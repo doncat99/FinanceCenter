@@ -39,6 +39,7 @@ class Recorder(metaclass=Meta):
     logger = logging.getLogger(__name__)
 
     # overwrite them to setup the data you want to record
+    region: Region = None
     provider: Provider = Provider.Default
     data_schema: Mixin = None
 
