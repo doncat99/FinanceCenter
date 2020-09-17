@@ -8,7 +8,7 @@ from sqlalchemy import exists, and_
 
 from zvt.api import AdjustType
 from zvt.contract import IntervalLevel
-from zvt.contract.common import Provider, EntityType
+from zvt.contract.common import Region, Provider, EntityType
 from zvt.contract.api import decode_entity_id, get_schema_by_name
 from zvt.domain import ReportPeriod, EtfStock, Mixin
 from zvt.utils.pd_utils import pd_is_not_null
@@ -177,15 +177,15 @@ def portfolio_relate_stock(df, portfolio):
 
 
 # etf半年报和年报才有全量的持仓信息，故根据离timestamp最近的报表(年报 or 半年报)来确定持仓
-def get_etf_stocks(timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
-    latests: List[EtfStock] = EtfStock.query_data(provider=provider, code=code, 
+def get_etf_stocks(region: Region, timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
+    latests: List[EtfStock] = EtfStock.query_data(region=region, provider=provider, code=code, 
                                                   end_timestamp=timestamp,
                                                   order=EtfStock.timestamp.desc(), 
                                                   limit=1, return_type='domain')
     if latests:
         latest_record = latests[0]
         # 获取最新的报表
-        df = EtfStock.query_data(provider=provider, code=code, codes=codes, ids=ids, 
+        df = EtfStock.query_data(region=region, provider=provider, code=code, codes=codes, ids=ids, 
                                  end_timestamp=timestamp,
                                  filters=[EtfStock.report_date == latest_record.report_date])
         # 最新的为年报或者半年报
@@ -197,7 +197,7 @@ def get_etf_stocks(timestamp, code=None, codes=None, ids=None, provider: Provide
             while True:
                 report_date = get_recent_report_date(latest_record.report_date, step=step)
 
-                pre_df = EtfStock.query_data(provider=provider, code=code, codes=codes, 
+                pre_df = EtfStock.query_data(region=region, provider=provider, code=code, codes=codes, 
                                              ids=ids, end_timestamp=timestamp,
                                              filters=[EtfStock.report_date == to_pd_timestamp(report_date)])
                 df = df.append(pre_df)
@@ -214,7 +214,7 @@ def get_etf_stocks(timestamp, code=None, codes=None, ids=None, provider: Provide
                     break
 
 
-def get_kdata(entity_id=None, entity_ids=None, level=IntervalLevel.LEVEL_1DAY.value, 
+def get_kdata(region: Region, entity_id=None, entity_ids=None, level=IntervalLevel.LEVEL_1DAY.value, 
               provider: Provider=Provider.Default, columns=None,
               return_type='df', start_timestamp=None, end_timestamp=None,
               filters=None, session=None, order=None, limit=None, index='timestamp', 
@@ -228,7 +228,7 @@ def get_kdata(entity_id=None, entity_ids=None, level=IntervalLevel.LEVEL_1DAY.va
     entity_type, _, _ = decode_entity_id(entity_id)
     data_schema: Mixin = get_kdata_schema(entity_type, level=level, adjust_type=adjust_type)
 
-    return data_schema.query_data(entity_ids=entity_ids, level=level, provider=provider,
+    return data_schema.query_data(region=region, entity_ids=entity_ids, level=level, provider=provider,
                                   columns=columns, return_type=return_type, 
                                   start_timestamp=start_timestamp, end_timestamp=end_timestamp, 
                                   filters=filters, session=session, order=order,
@@ -237,7 +237,7 @@ def get_kdata(entity_id=None, entity_ids=None, level=IntervalLevel.LEVEL_1DAY.va
 
 if __name__ == '__main__':
     from zvt.contract.common import Region
-    df = get_etf_stocks(timestamp=now_pd_timestamp(Region.CHN), code='510050', provider=Provider.JoinQuant)
+    df = get_etf_stocks(Region.CHN, timestamp=now_pd_timestamp(Region.CHN), code='510050', provider=Provider.JoinQuant)
     print(df)
 
     # assert get_kdata_schema(entity_type=EntityType.Stock, level=IntervalLevel.LEVEL_1DAY) == Stock1dKdata

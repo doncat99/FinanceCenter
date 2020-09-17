@@ -14,7 +14,8 @@ class Block1dKdata(KdataBase, BlockKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.EastMoney], 
+                providers={Region.CHN: [Provider.EastMoney], 
+                           Region.US: [Provider.Default]}, 
                 db_name='block_1d_kdata', schema_base=KdataBase)
 
 __all__ = ['Block1dKdata']

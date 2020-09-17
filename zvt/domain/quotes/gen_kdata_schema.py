@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from typing import List
+from typing import List, Dict
 
 from zvt.api import AdjustType
 from zvt.contract import IntervalLevel
@@ -11,7 +11,7 @@ from zvt.contract.common import Region, Provider, EntityType
 # 1)name:{entity_type}{level}Kdata
 # 2)one db file for one schema
 
-def gen_kdata_schema(pkg: str, regions: List[Region], providers: List[Provider], 
+def gen_kdata_schema(pkg: str, regions: List[Region], providers: Dict[(Region, List[Provider])], 
                      entity_type: EntityType, levels: List[IntervalLevel],
                      adjust_types: List[AdjustType] = [None]):
     tables = []
@@ -73,21 +73,29 @@ __all__ = ['{class_name}']
 
 if __name__ == '__main__':
     # 股票行情
-    gen_kdata_schema(pkg='zvt', regions=[Region.CHN, Region.US], 
-                     providers=[Provider.JoinQuant], entity_type=EntityType.Stock,
+    gen_kdata_schema(pkg='zvt', 
+                     regions=[Region.CHN, Region.US], 
+                     providers={Region.CHN: [Provider.JoinQuant], Region.US: [Provider.Default]}, 
+                     entity_type=EntityType.Stock,
                      levels=[level for level in IntervalLevel if level != IntervalLevel.LEVEL_TICK],
                      adjust_types=[None, AdjustType.hfq])
 
     # 板块行情
-    gen_kdata_schema(pkg='zvt', regions=[Region.CHN, Region.US], 
-                     providers=[Provider.EastMoney], entity_type=EntityType.Block,
+    gen_kdata_schema(pkg='zvt', 
+                     regions=[Region.CHN, Region.US], 
+                     providers={Region.CHN: [Provider.EastMoney], Region.US: [Provider.Default]}, 
+                     entity_type=EntityType.Block,
                      levels=[IntervalLevel.LEVEL_1DAY, IntervalLevel.LEVEL_1WEEK, IntervalLevel.LEVEL_1MON])
 
     # etf行情
-    gen_kdata_schema(pkg='zvt', regions=[Region.CHN, Region.US], 
-                     providers=[Provider.Sina], entity_type=EntityType.ETF,
+    gen_kdata_schema(pkg='zvt', 
+                     regions=[Region.CHN, Region.US], 
+                     providers={Region.CHN: [Provider.Sina], Region.US: [Provider.Default]}, 
+                     entity_type=EntityType.ETF,
                      levels=[IntervalLevel.LEVEL_1DAY])
     # 指数行情
-    gen_kdata_schema(pkg='zvt', regions=[Region.CHN, Region.US], 
-                     providers=[Provider.Sina], entity_type=EntityType.Index,
+    gen_kdata_schema(pkg='zvt', 
+                     regions=[Region.CHN, Region.US], 
+                     providers={Region.CHN: [Provider.Sina], Region.US:[Provider.Default]}, 
+                     entity_type=EntityType.Index,
                      levels=[IntervalLevel.LEVEL_1DAY])

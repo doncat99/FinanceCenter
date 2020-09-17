@@ -132,7 +132,8 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
             return
 
         # fill the timestamp for report published date
-        the_data_list = get_data(data_schema=self.data_schema,
+        the_data_list = get_data(region=self.region,
+                                 data_schema=self.data_schema,
                                  provider=self.provider,
                                  entity_id=entity.id,
                                  order=self.data_schema.timestamp.asc(),
@@ -145,7 +146,8 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                 for the_data in the_data_list:
                     self.fill_timestamp_with_jq(entity, the_data)
             else:
-                df = FinanceFactor.query_data(entity_id=entity.id,
+                df = FinanceFactor.query_data(region=self.region,
+                                              entity_id=entity.id,
                                               columns=[FinanceFactor.timestamp, FinanceFactor.report_date,
                                                        FinanceFactor.id],
                                               filters=[FinanceFactor.timestamp != FinanceFactor.report_date,

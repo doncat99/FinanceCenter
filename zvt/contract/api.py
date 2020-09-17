@@ -259,6 +259,7 @@ def common_filter(query: Query,
 
 
 def get_data(data_schema,
+             region: Region,
              ids: List[str] = None,
              entity_ids: List[str] = None,
              entity_id: str = None,
@@ -279,7 +280,7 @@ def get_data(data_schema,
              time_field: str = 'timestamp'):
     assert data_schema is not None
     assert provider.value is not None
-    assert provider in zvt_context.providers
+    assert provider in zvt_context.providers[region]
 
     # step1 = time.time()
 
@@ -483,7 +484,7 @@ def df_to_db(df: pd.DataFrame,
             session.commit()
 
         else:
-            current = get_data(data_schema=data_schema, columns=[data_schema.id], provider=provider,
+            current = get_data(data_schema=data_schema, region=region, columns=[data_schema.id], provider=provider,
                                ids=df_current['id'].tolist())
             if pd_is_not_null(current):
                 df_current = df_current[~df_current['id'].isin(current['id'])]
@@ -492,6 +493,7 @@ def df_to_db(df: pd.DataFrame,
 
 
 def get_entities(
+        region: Region, 
         entity_schema: EntityMixin = None,
         entity_type: EntityType = None,
         exchanges: List[str] = None,
@@ -515,7 +517,7 @@ def get_entities(
         entity_schema = zvt_context.entity_schema_map[entity_type]
 
     if provider.value is not None:
-        provider = entity_schema.providers[0]
+        provider = entity_schema.providers[region][0]
 
     if not order:
         order = entity_schema.code.asc()
@@ -526,18 +528,19 @@ def get_entities(
         else:
             filters = [entity_schema.exchange.in_(exchanges)]
 
-    return get_data(data_schema=entity_schema, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+    return get_data(data_schema=entity_schema, region=region, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
                     code=code, level=None, provider=provider, columns=columns, col_label=col_label,
                     return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                     filters=filters, session=session, order=order, limit=limit, index=index)
 
 
-def get_entity_ids(entity_type: EntityType = EntityType.Stock, 
+def get_entity_ids(region: Region,
+                   entity_type: EntityType = EntityType.Stock, 
                    entity_schema: EntityMixin = None, 
                    exchanges=None, 
                    codes=None, 
                    provider: Provider = Provider.Default):
-    df = get_entities(entity_type=entity_type, entity_schema=entity_schema, exchanges=exchanges, codes=codes,
+    df = get_entities(region=region, entity_type=entity_type, entity_schema=entity_schema, exchanges=exchanges, codes=codes,
                       provider=provider)
     if pd_is_not_null(df):
         return df['entity_id'].to_list()

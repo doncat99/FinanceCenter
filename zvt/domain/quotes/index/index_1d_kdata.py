@@ -15,7 +15,8 @@ class Index1dKdata(KdataBase, IndexKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.Sina], 
+                providers={Region.CHN: [Provider.Sina], 
+                           Region.US: [Provider.Default]}, 
                 db_name='index_1d_kdata', schema_base=KdataBase)
 
 __all__ = ['Index1dKdata']

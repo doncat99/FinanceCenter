@@ -71,7 +71,8 @@ class RightsIssueDetail(DividendFinancingBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.EastMoney], 
+                providers={Region.CHN: [Provider.EastMoney], 
+                           Region.US: [Provider.Default]}, 
                 db_name='dividend_financing', schema_base=DividendFinancingBase)
 
 __all__ = ['DividendFinancing', 'DividendDetail', 'SpoDetail', 'RightsIssueDetail']

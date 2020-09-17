@@ -17,7 +17,8 @@ class StockTradeDay(TradeDayBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant, Provider.Yahoo], 
+                providers={Region.CHN: [Provider.JoinQuant], 
+                           Region.US: [Provider.Yahoo]}, 
                 db_name='trade_day', schema_base=TradeDayBase)
 
 __all__ = ['StockTradeDay']

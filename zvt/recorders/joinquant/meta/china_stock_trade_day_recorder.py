@@ -13,6 +13,7 @@ class ChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
     entity_provider = Provider.JoinQuant
     entity_schema = Stock
 
+    region = Region.CHN
     provider = Provider.JoinQuant
     data_schema = StockTradeDay
 
@@ -26,7 +27,7 @@ class ChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
 
     def record(self, entity, start, end, size, timestamps, http_session):
         try:
-            trade_day = StockTradeDay.query_data(limit=1, order=StockTradeDay.timestamp.desc(), return_type='domain')
+            trade_day = StockTradeDay.query_data(region=self.region, limit=1, order=StockTradeDay.timestamp.desc(), return_type='domain')
             if len(trade_day) > 0:
                 start = trade_day[0].timestamp
         except Exception as _:
@@ -39,7 +40,7 @@ class ChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
         df['id'] = [to_time_str(date) for date in dates]
         df['entity_id'] = 'sz'
 
-        df_to_db(df=df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+        df_to_db(df=df, region=self.region, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
 
 
 __all__ = ['ChinaStockTradeDayRecorder']

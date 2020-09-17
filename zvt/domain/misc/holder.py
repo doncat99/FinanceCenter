@@ -95,7 +95,8 @@ class InstitutionalInvestorHolder(HolderBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.EastMoney, Provider.JoinQuant], 
+                providers={Region.CHN: [Provider.EastMoney], 
+                           Region.US: [Provider.JoinQuant]}, 
                 db_name='holder', schema_base=HolderBase)
 
 __all__ = ['TopTenTradableHolder', 'TopTenHolder', 'InstitutionalInvestorHolder', 'HkHolder']

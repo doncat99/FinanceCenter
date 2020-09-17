@@ -48,16 +48,20 @@ class Mixin(object):
             cls.provider_map_recorder[provider] = recorder_cls
 
     @classmethod
-    def register_provider(cls, provider: Provider):
+    def register_provider(cls, region: Region, provider: Provider):
         # dont't make providers as class field,it should be created for the sub class as need
         if not hasattr(cls, 'providers'):
-            cls.providers = []
+            cls.providers = {}
 
-        if provider not in cls.providers:
-            cls.providers.append(provider)
+        if region in cls.providers.keys():
+            if provider not in cls.providers[region]:
+                cls.providers[region].append(provider)
+        else:
+            cls.providers.update({region:[provider]})
 
     @classmethod
     def query_data(cls,
+                   region: Region,
                    provider_index: int = 0,
                    ids: List[str] = None,
                    entity_ids: List[str] = None,
@@ -79,8 +83,8 @@ class Mixin(object):
                    time_field: str = 'timestamp'):
         from .api import get_data
         if provider == Provider.Default:
-            provider = cls.providers[provider_index]
-        return get_data(data_schema=cls, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+            provider = cls.providers[region][provider_index]
+        return get_data(data_schema=cls, region=region, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
                         code=code, level=level, provider=provider, columns=columns, col_label=col_label,
                         return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                         filters=filters, session=session, order=order, limit=limit, index=index, time_field=time_field)

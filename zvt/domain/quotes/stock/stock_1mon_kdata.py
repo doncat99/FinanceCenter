@@ -14,7 +14,8 @@ class Stock1monKdata(KdataBase, StockKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant, Provider.Yahoo], 
+                providers={Region.CHN: [Provider.JoinQuant], 
+                           Region.US: [Provider.Yahoo]}, 
                 db_name='stock_1mon_kdata', schema_base=KdataBase)
 
 __all__ = ['Stock1monKdata']

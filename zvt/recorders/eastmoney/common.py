@@ -233,7 +233,8 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder):
 
     def evaluate_start_end_size_timestamps(self, now, entity, trade_day, stock_detail, http_session):
         # get latest record
-        latest_record = get_data(entity_id=entity.id,
+        latest_record = get_data(region=self.region,
+                                 entity_id=entity.id,
                                  provider=self.provider,
                                  data_schema=self.data_schema,
                                  order=self.data_schema.timestamp.desc(), limit=1,

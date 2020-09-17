@@ -963,7 +963,8 @@ class FinanceFactor(FinanceBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.EastMoney], 
+                providers={Region.CHN: [Provider.EastMoney], 
+                           Region.US: [Provider.Default]}, 
                 db_name='finance', schema_base=FinanceBase)
 
 __all__ = ['FinanceFactor', 'BalanceSheet', 'IncomeStatement', 'CashFlowStatement']

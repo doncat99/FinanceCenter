@@ -55,7 +55,8 @@ class JoinquantHkHolderRecorder(TimestampsDataRecorder):
     def get_latest_saved_record(self, entity):
         order = eval('self.data_schema.{}.desc()'.format(self.get_evaluated_time_field()))
 
-        records = get_data(filters=[HkHolder.holder_code == entity.code],
+        records = get_data(region=self.region,
+                           filters=[HkHolder.holder_code == entity.code],
                            provider=self.provider,
                            data_schema=self.data_schema,
                            order=order,

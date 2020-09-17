@@ -158,7 +158,8 @@ class DragonAndTiger(TradingBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.EastMoney, Provider.JoinQuant], 
+                providers={Region.CHN: [Provider.EastMoney, Provider.JoinQuant], 
+                           Region.US: [Provider.Default]}, 
                 db_name='trading', schema_base=TradingBase)
 
 __all__ = ['ManagerTrading', 'HolderTrading', 'MarginTrading', 'BigDealTrading', 'DragonAndTiger']

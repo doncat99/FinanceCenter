@@ -32,7 +32,9 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                 code_security = {}
                 code_security[item.code] = item
 
-                need_fill_items = DividendFinancing.query_data(provider=self.provider, codes=list(code_security.keys()),
+                need_fill_items = DividendFinancing.query_data(region=self.region,
+                                                               provider=self.provider, 
+                                                               codes=list(code_security.keys()),
                                                                return_type='domain',
                                                                session=self.session,
                                                                filters=[

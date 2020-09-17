@@ -64,7 +64,8 @@ class EtfValuation(ValuationBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant],
+                providers={Region.CHN: [Provider.JoinQuant], 
+                           Region.US: [Provider.Default]},
                 db_name='valuation', schema_base=ValuationBase)
 
 __all__ = ['StockValuation', 'EtfValuation']

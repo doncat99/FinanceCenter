@@ -104,7 +104,7 @@ class DataReader(object):
 
         # 转换成标准entity_id
         if entity_schema and not self.entity_ids:
-            df = get_entities(entity_schema=entity_schema, provider=self.entity_provider,
+            df = get_entities(region=self.region, entity_schema=entity_schema, provider=self.entity_provider,
                               exchanges=self.exchanges, codes=self.codes)
             if pd_is_not_null(df):
                 self.entity_ids = df['entity_id'].to_list()
@@ -149,7 +149,8 @@ class DataReader(object):
 
         dfs = []
         for entity_id in self.entity_ids:
-            df = data_schema.query_data(provider=provider,
+            df = data_schema.query_data(region=self.region, 
+                                        provider=provider,
                                         index=[self.category_field, self.time_field],
                                         order=data_schema.timestamp.desc(),
                                         entity_id=entity_id,
@@ -165,7 +166,8 @@ class DataReader(object):
         self.logger.info('load_data start')
         start_time = time.time()
 
-        self.data_df = self.data_schema.query_data(entity_ids=self.entity_ids,
+        self.data_df = self.data_schema.query_data(region=self.region,
+                                                   entity_ids=self.entity_ids,
                                                    provider=self.provider, 
                                                    columns=self.columns,
                                                    start_timestamp=self.start_timestamp,
@@ -225,7 +227,8 @@ class DataReader(object):
                 else:
                     filters = added_filter
 
-                added_df = self.data_schema.query_data(provider=self.provider,
+                added_df = self.data_schema.query_data(region=self.region,
+                                                       provider=self.provider,
                                                        columns=self.columns,
                                                        end_timestamp=to_timestamp, 
                                                        filters=filters, level=self.level,

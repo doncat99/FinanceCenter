@@ -11,7 +11,7 @@ from zvt import zvt_env
 
 
 # all registered providers
-providers = []
+providers = {}
 
 # all registered entity types
 entity_types = []

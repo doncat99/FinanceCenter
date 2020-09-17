@@ -62,7 +62,7 @@ class Recorder(metaclass=Meta):
 
         assert self.provider.value is not None
         assert self.data_schema is not None
-        assert self.provider in self.data_schema.providers
+        assert self.provider in self.data_schema.providers[self.region]
 
         self.batch_size = batch_size
         self.force_update = force_update
@@ -111,8 +111,10 @@ class RecorderForEntities(Recorder):
         :param sleeping_time:
         :type sleeping_time:
         """
-        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time)
+        self.region = share_para[4]
 
+        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time)
+        
         assert self.entity_provider.value is not None
         assert self.entity_schema is not None
 
@@ -140,7 +142,8 @@ class RecorderForEntities(Recorder):
             self.entity_session = get_db_session(provider=self.entity_provider, data_schema=self.entity_schema)
 
         # init the entity list
-        self.entities = get_entities(session=self.entity_session,
+        self.entities = get_entities(region=self.region,
+                                     session=self.entity_session,
                                      entity_schema=self.entity_schema,
                                      entity_type=self.entity_type,
                                      exchanges=self.exchanges,
@@ -183,7 +186,8 @@ class TimeSeriesDataRecorder(RecorderForEntities):
     def get_latest_saved_record(self, entity):
         order = eval('self.data_schema.{}.desc()'.format(self.get_evaluated_time_field()))
 
-        records = get_data(entity_id=entity.id,
+        records = get_data(region=self.region,
+                           entity_id=entity.id,
                            provider=self.provider,
                            data_schema=self.data_schema,
                            order=order,
@@ -301,7 +305,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         # optional way
         # item = self.session.query(self.data_schema).get(the_id)
 
-        items = get_data(data_schema=self.data_schema, session=self.session, provider=self.provider,
+        items = get_data(region=self.region, data_schema=self.data_schema, session=self.session, provider=self.provider,
                          entity_id=entity.id, filters=[self.data_schema.id == the_id], return_type='domain')
 
         if items and not self.force_update:
@@ -424,9 +428,9 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         return False
 
-    def process_entity(self, region: Region, entity_item, trade_day, stock_detail, http_session):
+    def process_entity(self, entity_item, trade_day, stock_detail, http_session):
         step1 = time.time()
-        now = now_pd_timestamp(region)
+        now = now_pd_timestamp(self.region)
 
         start_timestamp, end_timestamp, end_date, size, timestamps = \
             self.evaluate_start_end_size_timestamps(now, entity_item, trade_day, stock_detail, http_session)
@@ -474,10 +478,10 @@ class TimeSeriesDataRecorder(RecorderForEntities):
             self.data_schema.__name__, entity_item.id, time.time()-step1))
         return False
 
-    def process_loop(self, region: Region, entity_item, trade_day, stock_detail, http_session):
+    def process_loop(self, entity_item, trade_day, stock_detail, http_session):
         while True:
             try:
-                if self.process_entity(self.share_para[4], entity_item, trade_day, stock_detail, http_session):
+                if self.process_entity(entity_item, trade_day, stock_detail, http_session):
                     return
                 # sleep for a while to next entity
                 self.sleep()
@@ -487,9 +491,9 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
     def run(self):
         http_session = get_http_session()
-        trade_days= StockTradeDay.query_data(order=StockTradeDay.timestamp.desc(), return_type='domain')
+        trade_days= StockTradeDay.query_data(region=self.region, order=StockTradeDay.timestamp.desc(), return_type='domain')
         trade_day = [day.timestamp for day in trade_days]
-        stock_detail = StockDetail.query_data(columns=['entity_id', 'end_date'], index=['entity_id'], return_type='df')
+        stock_detail = StockDetail.query_data(region=self.region, columns=['entity_id', 'end_date'], index=['entity_id'], return_type='df')
 
         time.sleep(random.randint(0, self.share_para[1]))
         process_identity = multiprocessing.current_process()._identity
@@ -502,7 +506,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         with tqdm(total=len(self.entities), ncols=80, position=worker_id, desc=desc, leave=self.share_para[3]) as pbar:
             for entity_item in self.entities:
-                self.process_loop(self.share_para[4], entity_item, trade_day, stock_detail, http_session)
+                self.process_loop(entity_item, trade_day, stock_detail, http_session)
                 self.share_para[2].acquire()
                 pbar.update()
                 self.share_para[2].release()
@@ -545,7 +549,8 @@ class FixedCycleDataRecorder(TimeSeriesDataRecorder):
 
         # 对于k线这种数据，最后一个记录有可能是没完成的，所以取两个，总是删掉最后一个数据，更新之
         # self.logger.info("record info: {}, {}, {}".format(entity.id, order, self.level))
-        records = get_data(entity_id=entity.id,
+        records = get_data(region=self.region,
+                           entity_id=entity.id,
                            provider=self.provider,
                            data_schema=self.data_schema,
                            order=order,

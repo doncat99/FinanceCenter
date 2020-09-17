@@ -66,7 +66,8 @@ class CrossMarketSummary(OverallBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant, Provider.Exchange], 
+                providers={Region.CHN: [Provider.JoinQuant], 
+                           Region.US: [Provider.Exchange]}, 
                 db_name='overall', schema_base=OverallBase)
 
 __all__ = ['StockSummary', 'MarginTradingSummary', 'CrossMarketSummary']

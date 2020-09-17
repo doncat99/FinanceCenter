@@ -80,7 +80,8 @@ class StockMoneyFlow(MoneyFlowBase, Mixin):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.Sina], 
+                providers={Region.CHN: [Provider.Sina], 
+                           Region.US: [Provider.Default]}, 
                 db_name='money_flow', schema_base=MoneyFlowBase)
 
 __all__ = ['BlockMoneyFlow', 'StockMoneyFlow']

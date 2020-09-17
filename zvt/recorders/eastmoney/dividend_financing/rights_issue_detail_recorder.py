@@ -27,14 +27,18 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
     def on_finish(self):
         last_year = str(now_pd_timestamp(Region.CHN).year)
         codes = [item.code for item in self.entities]
-        need_filleds = DividendFinancing.query_data(provider=self.provider, codes=codes,
+        need_filleds = DividendFinancing.query_data(region=self.region,
+                                                    provider=self.provider, 
+                                                    codes=codes,
                                                     return_type='domain',
                                                     session=self.session,
                                                     filters=[DividendFinancing.rights_raising_fund.is_(None)],
                                                     end_timestamp=last_year)
 
         for item in need_filleds:
-            df = RightsIssueDetail.query_data(provider=self.provider, entity_id=item.entity_id,
+            df = RightsIssueDetail.query_data(region=self.region, 
+                                              provider=self.provider, 
+                                              entity_id=item.entity_id,
                                               columns=[RightsIssueDetail.timestamp,
                                                        RightsIssueDetail.rights_raising_fund],
                                               start_timestamp=item.timestamp,

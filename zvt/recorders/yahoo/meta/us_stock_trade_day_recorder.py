@@ -14,6 +14,7 @@ class UsStockTradeDayRecorder(TimeSeriesDataRecorder):
     entity_schema = Stock
 
     provider = Provider.Yahoo
+    region = Region.US
     data_schema = StockTradeDay
 
     def __init__(self, entity_type=EntityType.Stock, exchanges=['NYSE', 'NASDAQ'], entity_ids=None, codes=None, batch_size=10,
@@ -27,7 +28,7 @@ class UsStockTradeDayRecorder(TimeSeriesDataRecorder):
 
     def record(self, entity, start, end, size, timestamps, http_session):
         try:
-            trade_day = StockTradeDay.query_data(limit=1, order=StockTradeDay.timestamp.desc(), return_type='domain')
+            trade_day = StockTradeDay.query_data(region=self.region, limit=1, order=StockTradeDay.timestamp.desc(), return_type='domain')
             if len(trade_day) > 0:
                 start = trade_day[0].timestamp
         except Exception as _:
@@ -41,7 +42,7 @@ class UsStockTradeDayRecorder(TimeSeriesDataRecorder):
         df['id'] = [to_time_str(date) for date in dates]
         df['entity_id'] = 'nyse'
 
-        df_to_db(df=df, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+        df_to_db(df=df, region=self.region, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
 
 
 __all__ = ['UsStockTradeDayRecorder']

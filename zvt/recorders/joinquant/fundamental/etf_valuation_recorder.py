@@ -45,7 +45,8 @@ class JqChinaEtfValuationRecorder(TimeSeriesDataRecorder):
                 etf_stock_df.set_index('stock_id', inplace=True)
 
                 # 个股的估值数据
-                stock_valuation_df = StockValuation.query_data(entity_ids=etf_stock_df.index.to_list(),
+                stock_valuation_df = StockValuation.query_data(region=self.region,
+                                                               entity_ids=etf_stock_df.index.to_list(),
                                                                filters=[StockValuation.timestamp == date],
                                                                index='entity_id')
 

@@ -19,7 +19,7 @@ class BaseSecurity(EntityMixin):
 
 class BasePortfolio(BaseSecurity):
     @classmethod
-    def get_stocks(cls, timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
+    def get_stocks(cls, region: Region, timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
         """
 
         :param code: portfolio(etf/block/index...) code
@@ -29,7 +29,7 @@ class BasePortfolio(BaseSecurity):
         :return:
         """
         portfolio_stock: BasePortfolioStock = eval(f'{cls.__name__}Stock')
-        return portfolio_stock.query_data(provider=provider, code=code, codes=codes, ids=ids)
+        return portfolio_stock.query_data(region=region, provider=provider, code=code, codes=codes, ids=ids)
 
 
 # 个股
@@ -67,9 +67,9 @@ class Etf(StockMetaBase, BasePortfolio):
     category = Column(String(length=64))
 
     @classmethod
-    def get_stocks(cls, timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
+    def get_stocks(cls, region: Region, timestamp, code=None, codes=None, ids=None, provider: Provider=Provider.Default):
         from zvt.api.quote import get_etf_stocks
-        return get_etf_stocks(code=code, codes=codes, ids=ids, timestamp=timestamp, provider=provider)
+        return get_etf_stocks(region=region, code=code, codes=codes, ids=ids, timestamp=timestamp, provider=provider)
 
 
 # 组合(Etf,Index,Block)和个股(Stock)的关系 应该继承自该类
@@ -138,8 +138,8 @@ class StockDetail(StockMetaBase, BaseSecurity):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant, Provider.EastMoney, Provider.Exchange, 
-                           Provider.Sina, Provider.Yahoo], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.EastMoney, Provider.Sina, Provider.Exchange], 
+                           Region.US: [Provider.Yahoo, Provider.Exchange]}, 
                 db_name='stock_meta',
                 schema_base=StockMetaBase)
 

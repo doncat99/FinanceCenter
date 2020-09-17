@@ -14,7 +14,8 @@ class Stock15mHfqKdata(KdataBase, StockKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.JoinQuant, Provider.Yahoo], 
+                providers={Region.CHN: [Provider.JoinQuant], 
+                           Region.US: [Provider.Yahoo]}, 
                 db_name='stock_15m_hfq_kdata', schema_base=KdataBase)
 
 __all__ = ['Stock15mHfqKdata']

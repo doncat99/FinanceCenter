@@ -14,7 +14,8 @@ class Etf1dKdata(KdataBase, EtfKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers=[Provider.Sina], 
+                providers={Region.CHN: [Provider.Sina], 
+                           Region.US: [Provider.Default]}, 
                 db_name='etf_1d_kdata', schema_base=KdataBase)
 
 __all__ = ['Etf1dKdata']
