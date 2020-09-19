@@ -336,7 +336,7 @@ def fetch_data(lock, region: Region):
         data_set = data_set_chn
         # interface.get_stock_list_data(Provider.JoinQuant)
         # interface.get_etf_list(Provider.JoinQuant)
-        interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
+        # interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
 
     elif region == Region.US:
         data_set = data_set_us
@@ -352,7 +352,7 @@ def fetch_data(lock, region: Region):
 
     batch_size = 50
 
-    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=3, reset=True)
+    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=1, reset=True)
 
     print("")
     print("\/"*40)

@@ -96,7 +96,8 @@ def get_schemas(provider: Provider) -> List[DeclarativeMeta]:
     return schemas
 
 
-def get_db_session(provider: Provider,
+def get_db_session(region: Region,
+                   provider: Provider,
                    db_name: str = None,
                    data_schema: object = None,
                    force_new: bool = False) -> Session:
@@ -118,19 +119,20 @@ def get_db_session(provider: Provider,
     if data_schema:
         db_name = get_db_name(data_schema=data_schema)
 
-    session_key = '{}_{}'.format(provider.value, db_name)
+    session_key = '{}_{}_{}'.format(region.value, provider.value, db_name)
 
     if force_new:
-        return get_db_session_factory(provider, db_name, data_schema)()
+        return get_db_session_factory(region, provider, db_name, data_schema)()
 
     session = zvt_context.sessions.get(session_key)
     if not session:
-        session = get_db_session_factory(provider, db_name, data_schema)()
+        session = get_db_session_factory(region, provider, db_name, data_schema)()
         zvt_context.sessions[session_key] = session
     return session
 
 
-def get_db_session_factory(provider: Provider,
+def get_db_session_factory(region: Region,
+                           provider: Provider,
                            db_name: str = None,
                            data_schema: object = None):
     """
@@ -148,7 +150,7 @@ def get_db_session_factory(provider: Provider,
     if data_schema:
         db_name = get_db_name(data_schema=data_schema)
 
-    session_key = '{}_{}'.format(provider.value, db_name)
+    session_key = '{}_{}_{}'.format(region.value, provider.value, db_name)
     session = zvt_context.db_session_map.get(session_key)
     if not session:
         session = sessionmaker()
@@ -285,7 +287,7 @@ def get_data(data_schema,
     # step1 = time.time()
 
     if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
+        session = get_db_session(region=region, provider=provider, data_schema=data_schema)
 
     time_col = eval('data_schema.{}'.format(time_field))
 
@@ -388,9 +390,9 @@ def get_data_count(data_schema, filters=None, session=None):
     return count
 
 
-def get_group(provider: Provider, data_schema, column, group_func=func.count, session=None):
+def get_group(region: Region, provider: Provider, data_schema, column, group_func=func.count, session=None):
     if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
+        session = get_db_session(region=region, provider=provider, data_schema=data_schema)
     if group_func:
         query = session.query(column, group_func(column)).group_by(column)
     else:
@@ -473,7 +475,7 @@ def df_to_db(df: pd.DataFrame,
     for step in range(step_size):
         df_current = df.iloc[sub_size * step:sub_size * (step + 1)]
         if force_update:
-            session = get_db_session(provider=provider, data_schema=data_schema)
+            session = get_db_session(region=region, provider=provider, data_schema=data_schema)
             ids = df_current["id"].tolist()
             if len(ids) == 1:
                 sql = f"delete from {data_schema.__tablename__} where id = '{ids[0]}'"
