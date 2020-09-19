@@ -70,7 +70,7 @@ class Recorder(metaclass=Meta):
         self.sleeping_time = sleeping_time
 
         # using to do db operations
-        self.session = get_db_session(region=region, 
+        self.session = get_db_session(region=self.region, 
                                       provider=self.provider,
                                       data_schema=self.data_schema)
 

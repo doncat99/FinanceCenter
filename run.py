@@ -352,7 +352,7 @@ def fetch_data(lock, region: Region):
 
     batch_size = 50
 
-    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=1, reset=True)
+    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=3, reset=True)
 
     print("")
     print("\/"*40)
