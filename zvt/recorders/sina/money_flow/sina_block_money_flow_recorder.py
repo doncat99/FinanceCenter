@@ -30,7 +30,7 @@ class SinaBlockMoneyFlowRecorder(FixedCycleDataRecorder):
                  force_update=True, sleeping_time=10, default_size=2000, real_time=False, fix_duplicate_way='ignore',
                  start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0, level=IntervalLevel.LEVEL_1DAY,
                  kdata_use_begin_time=False, one_day_trading_minutes=24 * 60) -> None:
-        super().__init__('block', exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
+        super().__init__(EntityType.Block, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes)
 

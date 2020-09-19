@@ -63,7 +63,10 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
     def recompute_qfq(self, entity, qfq_factor, last_timestamp):
         # 重新计算前复权数据
         if qfq_factor != 0:
-            kdatas = get_kdata(provider=self.provider, entity_id=entity.id, level=self.level.value,
+            kdatas = get_kdata(region=self.region,
+                               provider=self.provider, 
+                               entity_id=entity.id, 
+                               level=self.level.value,
                                order=self.data_schema.timestamp.asc(),
                                return_type='domain',
                                session=self.session,
@@ -118,8 +121,13 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
             if self.adjust_type == AdjustType.qfq:
                 check_df = df.head(1)
                 check_date = check_df['timestamp'][0]
-                current_df = get_kdata(entity_id=entity.id, provider=self.provider, start_timestamp=check_date,
-                                       end_timestamp=check_date, limit=1, level=self.level,
+                current_df = get_kdata(region=self.region,
+                                       entity_id=entity.id, 
+                                       provider=self.provider, 
+                                       start_timestamp=check_date,
+                                       end_timestamp=check_date, 
+                                       limit=1, 
+                                       level=self.level,
                                        adjust_type=self.adjust_type)
                 if pd_is_not_null(current_df):
                     old = current_df.iloc[0, :]['close']
@@ -159,5 +167,5 @@ if __name__ == '__main__':
     JqChinaStockKdataRecorder(level=level, sleeping_time=0, codes=codes, real_time=False,
                               adjust_type=AdjustType.hfq).run()
 
-    print(get_kdata(entity_id='stock_sz_000001', limit=10, order=Stock1dHfqKdata.timestamp.desc(),
+    print(get_kdata(region=Region.CHN, entity_id='stock_sz_000001', limit=10, order=Stock1dHfqKdata.timestamp.desc(),
                     adjust_type=AdjustType.hfq))

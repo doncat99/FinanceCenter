@@ -52,7 +52,7 @@ class YahooUsStockKdataRecorder(FixedCycleDataRecorder):
         self.data_schema = get_kdata_schema(entity_type=EntityType.Stock, level=level, adjust_type=adjust_type)
         self.yahoo_trading_level = to_yahoo_trading_level(level)
 
-        super().__init__('stock', exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
+        super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
         self.adjust_type = adjust_type
@@ -117,5 +117,5 @@ if __name__ == '__main__':
     YahooUsStockKdataRecorder(level=level, sleeping_time=0, codes=codes, real_time=False,
                               adjust_type=AdjustType.hfq).run()
 
-    print(get_kdata(entity_id='stock_nyse_a', limit=10, order=Stock1dKdata.timestamp.desc(),
+    print(get_kdata(region=Region.US, entity_id='stock_nyse_a', limit=10, order=Stock1dKdata.timestamp.desc(),
                     adjust_type=AdjustType.hfq))

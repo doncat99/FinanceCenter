@@ -89,7 +89,7 @@ def init_env(zvt_home: str) -> None:
         for k in config_json:
             zvt_env[k] = config_json[k]
 
-    init_log()
+    init_log(file_name='fetch.log')
 
     # import pprint
     # pprint.pprint(zvt_env)

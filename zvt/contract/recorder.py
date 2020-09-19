@@ -70,7 +70,8 @@ class Recorder(metaclass=Meta):
         self.sleeping_time = sleeping_time
 
         # using to do db operations
-        self.session = get_db_session(provider=self.provider,
+        self.session = get_db_session(region=region, 
+                                      provider=self.provider,
                                       data_schema=self.data_schema)
 
     def run(self):
@@ -140,7 +141,9 @@ class RecorderForEntities(Recorder):
         if self.entity_provider == self.provider and self.entity_schema == self.data_schema:
             self.entity_session = self.session
         else:
-            self.entity_session = get_db_session(provider=self.entity_provider, data_schema=self.entity_schema)
+            self.entity_session = get_db_session(region=self.region, 
+                                                 provider=self.entity_provider, 
+                                                 data_schema=self.entity_schema)
 
         # init the entity list
         self.entities = get_entities(region=self.region,

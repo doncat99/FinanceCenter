@@ -1,7 +1,7 @@
 from jqdatasdk import finance
 
 from zvt.contract.recorder import TimeSeriesDataRecorder
-from zvt.contract.common import Provider
+from zvt.contract.common import Provider, EntityType
 from zvt.utils.time_utils import to_time_str
 from zvt.utils.utils import multiple_number
 from zvt.utils.request_utils import jq_auth, jq_query
@@ -27,7 +27,7 @@ class CrossMarketSummaryRecorder(TimeSeriesDataRecorder):
         # 310004	港股通（深）
 
         codes = ['310001', '310002', '310003', '310004']
-        super().__init__('index', ['cn'], None, codes, batch_size,
+        super().__init__(EntityType.Index, ['cn'], None, codes, batch_size,
                          force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, share_para=share_para)
         jq_auth()

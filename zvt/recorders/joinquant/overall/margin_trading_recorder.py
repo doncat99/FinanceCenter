@@ -1,7 +1,7 @@
 from jqdatasdk import finance
 
 from zvt.contract.recorder import TimeSeriesDataRecorder
-from zvt.contract.common import Provider
+from zvt.contract.common import Provider, EntityType
 from zvt.utils.time_utils import to_time_str
 from zvt.utils.request_utils import jq_auth, jq_query
 from zvt.domain import Index, MarginTradingSummary
@@ -28,7 +28,7 @@ class MarginTradingSummaryRecorder(TimeSeriesDataRecorder):
                  fix_duplicate_way='add', share_para=None) -> None:
         # 上海A股,深圳市场
         codes = ['000001', '399106']
-        super().__init__('index', ['cn'], None, codes, batch_size,
+        super().__init__(EntityType.Index, ['cn'], None, codes, batch_size,
                          force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, share_para=share_para)
         jq_auth()

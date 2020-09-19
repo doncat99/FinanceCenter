@@ -94,7 +94,7 @@ def register_schema(regions: List[Region],
             if engine is None: continue
             schema_base.metadata.create_all(engine)
 
-            session_fac = get_db_session_factory(provider, db_name=db_name)
+            session_fac = get_db_session_factory(region, provider, db_name=db_name)
             session_fac.configure(bind=engine)
 
         for provider in providers[region]:

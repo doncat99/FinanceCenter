@@ -134,4 +134,5 @@ def init_main_index(region: Region, provider=Provider.Exchange):
     except Exception as _:
         pass
 
-init_main_index(Region.CHN)
+init_main_index(Region.CHN, Provider.JoinQuant)
+init_main_index(Region.CHN, Provider.Exchange)

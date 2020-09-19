@@ -37,7 +37,7 @@ class JoinquantHkHolderRecorder(TimestampsDataRecorder):
         # 310004	港股通（深）
         codes = ['310001', '310002']
 
-        super().__init__('index', ['cn'], None, codes, 10, force_update, sleeping_time,
+        super().__init__(EntityType.Index, ['cn'], None, codes, 10, force_update, sleeping_time,
                          default_size, real_time, 'ignore', start_timestamp, end_timestamp, 0, 0)
         jq_auth()
 

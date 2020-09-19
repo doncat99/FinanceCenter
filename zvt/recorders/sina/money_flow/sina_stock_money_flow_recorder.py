@@ -2,7 +2,7 @@
 from zvt.contract import IntervalLevel
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import StockMoneyFlow, Stock, StockTradeDay
-from zvt.contract.common import Region, Provider
+from zvt.contract.common import Region, Provider, EntityType
 from zvt.utils.time_utils import to_pd_timestamp, is_same_date, now_pd_timestamp
 from zvt.utils.utils import to_float
 from zvt.utils.request_utils import request_get
@@ -21,7 +21,7 @@ class SinaStockMoneyFlowRecorder(FixedCycleDataRecorder):
                  force_update=True, sleeping_time=10, default_size=2000, real_time=False, fix_duplicate_way='ignore',
                  start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0, level=IntervalLevel.LEVEL_1DAY,
                  kdata_use_begin_time=False, one_day_trading_minutes=24 * 60, share_para=None) -> None:
-        super().__init__('stock', exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
+        super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
 

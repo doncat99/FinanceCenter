@@ -63,7 +63,7 @@ class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):
     def __init__(self, exchanges=None, entity_ids=None, codes=None, batch_size=10,
                  force_update=False, sleeping_time=5, default_size=2000, real_time=False, fix_duplicate_way='add',
                  start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0) -> None:
-        super().__init__('block', exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
+        super().__init__(EntityType.Block, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute)
 

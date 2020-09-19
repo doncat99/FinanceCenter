@@ -41,9 +41,12 @@ class ChinaETFDayKdataRecorder(FixedCycleDataRecorder):
         return generate_kdata_id(entity_id=entity.id, timestamp=original_data['timestamp'], level=self.level)
 
     def on_finish_entity(self, entity, http_session):
-        kdatas = get_kdata(entity_id=entity.id, level=IntervalLevel.LEVEL_1DAY.value,
+        kdatas = get_kdata(region=self.region,
+                           entity_id=entity.id, 
+                           level=IntervalLevel.LEVEL_1DAY.value,
                            order=Etf1dKdata.timestamp.asc(),
-                           return_type='domain', session=self.session,
+                           return_type='domain', 
+                           session=self.session,
                            filters=[Etf1dKdata.cumulative_net_value.is_(None)])
 
         if kdatas and len(kdatas) > 0:
