@@ -444,8 +444,8 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         # no more to record
         if size == 0:
             start = start_timestamp.strftime('%Y-%m-%d') if start_timestamp else None
-            self.logger.info("no update {} {}, {}, cost: {}".format(
-                self.data_schema.__name__, start_timestamp, entity_item.id, time.time()-step1))
+            # self.logger.info("no update {} {}, {}, cost: {}".format(
+            #     self.data_schema.__name__, start_timestamp, entity_item.id, time.time()-step1))
             self.on_finish_entity(entity_item, http_session)
             return True
 
@@ -627,7 +627,7 @@ class FixedCycleDataRecorder(TimeSeriesDataRecorder):
                 try:
                     trade_index = trade_day.index[trade_day.index < end_date].index[0]
                 except Exception as e:
-                    self.logger.warning("can't find timestamp between trade_day:{}".format(e))
+                    self.logger.warning("can't find timestamp:{} between trade_day:{}".format(end_date, e))
                 
         size = evaluate_size_from_timestamp(start_timestamp=latest_saved_timestamp, 
                                             end_timestamp=now,

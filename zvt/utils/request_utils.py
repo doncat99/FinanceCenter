@@ -27,11 +27,11 @@ def get_http_session():
     return http_session
 
 def request_get(http_session, url, headers=None):
-    logger.info("HTTP GET: {}".format(url))
+    # logger.info("HTTP GET: {}".format(url))
     return http_session.get(url, headers=headers, timeout=(5, 15))
 
 def request_post(http_session, url, data=None, json=None):
-    logger.info("HTTP POST: {}".format(url))
+    # logger.info("HTTP POST: {}".format(url))
     return http_session.post(url=url, data=data, json=json, timeout=(5, 15))
 
 
@@ -132,7 +132,7 @@ def jq_get_trade_days(start_date=None, end_date=None, count=None):
 # @swap_wrapper
 def jq_get_bars(security, count, unit="1d", fields=("date", "open", "high", "low", "close"), include_now=False, end_dt=None,
              fq_ref_date=None, df=True):
-    logger.info("HTTP GET: bars, with unit={}, fq_ref_date={}".format(unit, fq_ref_date))
+    # logger.info("HTTP GET: bars, with unit={}, fq_ref_date={}".format(unit, fq_ref_date))
     return get_bars(security, count, unit=unit, fields=fields, include_now=include_now, 
                     end_dt=end_dt, fq_ref_date=fq_ref_date, df=df)
 
@@ -142,9 +142,10 @@ def retry_if_connection_error(exception):
     # return isinstance(exception, ConnectionError)
 
 # if exception retry with 0.5 second wait  
-@retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=3, wait_fixed=2000)
+# @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=3, wait_fixed=2000)
 def yh_get_bars(code, interval, start=None, end=None, actions=True):
     logger.info("HTTP GET: bars, with code={}, unit={}, start={}, end={}".format(code, interval, start, end))
-    return asyncio.run(yf.Ticker(code).history(interval=interval, start=start, end=end, actions=actions, debug=False))
+    return yf.Ticker(code).history(interval=interval, start=start, end=end, actions=actions, debug=False)
+    # return asyncio.run()
     # return yf.Ticker(code).history(interval=interval, start=start, end=end, debug=False)
     
