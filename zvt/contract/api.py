@@ -17,7 +17,7 @@ from zvt import zvt_env
 from zvt.contract import IntervalLevel, EntityMixin
 from zvt.contract import zvt_context
 from zvt.contract.common import Region, Provider, EntityType
-from zvt.utils.pd_utils import pd_is_not_null, index_df
+from zvt.utils.pd_utils import pd_is_not_null, index_df, to_postgresql
 from zvt.utils.time_utils import to_pd_timestamp
 
 logger = logging.getLogger(__name__)
@@ -429,7 +429,7 @@ def df_to_db(df: pd.DataFrame,
              data_schema: DeclarativeMeta,
              provider: Provider,
              force_update: bool = False,
-             sub_size: int = 10000) -> object:
+             sub_size: int = 5000) -> object:
     """
     FIXME:improve
     store the df to db
@@ -464,6 +464,8 @@ def df_to_db(df: pd.DataFrame,
 
     if platform.system() == "Windows":
         sub_size = 900
+    elif zvt_env['db_engine'] == "postgresql":
+        sub_size = 50000
 
     if size >= sub_size:
         step_size = int(size / sub_size)
@@ -490,9 +492,12 @@ def df_to_db(df: pd.DataFrame,
                                ids=df_current['id'].tolist())
             if pd_is_not_null(current):
                 df_current = df_current[~df_current['id'].isin(current['id'])]
-
-        df_current.to_sql(data_schema.__tablename__, db_engine, index=False, 
-                          if_exists='append', method='multi')
+        
+        if zvt_env['db_engine'] == "postgresql":
+            to_postgresql(df_current, db_engine, data_schema.__tablename__)
+        else:
+            df_current.to_sql(data_schema.__tablename__, db_engine, index=False, 
+                              if_exists='append', method='multi')
 
 
 def get_entities(
