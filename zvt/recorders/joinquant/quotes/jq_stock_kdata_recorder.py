@@ -92,6 +92,7 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
             fq_ref_date = to_time_str(now_pd_timestamp(Region.CHN))
 
         if not self.end_timestamp:
+            end_timestamp = None
             df = jq_get_bars(to_jq_entity_id(entity),
                              count=size,
                              unit=self.jq_trading_level,
@@ -107,6 +108,9 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
                              end_dt=end_timestamp,
                              fq_ref_date=fq_ref_date,
                              include_now=False)
+
+        self.logger.info("record {} for entity_id:{}, size:{}".format(self.data_schema.__name__, entity.id, len(df)))
+
         if pd_is_not_null(df):
             df['name'] = entity.name
             df.rename(columns={'money': 'turnover', 'date': 'timestamp'}, inplace=True)
@@ -147,6 +151,7 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
             df['id'] = df[['entity_id', 'timestamp']].apply(generate_kdata_id, axis=1)
 
             df_to_db(df=df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.logger.info("persist {} for entity_id:{}, size:{}, time interval:[{}, {}]".format(self.data_schema.__name__, entity.id, len(df), start, end_timestamp))
 
         return None
 
