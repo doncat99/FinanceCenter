@@ -453,7 +453,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         start = start_timestamp.strftime('%Y-%m-%d') if start_timestamp else None
         trade_day = trade_day[0].strftime('%Y-%m-%d') if trade_day else None
         end = end_date.strftime('%Y-%m-%d') if end_date else None
-        self.logger.info('{}, {}, {}, {}, {}, {}'.format(entity_item.id, size, jq_get_query_count(), trade_day, start, end))
+        self.logger.info('request {}, {}, {}, {}, {}, {}'.format(entity_item.id, size, jq_get_query_count(), trade_day, start, end))
         original_list = self.record(entity_item, start=start_timestamp, end=end_timestamp, size=size,
                                     timestamps=timestamps, http_session=http_session)        
         # self.logger.info("record entity_item:{}, time cost:{}".format(entity_item.id, time.time()-step1))
@@ -467,15 +467,15 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         # handle realtime items
         entity_finished = self.process_realtime(entity_item, original_list, all_duplicated, now, http_session)
         if entity_finished:
-            if zvt_env['zvt_debug']:
-                latest_saved_record = self.get_latest_saved_record(entity=entity_item)
-                if latest_saved_record:
-                    start_timestamp = eval('latest_saved_record.{}'.format(self.get_evaluated_time_field()))
-                self.logger.info("finish recording {} id: {}, latest_timestamp: {}, time cost: {}".format(
-                    self.data_schema.__name__, entity_item.id, start_timestamp, time.time()-step1))
-            else:
-                self.logger.info("finish recording {} id: {}, time cost: {}".format(
-                    self.data_schema.__name__, entity_item.id, time.time()-step1))
+            # if zvt_env['zvt_debug']:
+            #     latest_saved_record = self.get_latest_saved_record(entity=entity_item)
+            #     if latest_saved_record:
+            #         start_timestamp = eval('latest_saved_record.{}'.format(self.get_evaluated_time_field()))
+            #     self.logger.info("finish recording {} id: {}, latest_timestamp: {}, time cost: {}".format(
+            #         self.data_schema.__name__, entity_item.id, start_timestamp, time.time()-step1))
+            # else:
+            #     self.logger.info("finish recording {} id: {}, time cost: {}".format(
+            #         self.data_schema.__name__, entity_item.id, time.time()-step1))
             return True
 
         self.logger.info("update recording {} id: {}, time cost: {}".format(

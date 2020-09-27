@@ -85,21 +85,13 @@ us_map_key = [
     "yahoo_stock_detail",
     "yahoo_trade_day",
     "yahoo_stock_1mon_kdata",
-    "yahoo_stock_1mon_hfq_kdata",
     "yahoo_stock_1wk_kdata",
-    "yahoo_stock_1wk_hfq_kdata",
     "yahoo_stock_1d_kdata",
-    "yahoo_stock_1d_hfq_kdata",
     "yahoo_stock_1h_kdata",
-    "yahoo_stock_1h_hfq_kdata",
     "yahoo_stock_30m_kdata",
-    "yahoo_stock_30m_hfq_kdata",
     "yahoo_stock_15m_kdata",
-    "yahoo_stock_15m_hfq_kdata",
     "yahoo_stock_5m_kdata",
-    "yahoo_stock_5m_hfq_kdata",
     "yahoo_stock_1m_kdata",
-    "yahoo_stock_1m_hfq_kdata",
     "zvt_trader_info",
 ]
 
@@ -113,7 +105,6 @@ def build_map(region: Region, map_key):
                               echo=False,
                               poolclass=QueuePool,
                               pool_size=zvt_env['cpus'],
-                              pool_timeout=30,
                               pool_pre_ping=True,
                               max_overflow=10)
 

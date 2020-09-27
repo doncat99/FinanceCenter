@@ -295,15 +295,15 @@ data_set_chn = [
     # [interface.get_margin_trading_summary_data,  Provider.JoinQuant, 0, "Margin Trading Summary",   24],
     # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, "Cross Market Summary",     24],
 
-    [interface.get_stock_1d_k_data,              Provider.JoinQuant, 0, "Stock Daily K-Data",       24], 
+    # [interface.get_stock_1d_k_data,              Provider.JoinQuant, 0, "Stock Daily K-Data",       24], 
     # [interface.get_stock_1d_hfq_k_data,          Provider.JoinQuant, 0, "Stock Daily HFQ K-Data",   24],
-    [interface.get_stock_1w_k_data,              Provider.JoinQuant, 0, "Stock Weekly K-Data",      24],
+    # [interface.get_stock_1w_k_data,              Provider.JoinQuant, 0, "Stock Weekly K-Data",      24],
     # [interface.get_stock_1w_hfq_k_data,          Provider.JoinQuant, 0, "Stock Weekly HFQ K-Data",  24],
     # [interface.get_stock_1mon_k_data,            Provider.JoinQuant, 0, "Stock Monthly K-Data",     24], 
     # [interface.get_etf_1d_k_data,                Provider.Sina,      1, "ETF Daily K-Data",         24],
 
     # [interface.get_stock_1mon_hfq_k_data,        Provider.JoinQuant, 0, "Stock Monthly HFQ K-Data", 24],
-    # [interface.get_stock_1h_k_data,              Provider.JoinQuant, 0, "Stock 1 hours K-Data",     24], 
+    [interface.get_stock_1h_k_data,              Provider.JoinQuant, 0, "Stock 1 hours K-Data",     24], 
     # [interface.get_stock_1h_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 hours HFQ K-Data", 24],
     # [interface.get_stock_30m_k_data,             Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24], 
     # [interface.get_stock_30m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24],
@@ -318,8 +318,8 @@ data_set_chn = [
 data_set_us = [
     [interface.get_stock_1d_k_data,         Provider.Yahoo, 0, "Stock Daily K-Data",       24],
     [interface.get_stock_1w_k_data,         Provider.Yahoo, 0, "Stock Weekly K-Data",      24],
-    [interface.get_stock_1mon_k_data,       Provider.Yahoo, 0, "Stock Monthly K-Data",     24], 
-    # [interface.get_stock_1h_k_data,         Provider.Yahoo, 0, "Stock 1 hours K-Data",     24], 
+    [interface.get_stock_1mon_k_data,       Provider.Yahoo, 0, "Stock Monthly K-Data",     24],
+    # [interface.get_stock_1h_k_data,         Provider.Yahoo, 0, "Stock 1 hours K-Data",     24],
     # [interface.get_stock_30m_k_data,        Provider.Yahoo, 0, "Stock 30 mins K-Data",     24], 
     # [interface.get_stock_15m_k_data,        Provider.Yahoo, 0, "Stock 15 mins K-Data",     24], 
     # [interface.get_stock_5m_k_data,         Provider.Yahoo, 0, "Stock 5 mins K-Data",      24], 
@@ -363,7 +363,7 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    # fetch_data(l, Region.CHN)
+    fetch_data(l, Region.CHN)
     fetch_data(l, Region.US)
 
     l.release

@@ -429,7 +429,7 @@ def df_to_db(df: pd.DataFrame,
              data_schema: DeclarativeMeta,
              provider: Provider,
              force_update: bool = False,
-             sub_size: int = 5000) -> object:
+             sub_size: int = 10000) -> object:
     """
     FIXME:improve
     store the df to db
@@ -491,7 +491,8 @@ def df_to_db(df: pd.DataFrame,
             if pd_is_not_null(current):
                 df_current = df_current[~df_current['id'].isin(current['id'])]
 
-        df_current.to_sql(data_schema.__tablename__, db_engine, index=False, if_exists='append')
+        df_current.to_sql(data_schema.__tablename__, db_engine, index=False, 
+                          if_exists='append', method='multi')
 
 
 def get_entities(
