@@ -474,19 +474,23 @@ def df_to_db(df: pd.DataFrame,
     else:
         step_size = 1
 
+    # prepare variable
+    if force_update:
+        session = get_db_session(region=region, provider=provider, data_schema=data_schema)
+    if zvt_env['db_engine'] == "postgresql":
+        conn = db_engine.raw_connection()
+
     for step in range(step_size):
         df_current = df.iloc[sub_size * step:sub_size * (step + 1)]
         if force_update:
-            session = get_db_session(region=region, provider=provider, data_schema=data_schema)
+            # session = get_db_session(region=region, provider=provider, data_schema=data_schema)
             ids = df_current["id"].tolist()
             if len(ids) == 1:
                 sql = f"delete from {data_schema.__tablename__} where id = '{ids[0]}'"
             else:
                 sql = f"delete from {data_schema.__tablename__} where id in {tuple(ids)}"
-
             session.execute(sql)
             session.commit()
-
         else:
             current = get_data(data_schema=data_schema, region=region, columns=[data_schema.id], provider=provider,
                                ids=df_current['id'].tolist())
@@ -494,10 +498,16 @@ def df_to_db(df: pd.DataFrame,
                 df_current = df_current[~df_current['id'].isin(current['id'])]
         
         if zvt_env['db_engine'] == "postgresql":
-            to_postgresql(df_current, db_engine, data_schema.__tablename__)
+            to_postgresql(df_current, conn, data_schema.__tablename__)
         else:
             df_current.to_sql(data_schema.__tablename__, db_engine, index=False, 
                               if_exists='append', method='multi')
+
+    # post processing
+    if force_update:
+        session.close()
+    if zvt_env['db_engine'] == "postgresql":
+        conn.close()
 
 
 def get_entities(

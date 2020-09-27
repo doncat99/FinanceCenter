@@ -73,14 +73,12 @@ def fill_with_same_index(df_list: List[pd.DataFrame]):
     return result
 
 
-def to_postgresql(df, engine, table_name):
+def to_postgresql(df, conn, table_name):
     output = StringIO()
     df.to_csv(output, sep='\t', index=False, header=False)
     output1 = output.getvalue()
     
-    conn = engine.raw_connection()
     cur = conn.cursor()
     cur.copy_from(StringIO(output1), table_name, columns=list(df.columns))
     conn.commit()
     cur.close()
-    conn.close()
