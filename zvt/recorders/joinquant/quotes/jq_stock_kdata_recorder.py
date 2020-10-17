@@ -109,7 +109,7 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
                              fq_ref_date=fq_ref_date,
                              include_now=False)
 
-        self.logger.info("record {} for entity_id:{}, size:{}".format(self.data_schema.__name__, entity.id, len(df)))
+        self.logger.info("record {} for {}, size:{}".format(self.data_schema.__name__, entity.id, len(df)))
 
         if pd_is_not_null(df):
             df['name'] = entity.name
@@ -151,7 +151,7 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
             df['id'] = df[['entity_id', 'timestamp']].apply(generate_kdata_id, axis=1)
 
             df_to_db(df=df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
-            self.logger.info("persist {} for entity_id:{}, size:{}, time interval:[{}, {}]".format(self.data_schema.__name__, entity.id, len(df), start, end_timestamp))
+            self.logger.info("persist {} for {}, size:{}, time interval:[{}, {}]".format(self.data_schema.__name__, entity.id, len(df), start, end_timestamp))
 
         return None
 

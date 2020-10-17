@@ -34,6 +34,7 @@ def is_datetime(the_time):
 def to_pd_timestamp(the_time):
     if the_time is None:
         return None
+
     if type(the_time) == int:
         return pd.Timestamp.fromtimestamp(the_time / 1000)
 
@@ -55,6 +56,10 @@ def now_pd_timestamp(region: Region) -> pd.Timestamp:
         tz = pytz.timezone('America/New_York')
         return pd.Timestamp.now(tz).replace(tzinfo=None)
     return pd.Timestamp.now()
+
+
+def to_time_int(the_time):
+    return int(datetime.datetime.strptime(the_time, '%Y-%m-%d').timestamp())
 
 
 def to_time_str(the_time, fmt=TIME_FORMAT_DAY):

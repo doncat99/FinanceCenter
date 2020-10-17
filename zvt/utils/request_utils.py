@@ -8,12 +8,15 @@ from retrying import retry
 from functools import wraps
 import asyncio
 
+import pandas as pd
 from jqdatasdk import is_auth, auth, query, logout, \
                       get_fundamentals, get_mtss, get_fundamentals_continuously, \
                       get_all_securities, get_trade_days, get_bars, get_query_count
 import yfinance as yf
+import finnhub
 
 from zvt import zvt_env
+from zvt.utils.time_utils import to_pd_timestamp, now_timestamp, to_time_int, to_time_str
 
 logger = logging.getLogger(__name__)
 
@@ -148,4 +151,23 @@ def yh_get_bars(code, interval, start=None, end=None, actions=True):
     return yf.Ticker(code).history(interval=interval, start=start, end=end, actions=actions, debug=False)
     # return asyncio.run()
     # return yf.Ticker(code).history(interval=interval, start=start, end=end, debug=False)
-    
+
+def fh_auth():
+    return finnhub.Client(api_key=zvt_env['finnhub_key'])
+
+def fh_get_bars(client, code, interval, start, end):    
+    logger.info("HTTP GET: bars, with code={}, unit={}, start={}, end={}".format(code, interval, start, end))
+    _from = to_time_int(start)
+    _to = now_timestamp() if end is None else to_time_int(end)
+    res = client.stock_candles(code, interval, _from, _to)
+    df = pd.DataFrame(res)
+    df.rename(columns={'o':'open', 'c':'close', 'h':'high', 'l':'low', 'v':'volume', 't':'timestamp'}, inplace=True)
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
+    df.set_index('timestamp', drop=True, inplace=True)
+    return df
+
+def tg_get_bars(http_session, code, interval, start, end):
+    headers = {'Content-Type': 'application/json'}
+    end = '' if end is None else end
+    url = "https://api.tiingo.com/tiingo/daily/{}/prices?startDate={}{}&token={}".format(code, start, end, zvt_env['tiingo_key'])
+    return request_get(http_session, url=url, headers=headers)

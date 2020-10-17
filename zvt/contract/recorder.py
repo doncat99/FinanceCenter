@@ -362,7 +362,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                 last_timestamp = domain_list[-1].timestamp
 
             self.logger.info(
-                "persist {} for entity_id:{},time interval:[{},{}]".format(
+                "persist {} for entity_id:{},time interval:[{}, {}]".format(
                     self.data_schema.__name__, entity.id, first_timestamp, last_timestamp))
 
             self.session.add_all(domain_list)

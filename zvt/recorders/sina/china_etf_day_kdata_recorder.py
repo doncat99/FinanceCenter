@@ -12,20 +12,20 @@ from zvt.utils.request_utils import request_get
 from zvt import init_log
 from zvt.api.quote import generate_kdata_id
 from zvt.api import get_kdata
-from zvt.domain import Index, Etf1dKdata
+from zvt.domain import Etf, Index, Etf1dKdata
 from zvt.recorders.consts import EASTMONEY_ETF_NET_VALUE_HEADER
 
 
 class ChinaETFDayKdataRecorder(FixedCycleDataRecorder):
     entity_provider = Provider.Exchange
-    entity_schema = Index
+    entity_schema = Etf
 
     provider = Provider.Sina
     data_schema = Etf1dKdata
     url = 'http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?' \
           'symbol={}{}&scale=240&&datalen={}&ma=no'
 
-    def __init__(self, entity_type=EntityType.Index, exchanges=['sh', 'sz'], entity_ids=None, codes=None, batch_size=10,
+    def __init__(self, entity_type=EntityType.ETF, exchanges=['sh', 'sz'], entity_ids=None, codes=None, batch_size=10,
                  force_update=False, sleeping_time=10, default_size=2000, real_time=True, fix_duplicate_way='add',
                  start_timestamp=None, end_timestamp=None,
                  level=IntervalLevel.LEVEL_1DAY, kdata_use_begin_time=False, close_hour=0, close_minute=0,
@@ -100,31 +100,31 @@ class ChinaETFDayKdataRecorder(FixedCycleDataRecorder):
         if start is None or size > self.default_size:
             size = 8000
 
-        return {
+        param =  {
             'security_item': entity,
             'level': self.level.value,
             'size': size
         }
 
-        # security_item = param['security_item']
-        # size = param['size']
+        security_item = param['security_item']
+        size = param['size']
 
-        # url = url.format(security_item.exchange, security_item.code, size)
+        url = url.format(security_item.exchange, security_item.code, size)
 
-        # response = request_get(http_session, url)
-        # response_json = demjson.decode(response.text)
+        response = request_get(http_session, url)
+        response_json = demjson.decode(response.text)
 
-        # if response_json is None or len(response_json) == 0:
-        #     return []
+        if response_json is None or len(response_json) == 0:
+            return []
 
-        # df = pd.DataFrame(response_json)
-        # df.rename(columns={'day': 'timestamp'}, inplace=True)
-        # df['timestamp'] = pd.to_datetime(df['timestamp'])
-        # df['name'] = security_item.name
-        # df['provider'] = 'sina'
-        # df['level'] = param['level']
+        df = pd.DataFrame(response_json)
+        df.rename(columns={'day': 'timestamp'}, inplace=True)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['name'] = security_item.name
+        df['provider'] = 'sina'
+        df['level'] = param['level']
 
-        # return df.to_dict(orient='records')
+        return df.to_dict(orient='records')
 
 
 __all__ = ['ChinaETFDayKdataRecorder']

@@ -295,38 +295,38 @@ data_set_chn = [
     # [interface.get_margin_trading_summary_data,  Provider.JoinQuant, 0, "Margin Trading Summary",   24],
     # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, "Cross Market Summary",     24],
 
-    # [interface.get_stock_1d_k_data,              Provider.JoinQuant, 0, "Stock Daily K-Data",       24], 
-    # [interface.get_stock_1d_hfq_k_data,          Provider.JoinQuant, 0, "Stock Daily HFQ K-Data",   24],
-    # [interface.get_stock_1w_k_data,              Provider.JoinQuant, 0, "Stock Weekly K-Data",      24],
-    # [interface.get_stock_1w_hfq_k_data,          Provider.JoinQuant, 0, "Stock Weekly HFQ K-Data",  24],
-    # [interface.get_stock_1mon_k_data,            Provider.JoinQuant, 0, "Stock Monthly K-Data",     24], 
-    # [interface.get_etf_1d_k_data,                Provider.Sina,      1, "ETF Daily K-Data",         24],
+    [interface.get_stock_1d_k_data,              Provider.JoinQuant, 0, "Stock Daily K-Data",       24], 
+    [interface.get_stock_1d_hfq_k_data,          Provider.JoinQuant, 0, "Stock Daily HFQ K-Data",   24],
+    [interface.get_stock_1w_k_data,              Provider.JoinQuant, 0, "Stock Weekly K-Data",      24],
+    [interface.get_stock_1w_hfq_k_data,          Provider.JoinQuant, 0, "Stock Weekly HFQ K-Data",  24],
+    [interface.get_stock_1mon_k_data,            Provider.JoinQuant, 0, "Stock Monthly K-Data",     24], 
+    [interface.get_stock_1mon_hfq_k_data,        Provider.JoinQuant, 0, "Stock Monthly HFQ K-Data", 24],
+    [interface.get_etf_1d_k_data,                Provider.Sina,      1, "ETF Daily K-Data",         24],
 
-    # [interface.get_stock_1mon_hfq_k_data,        Provider.JoinQuant, 0, "Stock Monthly HFQ K-Data", 24],
     [interface.get_stock_1h_k_data,              Provider.JoinQuant, 0, "Stock 1 hours K-Data",     24], 
-    # [interface.get_stock_1h_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 hours HFQ K-Data", 24],
-    # [interface.get_stock_30m_k_data,             Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24], 
-    # [interface.get_stock_30m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24],
-    # [interface.get_stock_1m_k_data,              Provider.JoinQuant, 0, "Stock 1 mins K-Data",      24], 
-    # [interface.get_stock_1m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 mins HFQ K-Data",  24],
-    # [interface.get_stock_5m_k_data,              Provider.JoinQuant, 0, "Stock 5 mins K-Data",      24], 
-    # [interface.get_stock_5m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 5 mins HFQ K-Data",  24],
-    # [interface.get_stock_15m_k_data,             Provider.JoinQuant, 0, "Stock 15 mins K-Data",     24], 
-    # [interface.get_stock_15m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 15 mins HFQ K-Data", 24],
+    [interface.get_stock_1h_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 hours HFQ K-Data", 24],
+    [interface.get_stock_30m_k_data,             Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24], 
+    [interface.get_stock_30m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24],
+    [interface.get_stock_15m_k_data,             Provider.JoinQuant, 0, "Stock 15 mins K-Data",     24], 
+    [interface.get_stock_15m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 15 mins HFQ K-Data", 24],
+    [interface.get_stock_5m_k_data,              Provider.JoinQuant, 0, "Stock 5 mins K-Data",      24], 
+    [interface.get_stock_5m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 5 mins HFQ K-Data",  24],
+    [interface.get_stock_1m_k_data,              Provider.JoinQuant, 0, "Stock 1 mins K-Data",      24], 
+    [interface.get_stock_1m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 mins HFQ K-Data",  24],
 ]
 
 data_set_us = [
     [interface.get_stock_1d_k_data,         Provider.Yahoo, 0, "Stock Daily K-Data",       24],
     [interface.get_stock_1w_k_data,         Provider.Yahoo, 0, "Stock Weekly K-Data",      24],
     [interface.get_stock_1mon_k_data,       Provider.Yahoo, 0, "Stock Monthly K-Data",     24],
-    # [interface.get_stock_1h_k_data,         Provider.Yahoo, 0, "Stock 1 hours K-Data",     24],
-    # [interface.get_stock_30m_k_data,        Provider.Yahoo, 0, "Stock 30 mins K-Data",     24], 
-    # [interface.get_stock_15m_k_data,        Provider.Yahoo, 0, "Stock 15 mins K-Data",     24], 
-    # [interface.get_stock_5m_k_data,         Provider.Yahoo, 0, "Stock 5 mins K-Data",      24], 
-    # [interface.get_stock_1m_k_data,         Provider.Yahoo, 0, "Stock 1 mins K-Data",      24],
+    [interface.get_stock_1h_k_data,         Provider.Yahoo, 0, "Stock 1 hours K-Data",     24],
+    [interface.get_stock_30m_k_data,        Provider.Yahoo, 0, "Stock 30 mins K-Data",     24], 
+    [interface.get_stock_15m_k_data,        Provider.Yahoo, 0, "Stock 15 mins K-Data",     24], 
+    [interface.get_stock_5m_k_data,         Provider.Yahoo, 0, "Stock 5 mins K-Data",      24], 
+    [interface.get_stock_1m_k_data,         Provider.Yahoo, 0, "Stock 1 mins K-Data",      24],
 ]
 
-def fetch_data(lock, region: Region):
+def fetch_data(lock, region: Region, pc):
     print("")
     print("*"*80)
     print("*    Start Fetching {} Stock information...      {}".format(region.value.upper(), datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
@@ -334,13 +334,13 @@ def fetch_data(lock, region: Region):
 
     if region == Region.CHN:
         data_set = data_set_chn
-        # interface.get_stock_list_data(Provider.JoinQuant)
-        # interface.get_etf_list(Provider.JoinQuant)
+        interface.get_stock_list_data(Provider.JoinQuant)
+        interface.get_etf_list(Provider.JoinQuant)
         interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
 
     elif region == Region.US:
         data_set = data_set_us
-        # interface.get_stock_list_data(Provider.Yahoo)
+        interface.get_stock_list_data(Provider.Yahoo)
         interface.get_stock_trade_day(Provider.Yahoo, lock, region)
 
     else:
@@ -352,7 +352,7 @@ def fetch_data(lock, region: Region):
 
     batch_size = 50
 
-    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=3, reset=True)
+    mp_tqdm(run, lock, region, shared=[region, batch_size], args=data_set, pc=pc, reset=True)
 
     print("")
     print("\/"*40)
@@ -363,8 +363,8 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    fetch_data(l, Region.CHN)
-    fetch_data(l, Region.US)
+    fetch_data(l, Region.CHN, 1)
+    fetch_data(l, Region.US, 8)
 
     l.release
 
@@ -374,4 +374,11 @@ if __name__ == '__main__':
 
     sched.start()
     sched._thread.join()
+
+    # from zvt.utils.request_utils import fh_auth, fh_get_bars
+
+    # client = fh_auth()
+
+    # print(fh_get_bars(client, 'AMD', 'D', '2000-08-01', '2000-08-30'))
+
 

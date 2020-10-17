@@ -43,6 +43,7 @@ class BaseJqChinaMetaRecorder(Recorder):
 
 class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
     data_schema = Stock
+    region = Region.CHN
 
     def run(self):
         # 抓取股票列表
@@ -59,6 +60,7 @@ class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
 
 class JqChinaEtfRecorder(BaseJqChinaMetaRecorder):
     data_schema = Etf
+    region = Region.CHN
 
     def run(self):
         # 抓取etf列表
