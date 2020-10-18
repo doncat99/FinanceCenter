@@ -109,7 +109,7 @@ class ChinaETFDayKdataRecorder(FixedCycleDataRecorder):
         security_item = param['security_item']
         size = param['size']
 
-        url = url.format(security_item.exchange, security_item.code, size)
+        url = ChinaETFDayKdataRecorder.url.format(security_item.exchange, security_item.code, size)
 
         response = request_get(http_session, url)
         response_json = demjson.decode(response.text)
