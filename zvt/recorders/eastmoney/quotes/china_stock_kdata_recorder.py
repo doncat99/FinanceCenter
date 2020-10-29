@@ -44,11 +44,14 @@ class ChinaStockKdataRecorder(FixedCycleDataRecorder):
                          one_day_trading_minutes)
 
     def init_entities(self):
+        assert self.region is not None
+        
         self.entity_session = get_db_session(region=self.region, 
                                              provider=self.entity_provider, 
                                              data_schema=self.entity_schema)
 
-        self.entities = get_entities(session=self.entity_session, 
+        self.entities = get_entities(region=self.region,
+                                     session=self.entity_session, 
                                      entity_type=EntityType.Index,
                                      exchanges=self.exchanges,
                                      codes=self.codes,

@@ -287,15 +287,17 @@ data_set_chn = [
     # [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, "Rights Issue Detail",      24],
     # [interface.get_holder_trading_data,          Provider.EastMoney, 0, "Holder Trading",           24],
     # [interface.get_etf_valuation_data,           Provider.JoinQuant, 0, "ETF Valuation",            24],
-    # [interface.get_stock_summary_data,           Provider.JoinQuant, 0, "Stock Summary",            24],  
+
+    # [interface.get_stock_summary_data,           Provider.JoinQuant, 0, "Stock Summary",            24], 
     # [interface.get_stock_detail_data,            Provider.EastMoney, 0, "Stock Detail",             24], 
+
     # [interface.get_cashflow_data,                Provider.EastMoney, 0, "CashFlow Statement",       24],
     # [interface.get_stock_valuation_data,         Provider.JoinQuant, 0, "Stock Valuation",          24],
     # [interface.get_etf_stock_data,               Provider.JoinQuant, 0, "ETF Stock",                24],
     # [interface.get_margin_trading_summary_data,  Provider.JoinQuant, 0, "Margin Trading Summary",   24],
     # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, "Cross Market Summary",     24],
 
-    [interface.get_etf_1d_k_data,                Provider.Sina,      0, "ETF Daily K-Data",         24],
+    # [interface.get_etf_1d_k_data,                Provider.Sina,      0, "ETF Daily K-Data",         24],
     [interface.get_stock_1d_k_data,              Provider.JoinQuant, 0, "Stock Daily K-Data",       24], 
     [interface.get_stock_1w_k_data,              Provider.JoinQuant, 0, "Stock Weekly K-Data",      24],
     [interface.get_stock_1mon_k_data,            Provider.JoinQuant, 0, "Stock Monthly K-Data",     24],
@@ -336,7 +338,7 @@ def fetch_data(lock, region: Region, pc):
         data_set = data_set_chn
         # interface.get_stock_list_data(Provider.JoinQuant)
         # interface.get_etf_list(Provider.JoinQuant)
-        # interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
+        interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
 
     elif region == Region.US:
         data_set = data_set_us
@@ -363,7 +365,7 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    # fetch_data(l, Region.CHN, 1)
+    fetch_data(l, Region.CHN, 3)
     fetch_data(l, Region.US, 8)
 
     l.release

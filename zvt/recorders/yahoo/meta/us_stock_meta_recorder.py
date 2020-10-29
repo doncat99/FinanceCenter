@@ -36,6 +36,7 @@ class YahooUsStockDetailRecorder(Recorder):
         self.share_para = share_para
         
         if not self.force_update:
+            assert self.region is not None
             self.entities = get_entities(region=self.region,
                                          session=self.session,
                                          entity_type=EntityType.StockDetail.value,

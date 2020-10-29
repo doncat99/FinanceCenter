@@ -138,6 +138,8 @@ class RecorderForEntities(Recorder):
         init the entities which we would record data for
 
         """
+        assert self.region is not None
+
         if self.entity_provider == self.provider and self.entity_schema == self.data_schema:
             self.entity_session = self.session
         else:
