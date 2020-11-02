@@ -287,10 +287,8 @@ data_set_chn = [
     # [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, "Rights Issue Detail",      24],
     # [interface.get_holder_trading_data,          Provider.EastMoney, 0, "Holder Trading",           24],
     # [interface.get_etf_valuation_data,           Provider.JoinQuant, 0, "ETF Valuation",            24],
-
     # [interface.get_stock_summary_data,           Provider.JoinQuant, 0, "Stock Summary",            24], 
     # [interface.get_stock_detail_data,            Provider.EastMoney, 0, "Stock Detail",             24], 
-
     # [interface.get_cashflow_data,                Provider.EastMoney, 0, "CashFlow Statement",       24],
     # [interface.get_stock_valuation_data,         Provider.JoinQuant, 0, "Stock Valuation",          24],
     # [interface.get_etf_stock_data,               Provider.JoinQuant, 0, "ETF Stock",                24],
@@ -307,14 +305,14 @@ data_set_chn = [
     [interface.get_stock_5m_k_data,              Provider.JoinQuant, 0, "Stock 5 mins K-Data",      24], 
     [interface.get_stock_1m_k_data,              Provider.JoinQuant, 0, "Stock 1 mins K-Data",      24], 
 
-    [interface.get_stock_1d_hfq_k_data,          Provider.JoinQuant, 0, "Stock Daily HFQ K-Data",   24],
-    [interface.get_stock_1w_hfq_k_data,          Provider.JoinQuant, 0, "Stock Weekly HFQ K-Data",  24],
-    [interface.get_stock_1mon_hfq_k_data,        Provider.JoinQuant, 0, "Stock Monthly HFQ K-Data", 24],
-    [interface.get_stock_1h_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 hours HFQ K-Data", 24],
-    [interface.get_stock_30m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24],
-    [interface.get_stock_15m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 15 mins HFQ K-Data", 24],
-    [interface.get_stock_5m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 5 mins HFQ K-Data",  24],
-    [interface.get_stock_1m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 mins HFQ K-Data",  24],
+    # [interface.get_stock_1d_hfq_k_data,          Provider.JoinQuant, 0, "Stock Daily HFQ K-Data",   24],
+    # [interface.get_stock_1w_hfq_k_data,          Provider.JoinQuant, 0, "Stock Weekly HFQ K-Data",  24],
+    # [interface.get_stock_1mon_hfq_k_data,        Provider.JoinQuant, 0, "Stock Monthly HFQ K-Data", 24],
+    # [interface.get_stock_1h_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 hours HFQ K-Data", 24],
+    # [interface.get_stock_30m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 30 mins K-Data",     24],
+    # [interface.get_stock_15m_hfq_k_data,         Provider.JoinQuant, 0, "Stock 15 mins HFQ K-Data", 24],
+    # [interface.get_stock_5m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 5 mins HFQ K-Data",  24],
+    # [interface.get_stock_1m_hfq_k_data,          Provider.JoinQuant, 0, "Stock 1 mins HFQ K-Data",  24],
 ]
 
 data_set_us = [
@@ -365,8 +363,8 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    fetch_data(l, Region.CHN, 3)
-    fetch_data(l, Region.US, 8)
+    fetch_data(l, Region.CHN, 1)
+    # fetch_data(l, Region.US, 8)
 
     l.release
 

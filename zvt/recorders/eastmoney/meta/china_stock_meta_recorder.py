@@ -3,7 +3,7 @@ import multiprocessing
 import time
 import random
 
-from zvt.contract.recorder import Recorder, Provider, EntityType
+from zvt.contract.recorder import Recorder, Region, Provider, EntityType
 from zvt.utils.time_utils import to_pd_timestamp
 from zvt.utils.utils import to_float, pct_to_float
 from zvt.utils.request_utils import get_http_session, request_post
@@ -25,6 +25,7 @@ class EastmoneyChinaStockListRecorder(ExchangeChinaStockListRecorder):
 class EastmoneyChinaStockDetailRecorder(Recorder):
     provider = Provider.EastMoney
     data_schema = StockDetail
+    region = Region.CHN
 
     def __init__(self, batch_size=10, force_update=False, sleeping_time=5, codes=None, share_para=None) -> None:
         super().__init__(batch_size, force_update, sleeping_time)
