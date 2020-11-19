@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-import enum
 
+# the __all__ is generated
+__all__ = []
 
-class AdjustType(enum.Enum):
-    # 这里用拼音，因为英文不直观 split-adjusted？wtf?
-    # 不复权
-    bfq = 'bfq'
-    # 前复权
-    qfq = 'qfq'
-    # 后复权
-    hfq = 'hfq'
+# __init__.py structure:
+# common code of the package
+# export interface in __all__ which contains __all__ of its sub modules
 
-
+# import all from submodule quote
 from .quote import *

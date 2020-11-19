@@ -73,7 +73,7 @@ def get_db_engine(region: Region,
     db_engine = zvt_context.db_engine_map.get(engine_key)
     if not db_engine:
         db_engine = build_engine(region, data_path, provider, db_name)
-        if db_engine: zvt_context.db_engine_map[engine_key] = db_engine
+        zvt_context.db_engine_map[engine_key] = db_engine
     return db_engine
 
 
