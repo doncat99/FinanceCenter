@@ -358,7 +358,12 @@ def get_data(data_schema,
                 df = index_df(df, index=index, time_field=time_field)
         return df
     elif return_type == 'domain':
-        return list(window_query(query, 100000))
+        temp = []
+        try:
+            temp = list(window_query(query, 100000))
+        except:
+            pass
+        return temp
     elif return_type == 'dict':
         return [item.__dict__ for item in list(window_query(query, 100000))]
 

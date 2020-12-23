@@ -6,14 +6,18 @@ import requests
 from requests.adapters import HTTPAdapter
 from retrying import retry
 from functools import wraps
-import asyncio
+# import asyncio
 
 import pandas as pd
 from jqdatasdk import is_auth, auth, query, logout, \
                       get_fundamentals, get_mtss, get_fundamentals_continuously, \
                       get_all_securities, get_trade_days, get_bars, get_query_count
+# from baostock import query_history_k_data_plus
+import baostock as bs
 import yfinance as yf
 import finnhub
+
+bs.login()
 
 from zvt import zvt_env
 from zvt.utils.time_utils import to_pd_timestamp, now_timestamp, to_time_int, to_time_str
@@ -138,6 +142,11 @@ def jq_get_bars(security, count, unit="1d", fields=("date", "open", "high", "low
     # logger.info("HTTP GET: bars, with unit={}, fq_ref_date={}".format(unit, fq_ref_date))
     return get_bars(security, count, unit=unit, fields=fields, include_now=include_now, 
                     end_dt=end_dt, fq_ref_date=fq_ref_date, df=df)
+
+def bao_get_bars(security, start, end, frequency="d", adjustflag="3",
+                 fields="date, code, open, high, low, close, preclose, volume, amount, adjustflag, turn, tradestatus, pctChg, isST"):
+    k_rs = bs.query_history_k_data_plus(security, start_date=start, end_date=end, frequency=frequency, adjustflag=adjustflag, fields=fields)
+    return k_rs.get_data()
 
 def retry_if_connection_error(exception):
     """ Specify an exception you need. or just True"""

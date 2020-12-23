@@ -10,6 +10,7 @@ class Region(enum.Enum):
 class Provider(enum.Enum):
     ZVT = 'zvt'
     JoinQuant = 'joinquant'
+    BaoStock = 'baostock'
     EastMoney = 'eastmoney'
     Exchange = 'exchange'
     Sina = 'sina'

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from zvt.contract.common import *
+from zvt.recorders.baostock import *
 from zvt.recorders.eastmoney import *
 from zvt.recorders.exchange import *
 from zvt.recorders.joinquant import *

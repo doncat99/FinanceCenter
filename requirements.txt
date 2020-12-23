@@ -13,3 +13,5 @@ pandas_market_calendars==1.4.2
 yfinance==0.1.54
 tqdm==4.46.1
 jqdatasdk==1.8.1
+finnhub-python
+baostock

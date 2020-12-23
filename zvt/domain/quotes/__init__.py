@@ -66,6 +66,9 @@ class StockKdataCommon(KdataCommon):
     # 换手率
     turnover_rate = Column(Float)
 
+    amount = Column(Float)
+    adjustflag = Column(String(length=8))
+
 
 from zvt.domain.quotes.block import *
 from zvt.domain.quotes.stock import *

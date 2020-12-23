@@ -14,7 +14,7 @@ class Stock1wkHfqKdata(KdataBase, StockKdataCommon):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.JoinQuant], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
                            Region.US: [Provider.Yahoo]}, 
                 db_name='stock_1wk_hfq_kdata', schema_base=KdataBase)
 
