@@ -135,6 +135,7 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
             df['code'] = entity.code
             df['provider'] = Provider.BaoStock.value
             df['level'] = self.level.value
+            df.replace({'adjustflag': {'1': 'hfq', '2': 'qfq', '3': 'normal'}}, inplace=True)
             
 
             # 判断是否需要重新计算之前保存的前复权数据
