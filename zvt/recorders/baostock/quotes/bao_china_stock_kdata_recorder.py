@@ -116,7 +116,7 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 df['is_st'] = df['is_st'].astype(int)
 
-            if self.bao_trading_level == 'w' or self.bao_trading_level == 'm':
+            elif self.bao_trading_level == 'w' or self.bao_trading_level == 'm':
                 df.rename(columns={'turn': 'turnover', 'date': 'timestamp', 'pctChg': 'change_pct'}, inplace=True)
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
 
