@@ -30,7 +30,7 @@ def to_bao_trading_field(trading_level):
     if trading_level == 'w' or trading_level == 'm':
         return "date, open, high, low, close, volume, amount, adjustflag, turn, pctChg"
     else:
-        return "date, time, open, high, low, close, volume, amount, adjustflag"
+        return "time, open, high, low, close, volume, amount, adjustflag"
 
 
 def to_bao_entity_id(security_item):
