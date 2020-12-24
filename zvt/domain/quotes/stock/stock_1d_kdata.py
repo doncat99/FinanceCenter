@@ -24,12 +24,33 @@ class Stock1dKdata(KdataBase, StockKdataCommon):
     pb_mrq = Column(Float)
     is_st = Column(Integer)
 
-class Stock1dHfqKdata(KdataBase, Stock1dKdata):
+class Stock1dHfqKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1d_hfq_kdata'
 
+    pre_close = Column(Float)
+    # 滚动市盈率
+    pe_ttm = Column(Float)
+    # 滚动市销率
+    ps_ttm = Column(Float)
+    # 滚动市现率
+    pcf_ncf_ttm = Column(Float)
+    # 市净率
+    pb_mrq = Column(Float)
+    is_st = Column(Integer)
 
-class Stock1dBfqKdata(KdataBase, Stock1dKdata):
+class Stock1dBfqKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1d_bfq_kdata'
+
+    pre_close = Column(Float)
+    # 滚动市盈率
+    pe_ttm = Column(Float)
+    # 滚动市销率
+    ps_ttm = Column(Float)
+    # 滚动市现率
+    pcf_ncf_ttm = Column(Float)
+    # 市净率
+    pb_mrq = Column(Float)
+    is_st = Column(Integer)
 
 
 register_schema(regions=[Region.CHN, Region.US], 

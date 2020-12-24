@@ -12,10 +12,10 @@ KdataBase = declarative_base()
 class Stock1mKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1m_kdata'
 
-class Stock1mHfqKdata(KdataBase, Stock1mKdata):
+class Stock1mHfqKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1m_hfq_kdata'
 
-class Stock1mBfqKdata(KdataBase, Stock1mKdata):
+class Stock1mBfqKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1m_bfq_kdata'
 
 

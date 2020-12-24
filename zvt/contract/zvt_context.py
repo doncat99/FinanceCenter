@@ -2,7 +2,6 @@
 import contextlib
 import sqlalchemy.exc
 from sqlalchemy import create_engine
-from sqlalchemy.sql import text
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.ext.declarative import declarative_base
 

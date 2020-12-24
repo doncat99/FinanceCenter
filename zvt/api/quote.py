@@ -29,7 +29,7 @@ def get_kdata_schema(entity_type: EntityType,
                                           adjust_type.value.capitalize())
     else:
         schema_str = '{}{}Kdata'.format(entity_type.value.capitalize(), level.value.capitalize())
-        return get_schema_by_name(schema_str)
+    return get_schema_by_name(schema_str)
 
 
 def to_report_period_type(report_date):
