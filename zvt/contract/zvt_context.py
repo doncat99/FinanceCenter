@@ -56,36 +56,67 @@ chn_map_key = [
     "joinquant_trade_day",
     "joinquant_overall",
     "joinquant_valuation",
+    
     "joinquant_stock_1mon_kdata",
     "joinquant_stock_1mon_hfq_kdata",
+    "joinquant_stock_1mon_bfq_kdata",
+    
     "joinquant_stock_1wk_kdata",
     "joinquant_stock_1wk_hfq_kdata",
+    "joinquant_stock_1wk_bfq_kdata",
+    
     "joinquant_stock_1d_kdata",
     "joinquant_stock_1d_hfq_kdata",
+    "joinquant_stock_1d_bfq_kdata",
+    
     "joinquant_stock_1h_kdata",
     "joinquant_stock_1h_hfq_kdata",
+    "joinquant_stock_1h_bfq_kdata",
+    
     "joinquant_stock_30m_kdata",
     "joinquant_stock_30m_hfq_kdata",
+    "joinquant_stock_30m_bfq_kdata",
+    
     "joinquant_stock_15m_kdata",
     "joinquant_stock_15m_hfq_kdata",
+    "joinquant_stock_15m_bfq_kdata",
+    
     "joinquant_stock_5m_kdata",
     "joinquant_stock_5m_hfq_kdata",
+    "joinquant_stock_5m_bfq_kdata",
+    
     "joinquant_stock_1m_kdata",
     "joinquant_stock_1m_hfq_kdata",
+    "joinquant_stock_1m_bfq_kdata",
+    
     "baostock_stock_1mon_kdata",
     "baostock_stock_1mon_hfq_kdata",
+    "baostock_stock_1mon_bfq_kdata",
+    
     "baostock_stock_1wk_kdata",
     "baostock_stock_1wk_hfq_kdata",
+    "baostock_stock_1wk_bfq_kdata",
+    
     "baostock_stock_1d_kdata",
     "baostock_stock_1d_hfq_kdata",
+    "baostock_stock_1d_bfq_kdata",
+    
     "baostock_stock_1h_kdata",
     "baostock_stock_1h_hfq_kdata",
+    "baostock_stock_1h_bfq_kdata",
+
     "baostock_stock_30m_kdata",
     "baostock_stock_30m_hfq_kdata",
+    "baostock_stock_30m_bfq_kdata",
+
     "baostock_stock_15m_kdata",
     "baostock_stock_15m_hfq_kdata",
+    "baostock_stock_15m_bfq_kdata",
+
     "baostock_stock_5m_kdata",
     "baostock_stock_5m_hfq_kdata",
+    "baostock_stock_5m_bfq_kdata",
+
     "sina_etf_1d_kdata",
     "sina_index_1d_kdata",
     "sina_money_flow",

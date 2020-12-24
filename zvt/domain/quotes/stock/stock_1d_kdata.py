@@ -24,10 +24,30 @@ class Stock1dKdata(KdataBase, StockKdataCommon):
     pb_mrq = Column(Float)
     is_st = Column(Integer)
 
+class Stock1dHfqKdata(KdataBase, Stock1dKdata):
+    __tablename__ = 'stock_1d_hfq_kdata'
+
+
+class Stock1dBfqKdata(KdataBase, Stock1dKdata):
+    __tablename__ = 'stock_1d_bfq_kdata'
+
 
 register_schema(regions=[Region.CHN, Region.US], 
                 providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
                            Region.US: [Provider.Yahoo]}, 
                 db_name='stock_1d_kdata', schema_base=KdataBase)
 
-__all__ = ['Stock1dKdata']
+
+register_schema(regions=[Region.CHN, Region.US], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
+                           Region.US: [Provider.Yahoo]}, 
+                db_name='stock_1d_hfq_kdata', schema_base=KdataBase)
+
+
+register_schema(regions=[Region.CHN, Region.US], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
+                           Region.US: [Provider.Yahoo]}, 
+                db_name='stock_1d_bfq_kdata', schema_base=KdataBase)
+
+
+__all__ = ['Stock1dKdata', 'Stock1dHfqKdata', 'Stock1dBfqKdata']

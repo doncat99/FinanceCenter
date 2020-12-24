@@ -19,12 +19,15 @@ from zvt.domain import Stock, Etf, StockTradeDay, StockSummary, StockDetail, Fin
                        BalanceSheet, IncomeStatement, CashFlowStatement, StockMoneyFlow, \
                        DividendFinancing, DividendDetail, RightsIssueDetail, SpoDetail, \
                        MarginTradingSummary, CrossMarketSummary, HolderTrading, TopTenHolder, \
-                       TopTenTradableHolder, StockValuation, EtfStock, EtfValuation, Stock1dKdata, \
-                       Stock1dHfqKdata, Stock1dHfqKdata, Stock1wkKdata, Stock1wkHfqKdata, \
-                       Stock1monKdata, Stock1monHfqKdata, Stock1monHfqKdata, Stock1monHfqKdata, \
-                       Stock1mKdata, Stock1mHfqKdata, Stock1mHfqKdata, Stock5mKdata, Stock5mHfqKdata, \
-                       Stock15mKdata, Stock15mHfqKdata, Stock30mKdata, Stock30mHfqKdata, \
-                       Stock1hKdata, Stock1hHfqKdata, Etf1dKdata
+                       TopTenTradableHolder, StockValuation, EtfStock, EtfValuation, Etf1dKdata, \
+                       Stock1dKdata,   Stock1dHfqKdata,   Stock1dBfqKdata, \
+                       Stock1wkKdata,  Stock1wkHfqKdata,  Stock1wkBfqKdata, \
+                       Stock1monKdata, Stock1monHfqKdata, Stock1monBfqKdata, \
+                       Stock1mKdata,   Stock1mHfqKdata,   Stock1mBfqKdata, \
+                       Stock5mKdata,   Stock5mHfqKdata,   Stock5mBfqKdata, \
+                       Stock15mKdata,  Stock15mHfqKdata,  Stock15mBfqKdata, \
+                       Stock30mKdata,  Stock30mHfqKdata,  Stock30mBfqKdata, \
+                       Stock1hKdata,   Stock1hHfqKdata,   Stock1hBfqKdata
 
 logger = logging.getLogger(__name__)
 sched = BackgroundScheduler()
@@ -297,13 +300,13 @@ data_set_chn = [
     # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, "Cross Market Summary",     24],
 
     # [interface.get_etf_1d_k_data,                Provider.Sina,      0, "ETF Daily K-Data",         24],
-    [interface.get_stock_1d_k_data,              Provider.BaoStock, 0, "Stock Daily K-Data",       24], 
-    [interface.get_stock_1w_k_data,              Provider.BaoStock, 0, "Stock Weekly K-Data",      24],
-    [interface.get_stock_1mon_k_data,            Provider.BaoStock, 0, "Stock Monthly K-Data",     24],
+    # [interface.get_stock_1d_k_data,              Provider.BaoStock, 0, "Stock Daily K-Data",       24], 
+    # [interface.get_stock_1w_k_data,              Provider.BaoStock, 0, "Stock Weekly K-Data",      24],
+    # [interface.get_stock_1mon_k_data,            Provider.BaoStock, 0, "Stock Monthly K-Data",     24],
     # [interface.get_stock_1h_k_data,              Provider.BaoStock, 0, "Stock 1 hours K-Data",     24], 
     # [interface.get_stock_30m_k_data,             Provider.BaoStock, 0, "Stock 30 mins K-Data",     24], 
     # [interface.get_stock_15m_k_data,             Provider.BaoStock, 0, "Stock 15 mins K-Data",     24], 
-    # [interface.get_stock_5m_k_data,              Provider.BaoStock, 0, "Stock 5 mins K-Data",      24], 
+    [interface.get_stock_5m_k_data,              Provider.BaoStock, 0, "Stock 5 mins K-Data",      24], 
     # [interface.get_stock_1m_k_data,              Provider.BaoStock, 0, "Stock 1 mins K-Data",      24], 
 
     # [interface.get_stock_1d_hfq_k_data,          Provider.BaoStock, 0, "Stock Daily HFQ K-Data",   24],
@@ -364,7 +367,7 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    fetch_data(l, Region.CHN, 3)
+    fetch_data(l, Region.CHN, 1)
     # fetch_data(l, Region.US, 8)
 
     l.release

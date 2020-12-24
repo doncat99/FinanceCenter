@@ -12,10 +12,27 @@ KdataBase = declarative_base()
 class Stock1monKdata(KdataBase, StockKdataCommon):
     __tablename__ = 'stock_1mon_kdata'
 
+class Stock1monHfqKdata(KdataBase, Stock1monKdata):
+    __tablename__ = 'stock_1mon_hfq_kdata'
+
+class Stock1monBfqKdata(KdataBase, Stock1monKdata):
+    __tablename__ = 'stock_1mon_bfq_kdata'
+
 
 register_schema(regions=[Region.CHN, Region.US], 
                 providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
                            Region.US: [Provider.Yahoo]}, 
                 db_name='stock_1mon_kdata', schema_base=KdataBase)
 
-__all__ = ['Stock1monKdata']
+register_schema(regions=[Region.CHN, Region.US], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
+                           Region.US: [Provider.Yahoo]}, 
+                db_name='stock_1mon_hfq_kdata', schema_base=KdataBase)
+
+register_schema(regions=[Region.CHN, Region.US], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock], 
+                           Region.US: [Provider.Yahoo]}, 
+                db_name='stock_1mon_bfq_kdata', schema_base=KdataBase)
+
+
+__all__ = ['Stock1monKdata', 'Stock1monHfqKdata', 'Stock1monBfqKdata']

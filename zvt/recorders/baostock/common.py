@@ -2,6 +2,7 @@
 from zvt.contract import IntervalLevel
 from zvt.contract.common import EntityType
 from zvt.domain import ReportPeriod
+from zvt.api import AdjustType
 
 
 def to_bao_trading_level(trading_level: IntervalLevel):
@@ -39,3 +40,12 @@ def to_bao_entity_id(security_item):
             return 'sh.{}'.format(security_item.code)
         if security_item.exchange == 'sz':
             return 'sz.{}'.format(security_item.code)
+
+
+def to_bao_adjust_flag(adjustflag):
+    if adjustflag == AdjustType.bfq:
+        return "3"
+    if adjustflag == AdjustType.qfq:
+        return "2"
+    if adjustflag == AdjustType.hfq:
+        return "1"

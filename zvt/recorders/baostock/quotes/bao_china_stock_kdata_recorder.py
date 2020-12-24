@@ -11,7 +11,7 @@ from zvt.contract import IntervalLevel
 from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.contract.common import Region, Provider, EntityType
-from zvt.recorders.baostock.common import to_bao_trading_level, to_bao_entity_id, to_bao_trading_field
+from zvt.recorders.baostock.common import to_bao_trading_level, to_bao_entity_id, to_bao_trading_field, to_bao_adjust_flag
 from zvt.domain import Stock, StockKdataCommon, Stock1dHfqKdata
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import to_time_str, now_pd_timestamp, TIME_FORMAT_DAY, TIME_FORMAT_ISO8601
@@ -98,14 +98,16 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
                               start=start,
                               end=end_timestamp,
                               frequency=self.bao_trading_level,
-                              fields=to_bao_trading_field(self.bao_trading_level))
+                              fields=to_bao_trading_field(self.bao_trading_level),
+                              adjustflag=to_bao_adjust_flag(self.adjust_type))
         else:
             end_timestamp = to_time_str(self.end_timestamp)
             df = bao_get_bars(to_bao_entity_id(entity),
                               start=start,
                               end=end_timestamp,
                               frequency=self.bao_trading_level,
-                              fields=to_bao_trading_field(self.bao_trading_level))
+                              fields=to_bao_trading_field(self.bao_trading_level),
+                              adjustflag=to_bao_adjust_flag(self.adjust_type))
 
         self.logger.info("record {} for {}, size:{}".format(self.data_schema.__name__, entity.id, len(df)))
 
