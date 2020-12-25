@@ -36,9 +36,6 @@ class BaseBaoChinaMetaRecorder(Recorder):
         if category:
             df['category'] = category
 
-        # df.set_index('entity_id', drop=True, inplace=True)
-        # df.to_csv("aaa.csv")
-
         return df
 
 
