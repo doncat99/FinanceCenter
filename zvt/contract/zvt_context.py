@@ -88,6 +88,7 @@ chn_map_key = [
     "joinquant_stock_1m_hfq_kdata",
     "joinquant_stock_1m_bfq_kdata",
     
+    "baostock_stock_meta",
     "baostock_trade_day",
 
     "baostock_stock_1mon_kdata",

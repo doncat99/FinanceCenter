@@ -55,8 +55,6 @@ class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
         # self.logger.info(df_stock)
         self.logger.info("persist stock list success")
 
-        jq_logout()
-
 
 class JqChinaEtfRecorder(BaseJqChinaMetaRecorder):
     data_schema = Etf
@@ -69,7 +67,6 @@ class JqChinaEtfRecorder(BaseJqChinaMetaRecorder):
 
         # self.logger.info(df_index)
         self.logger.info("persist etf list success")
-        jq_logout()
 
 
 class JqChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):

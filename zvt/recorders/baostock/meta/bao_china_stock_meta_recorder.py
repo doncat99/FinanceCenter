@@ -7,47 +7,48 @@ from zvt.contract.recorder import Recorder, TimeSeriesDataRecorder
 from zvt.api.quote import china_stock_code_to_id, portfolio_relate_stock
 from zvt.domain import EtfStock, Stock, Etf, StockDetail
 from zvt.contract.common import Region, Provider, EntityType
-from zvt.recorders.joinquant.common import to_entity_id, jq_to_report_period
+from zvt.recorders.baostock.common import to_entity_id, to_bao_entity_type
 from zvt.utils.pd_utils import pd_is_not_null
-from zvt.utils.request_utils import jq_auth, jq_get_all_securities, jq_query, jq_logout
+from zvt.utils.request_utils import bao_get_all_securities
 
 
-class BaseJqChinaMetaRecorder(Recorder):
-    provider = Provider.JoinQuant
+class BaseBaoChinaMetaRecorder(Recorder):
+    provider = Provider.BaoStock
 
     def __init__(self, batch_size=10, force_update=True, sleeping_time=10, share_para=None) -> None:
         super().__init__(batch_size, force_update, sleeping_time)
-        jq_auth()
+
 
     def to_zvt_entity(self, df, entity_type: EntityType, category=None):
-        df.index.name = 'entity_id'
-        df = df.reset_index()
         # 上市日期
-        df.rename(columns={'start_date': 'timestamp'}, inplace=True)
-        df['timestamp'] = pd.to_datetime(df['timestamp'])
-        df['list_date'] = df['timestamp']
+        df.rename(columns={'ipoDate': 'list_date', 'outDate': 'end_date', 'code_name': 'name'}, inplace=True)
+        df['end_date'].replace(r'^\s*$', '2200-01-01', regex=True, inplace=True)
+        
+        df['list_date'] = pd.to_datetime(df['list_date'])
         df['end_date'] = pd.to_datetime(df['end_date'])
+        df['timestamp'] = df['list_date']
 
-        df['entity_id'] = df['entity_id'].apply(lambda x: to_entity_id(entity_type=entity_type, jq_code=x))
+        df['entity_id'] = df['code'].apply(lambda x: to_entity_id(entity_type=entity_type, bao_code=x))
         df['id'] = df['entity_id']
         df['entity_type'] = entity_type.value
-        df['exchange'] = df['entity_id'].apply(lambda x: get_entity_exchange(x))
-        df['code'] = df['entity_id'].apply(lambda x: get_entity_code(x))
-        df['name'] = df['display_name']
+        df[['exchange','code']] = df['code'].str.split('.',expand=True)
 
         if category:
             df['category'] = category
 
+        # df.set_index('entity_id', drop=True, inplace=True)
+        # df.to_csv("aaa.csv")
+
         return df
 
 
-class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
+class BaoChinaStockRecorder(BaseBaoChinaMetaRecorder):
     data_schema = Stock
     region = Region.CHN
 
     def run(self):
         # 抓取股票列表
-        df_stock = self.to_zvt_entity(jq_get_all_securities(['stock']), entity_type=EntityType.Stock)
+        df_stock = self.to_zvt_entity(bao_get_all_securities(to_bao_entity_type(EntityType.Stock)), entity_type=EntityType.Stock)
         df_to_db(df_stock, region=Region.CHN, data_schema=Stock, provider=self.provider, force_update=self.force_update)
         # persist StockDetail too
         df_to_db(df=df_stock, region=Region.CHN, data_schema=StockDetail, provider=self.provider, force_update=self.force_update)
@@ -55,29 +56,26 @@ class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
         # self.logger.info(df_stock)
         self.logger.info("persist stock list success")
 
-        jq_logout()
 
-
-class JqChinaEtfRecorder(BaseJqChinaMetaRecorder):
+class BaoChinaEtfRecorder(BaseBaoChinaMetaRecorder):
     data_schema = Etf
     region = Region.CHN
 
     def run(self):
         # 抓取etf列表
-        df_index = self.to_zvt_entity(jq_get_all_securities(['etf']), entity_type=EntityType.ETF, category='etf')
+        df_index = self.to_zvt_entity(bao_get_all_securities(to_bao_entity_type(EntityType.ETF)), entity_type=EntityType.ETF, category='etf')
         df_to_db(df_index, region=Region.CHN, data_schema=Etf, provider=self.provider, force_update=self.force_update)
 
         # self.logger.info(df_index)
         self.logger.info("persist etf list success")
-        jq_logout()
 
 
-class JqChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):
+class BaoChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):
     entity_provider = Provider.JoinQuant
     entity_schema = Etf
 
     # 数据来自jq
-    provider = Provider.JoinQuant
+    provider = Provider.BaoStock
 
     data_schema = EtfStock
 
@@ -87,11 +85,11 @@ class JqChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, share_para=share_para)
-        jq_auth()
+
 
     def on_finish(self):
         super().on_finish()
-        jq_logout()
+
 
     def record(self, entity, start, end, size, timestamps, http_session):
         q = jq_query(finance.FUND_PORTFOLIO_STOCK).filter(finance.FUND_PORTFOLIO_STOCK.pub_date >= start).filter(
@@ -123,8 +121,8 @@ class JqChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):
         return None
 
 
-__all__ = ['JqChinaStockRecorder', 'JqChinaEtfRecorder', 'JqChinaStockEtfPortfolioRecorder']
+__all__ = ['BaoChinaStockRecorder', 'BaoChinaEtfRecorder', 'BaoChinaStockEtfPortfolioRecorder']
 
 if __name__ == '__main__':
-    # JqChinaStockRecorder().run()
-    JqChinaStockEtfPortfolioRecorder(codes=['510050']).run()
+    # BaoChinaStockRecorder().run()
+    BaoChinaStockEtfPortfolioRecorder(codes=['510050']).run()

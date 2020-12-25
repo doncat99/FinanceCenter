@@ -138,7 +138,7 @@ class StockDetail(StockMetaBase, BaseSecurity):
 
 
 register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.JoinQuant, Provider.EastMoney, Provider.Sina, Provider.Exchange], 
+                providers={Region.CHN: [Provider.JoinQuant, Provider.BaoStock, Provider.EastMoney, Provider.Sina, Provider.Exchange], 
                            Region.US: [Provider.Yahoo, Provider.Exchange]}, 
                 db_name='stock_meta',
                 schema_base=StockMetaBase)

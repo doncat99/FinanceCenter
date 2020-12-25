@@ -49,3 +49,15 @@ def to_bao_adjust_flag(adjustflag):
         return "2"
     if adjustflag == AdjustType.hfq:
         return "1"
+
+def to_bao_entity_type(entity_type : EntityType):
+    if entity_type == EntityType.Stock:
+        return "1"
+    if entity_type == EntityType.Index:
+        return "2"
+    if entity_type == EntityType.ETF:
+        return "3"
+
+def to_entity_id(bao_code: str, entity_type: EntityType):
+    exchange, code = bao_code.split('.')
+    return f'{entity_type.value}_{exchange}_{code}'
