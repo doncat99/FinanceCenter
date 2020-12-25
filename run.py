@@ -303,9 +303,9 @@ data_set_chn = [
     # [interface.get_stock_1d_k_data,              Provider.BaoStock, 0, "Stock Daily K-Data",       24], 
     # [interface.get_stock_1w_k_data,              Provider.BaoStock, 0, "Stock Weekly K-Data",      24],
     # [interface.get_stock_1mon_k_data,            Provider.BaoStock, 0, "Stock Monthly K-Data",     24],
-    # [interface.get_stock_1h_k_data,              Provider.BaoStock, 0, "Stock 1 hours K-Data",     24], 
-    # [interface.get_stock_30m_k_data,             Provider.BaoStock, 0, "Stock 30 mins K-Data",     24], 
-    # [interface.get_stock_15m_k_data,             Provider.BaoStock, 0, "Stock 15 mins K-Data",     24], 
+    [interface.get_stock_1h_k_data,              Provider.BaoStock, 0, "Stock 1 hours K-Data",     24], 
+    [interface.get_stock_30m_k_data,             Provider.BaoStock, 0, "Stock 30 mins K-Data",     24], 
+    [interface.get_stock_15m_k_data,             Provider.BaoStock, 0, "Stock 15 mins K-Data",     24], 
     [interface.get_stock_5m_k_data,              Provider.BaoStock, 0, "Stock 5 mins K-Data",      24], 
     # [interface.get_stock_1m_k_data,              Provider.BaoStock, 0, "Stock 1 mins K-Data",      24], 
 
@@ -340,7 +340,7 @@ def fetch_data(lock, region: Region, pc):
         data_set = data_set_chn
         interface.get_stock_list_data(Provider.JoinQuant)
         # interface.get_etf_list(Provider.JoinQuant)
-        interface.get_stock_trade_day(Provider.JoinQuant, lock, region)
+        interface.get_stock_trade_day(Provider.BaoStock, lock, region)
 
     elif region == Region.US:
         data_set = data_set_us
@@ -367,7 +367,7 @@ def main():
     multiprocessing.freeze_support()
     l = multiprocessing.Lock()
 
-    fetch_data(l, Region.CHN, 1)
+    fetch_data(l, Region.CHN, 4)
     # fetch_data(l, Region.US, 8)
 
     l.release

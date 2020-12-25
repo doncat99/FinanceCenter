@@ -143,6 +143,11 @@ def jq_get_bars(security, count, unit="1d", fields=("date", "open", "high", "low
     return get_bars(security, count, unit=unit, fields=fields, include_now=include_now, 
                     end_dt=end_dt, fq_ref_date=fq_ref_date, df=df)
 
+def bao_get_trade_days(start_date=None, end_date=None):
+    # logger.info("HTTP GET: trade_days, with start_date={}, end_date={}".format(start_date, end_date))
+    k_rs = bs.query_trade_dates(start_date=start_date, end_date=end_date)
+    return k_rs.get_data()
+
 def bao_get_bars(security, start, end, frequency="d", adjustflag="3",
                  fields="date, code, open, high, low, close, preclose, volume, amount, adjustflag, turn, tradestatus, pctChg, isST"):
     k_rs = bs.query_history_k_data_plus(security, start_date=start, end_date=end, frequency=frequency, adjustflag=adjustflag, fields=fields)

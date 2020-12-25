@@ -9,7 +9,7 @@ from zvt.utils.time_utils import to_time_str
 from zvt.utils.request_utils import jq_auth, jq_get_trade_days
 
 
-class ChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
+class JqChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
     entity_provider = Provider.JoinQuant
     entity_schema = Stock
 
@@ -38,13 +38,13 @@ class ChinaStockTradeDayRecorder(TimeSeriesDataRecorder):
         self.logger.info(f'add dates:{dates}')
         df['timestamp'] = pd.to_datetime(dates)
         df['id'] = [to_time_str(date) for date in dates]
-        df['entity_id'] = 'sz'
+        df['entity_id'] = 'chn'
 
         df_to_db(df=df, region=self.region, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
 
 
-__all__ = ['ChinaStockTradeDayRecorder']
+__all__ = ['JqChinaStockTradeDayRecorder']
 
 if __name__ == '__main__':
-    r = ChinaStockTradeDayRecorder()
+    r = JqChinaStockTradeDayRecorder()
     r.run()
