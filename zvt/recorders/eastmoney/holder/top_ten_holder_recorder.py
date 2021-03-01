@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-from zvt.utils.time_utils import to_time_str, to_pd_timestamp
-from zvt.utils.utils import to_float
+from datetime import datetime
+
+import pandas as pd
+import numpy as np
+
+from zvt.api.data_type import Region, Provider
 from zvt.api.quote import to_report_period_type
 from zvt.domain.misc.holder import TopTenHolder
-from zvt.contract.common import Provider
 from zvt.recorders.eastmoney.common import EastmoneyTimestampsDataRecorder, get_fc
+from zvt.utils.time_utils import to_time_str, PD_TIME_FORMAT_DAY
+from zvt.utils.utils import to_float
 
 
 class TopTenHolderRecorder(EastmoneyTimestampsDataRecorder):
-    provider = Provider.EastMoney
     data_schema = TopTenHolder
+
+    region = Region.CHN
+    provider = Provider.EastMoney
 
     url = 'https://emh5.eastmoney.com/api/GuBenGuDong/GetShiDaGuDong'
     path_fields = ['ShiDaGuDongList']
@@ -18,35 +25,53 @@ class TopTenHolderRecorder(EastmoneyTimestampsDataRecorder):
     timestamp_list_path_fields = ['SDGDBGQ', 'ShiDaGuDongBaoGaoQiList']
     timestamp_path_fields = ['BaoGaoQi']
 
-    def get_data_map(self):
-        return {
-            "report_period": ("timestamp", to_report_period_type),
-            "report_date": ("timestamp", to_pd_timestamp),
-            # 股东代码
-            "holder_code": ("GuDongDaiMa", str),
-            # 股东名称
-            "holder_name": ("GuDongMingCheng", str),
-            # 持股数
-            "shareholding_numbers": ("ChiGuShu", to_float),
-            # 持股比例
-            "shareholding_ratio": ("ChiGuBiLi", to_float),
-            # 变动
-            "change": ("ZengJian", to_float),
-            # 变动比例
-            "change_ratio": ("BianDongBiLi", to_float),
-        }
-
-    def generate_request_param(self, security_item, start, end, size, timestamp):
+    def generate_request_param(self, security_item, start, end, size, timestamp, http_session):
         return {"color": "w",
                 "fc": get_fc(security_item),
                 "BaoGaoQi": to_time_str(timestamp)
                 }
 
-    def generate_domain_id(self, entity, original_data):
-        the_name = original_data.get("GuDongMingCheng")
-        timestamp = original_data[self.get_original_time_field()]
-        the_id = "{}_{}_{}".format(entity.id, timestamp, the_name)
-        return the_id
+    def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
+        return entity.id + '_' + df[self.get_evaluated_time_field()].dt.strftime(time_fmt) + '_' + df['holder_name']
+
+    def format(self, entity, df):
+        df['report_period'] = df['timestamp'].apply(lambda x: to_report_period_type(x))
+        df['report_date'] = pd.to_datetime(df['timestamp'])
+        # 股东代码
+        df['holder_code'] = df['GuDongDaiMa'].astype(str)
+        df['holder_code'] = df['holder_code'].apply(lambda x: x.replace('\n', '').replace('\r', ''))
+        # 股东名称
+        df['holder_name'] = df['GuDongMingCheng'].astype(str)
+        df['holder_name'] = df['holder_name'].apply(lambda x: x.replace('\n', '').replace('\r', ''))
+
+        # 持股数
+        df['shareholding_numbers'] = df['ChiGuShu'].apply(lambda x: to_float(x))
+        # 持股比例
+        df['shareholding_ratio'] = df['ChiGuBiLi'].apply(lambda x: to_float(x))
+        # 变动
+        df['change'] = df['ZengJian'].apply(lambda x: to_float(x))
+        # 变动比例
+        df['change_ratio'] = df['BianDongBiLi'].apply(lambda x: to_float(x))
+
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        fill_values = {'report_period': "未知",
+                       'report_date': pd.to_datetime("1900-01-01"),
+                       'holder_name': "未知",
+                       'holder_code': "未知"}
+        df.fillna(value=fill_values, inplace=True)
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
 
 
 __all__ = ['TopTenHolder']
@@ -54,4 +79,4 @@ __all__ = ['TopTenHolder']
 if __name__ == '__main__':
     # init_log('top_ten_holder.log')
 
-    TopTenHolderRecorder(codes=['002572']).run()
+    TopTenHolderRecorder(codes=['600547']).run()

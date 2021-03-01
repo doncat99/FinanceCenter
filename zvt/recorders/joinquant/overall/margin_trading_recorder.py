@@ -1,10 +1,16 @@
-from jqdatasdk import finance
+from datetime import datetime
 
-from zvt.contract.recorder import TimeSeriesDataRecorder
-from zvt.contract.common import Provider, EntityType
-from zvt.utils.time_utils import to_time_str
-from zvt.utils.request_utils import jq_auth, jq_query
+import pandas as pd
+import numpy as np
+
+from zvt import zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.domain import Index, MarginTradingSummary
+from zvt.contract.recorder import TimeSeriesDataRecorder
+from zvt.networking.request import jq_run_query
+from zvt.utils.time_utils import to_time_str
+from zvt.utils.pd_utils import pd_is_not_null
+
 
 # 聚宽编码
 # XSHG-上海证券交易所
@@ -17,57 +23,60 @@ code_map_jq = {
 
 
 class MarginTradingSummaryRecorder(TimeSeriesDataRecorder):
-    entity_provider = Provider.Exchange
-    entity_schema = Index
-
+    region = Region.CHN
     provider = Provider.JoinQuant
+    entity_schema = Index
     data_schema = MarginTradingSummary
 
     def __init__(self, batch_size=10,
-                 force_update=False, sleeping_time=5, default_size=2000, real_time=False,
-                 fix_duplicate_way='add', share_para=None) -> None:
+                 force_update=False, sleeping_time=5, default_size=zvt_config['batch_size'],
+                 real_time=False, fix_duplicate_way='add', share_para=None) -> None:
         # 上海A股,深圳市场
         codes = ['000001', '399106']
-        super().__init__(EntityType.Index, ['cn'], None, codes, batch_size,
+        super().__init__(EntityType.Index, ['sh', 'sz'], None, codes, batch_size,
                          force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, share_para=share_para)
-        jq_auth()
 
     def record(self, entity, start, end, size, timestamps, http_session):
         jq_code = code_map_jq.get(entity.code)
 
-        q = jq_query(finance.STK_MT_TOTAL).filter(
-                finance.STK_MT_TOTAL.exchange_code == jq_code,
-                finance.STK_MT_TOTAL.date >= to_time_str(start)).limit(2000)
+        df = jq_run_query(table='finance.STK_MT_TOTAL',
+                          conditions=f'exchange_code#=#{jq_code}&date#>=#{to_time_str(start)}', parse_dates=['date'])
 
-        df = finance.run_query(q)
-
-        json_results = []
-
-        for item in df.to_dict(orient='records'):
-            result = {
-                'provider': self.provider.value,
-                'timestamp': item['date'],
-                'name': entity.name,
-                'margin_value': item['fin_value'],
-                'margin_buy': item['fin_buy_value'],
-                'short_value': item['sec_value'],
-                'short_volume': item['sec_sell_volume'],
-                'total_value': item['fin_sec_value']
-            }
-
-            json_results.append(result)
-
-        if len(json_results) < 100:
-            self.one_shot = True
-
-        return json_results
-
-    def get_data_map(self):
+        if pd_is_not_null(df):
+            if len(df) < 100:
+                self.one_shot = True
+            return df
         return None
 
+    def format(self, entity, df):
+        cols = ['date', 'fin_value', 'fin_buy_value', 'sec_value', 'sec_sell_volume', 'fin_sec_value']
+        df = df[cols].copy()
+        df.rename(columns={'date': 'timestamp', 'fin_value': 'margin_value',
+                           'fin_buy_value': 'margin_buy',
+                           'sec_value': 'short_value',
+                           'sec_sell_volume': 'short_volume',
+                           'fin_sec_value': 'total_value'}, inplace=True)
 
-__all__ = ['MarginTradingSummaryRecorder']
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+        df['name'] = entity.name
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
+
 
 if __name__ == '__main__':
     MarginTradingSummaryRecorder(batch_size=30).run()
+
+
+# the __all__ is generated
+__all__ = ['MarginTradingSummaryRecorder']

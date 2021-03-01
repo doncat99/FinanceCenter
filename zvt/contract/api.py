@@ -1,37 +1,25 @@
 # -*- coding: utf-8 -*-
-import os
 import logging
 import time
-from typing import List, Union
-import platform
+from typing import List, Union, Type
 
 import pandas as pd
-from sqlalchemy import create_engine
-from sqlalchemy import func, exists, and_
+
+from sqlalchemy import func
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.orm import Query
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Query, Session, sessionmaker
+from sqlalchemy_batch_inserts import enable_batch_inserting
 
-from zvt import zvt_env
-from zvt.contract import IntervalLevel, EntityMixin
-from zvt.contract import zvt_context
-from zvt.contract.common import Region, Provider, EntityType
-from zvt.utils.pd_utils import pd_is_not_null, index_df, to_postgresql
+from zvt import zvt_env, zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
+from zvt.contract import zvt_context, IntervalLevel, EntityMixin, Mixin
+from zvt.database.api import build_engine, to_postgresql, profiled
+from zvt.utils.pd_utils import pd_is_not_null, index_df
 from zvt.utils.time_utils import to_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
-
-def build_engine(region: Region, data_path, provider: Provider, db_name):
-    if "db_engine" in zvt_env and zvt_env['db_engine'] == "postgresql":
-        # print("engine added require:{}_{}_{}".format(region.value, provider, db_name))
-        db_engine = None
-    else:
-        db_path = os.path.join(data_path, '{}_{}_{}.db?check_same_thread=False'.format(region.value, provider.value, db_name))
-        db_engine = create_engine('sqlite:///' + db_path, echo=False)
-
-    return db_engine
 
 def get_db_name(data_schema: DeclarativeMeta) -> str:
     """
@@ -52,48 +40,25 @@ def get_db_engine(region: Region,
                   db_name: str = None,
                   data_schema: object = None,
                   data_path: str = zvt_env['data_path']) -> Engine:
-    """
-    get db engine of the (provider,db_name) or (provider,data_schema)
-
-
-    :param data_path:
-    :param provider:
-    :type provider:
-    :param db_name:
-    :type db_name:
-    :param data_schema:
-    :type data_schema:
-    :return:
-    :rtype:
-    """
     if data_schema:
         db_name = get_db_name(data_schema=data_schema)
 
     engine_key = '{}_{}_{}'.format(region.value, provider.value, db_name)
     db_engine = zvt_context.db_engine_map.get(engine_key)
+
     if not db_engine:
-        db_engine = build_engine(region, data_path, provider, db_name)
+        # logger.info("engine key: {}".format(engine_key))
+        region_key = '{}'.format(region.value)
+
+        db_engine = zvt_context.db_region_map.get(region_key)
+        if not db_engine:
+            # logger.info("region key: {}".format(region_key))
+            db_engine = build_engine(region)
+            zvt_context.db_region_map[region_key] = db_engine
+
         zvt_context.db_engine_map[engine_key] = db_engine
+
     return db_engine
-
-
-def get_schemas(provider: Provider) -> List[DeclarativeMeta]:
-    """
-    get domain schemas supported by the provider
-
-    :param provider:
-    :type provider:
-    :return:
-    :rtype:
-    """
-    schemas = []
-    for provider1, dbs in zvt_context.provider_map_dbnames.items():
-        if provider == provider1:
-            for dbname in dbs:
-                schemas1 = zvt_context.dbname_map_schemas.get(dbname)
-                if schemas1:
-                    schemas += schemas1
-    return schemas
 
 
 def get_db_session(region: Region,
@@ -101,21 +66,6 @@ def get_db_session(region: Region,
                    db_name: str = None,
                    data_schema: object = None,
                    force_new: bool = False) -> Session:
-    """
-    get db session of the (provider,db_name) or (provider,data_schema)
-
-    :param provider:
-    :type provider:
-    :param db_name:
-    :type db_name:
-    :param data_schema:
-    :type data_schema:
-    :param force_new:
-    :type force_new:
-
-    :return:
-    :rtype:
-    """
     if data_schema:
         db_name = get_db_name(data_schema=data_schema)
 
@@ -127,6 +77,7 @@ def get_db_session(region: Region,
     session = zvt_context.sessions.get(session_key)
     if not session:
         session = get_db_session_factory(region, provider, db_name, data_schema)()
+        enable_batch_inserting(session)
         zvt_context.sessions[session_key] = session
     return session
 
@@ -135,18 +86,6 @@ def get_db_session_factory(region: Region,
                            provider: Provider,
                            db_name: str = None,
                            data_schema: object = None):
-    """
-    get db session factory of the (provider,db_name) or (provider,data_schema)
-
-    :param provider:
-    :type provider:
-    :param db_name:
-    :type db_name:
-    :param data_schema:
-    :type data_schema:
-    :return:
-    :rtype:
-    """
     if data_schema:
         db_name = get_db_name(data_schema=data_schema)
 
@@ -158,76 +97,13 @@ def get_db_session_factory(region: Region,
     return session
 
 
-def domain_name_to_table_name(domain_name: str) -> str:
-    parts = []
-    part = ''
-    for c in domain_name:
-        if c.isupper() or c.isdigit():
-            if part:
-                parts.append(part)
-            part = c.lower()
-        else:
-            part = part + c
-
-    parts.append(part)
-
-    if len(parts) > 1:
-        return '_'.join(parts)
-    elif parts:
-        return parts[0]
-
-
-def table_name_to_domain_name(table_name: str) -> DeclarativeMeta:
-    """
-    the rules for table_name -> domain_class
-
-    :param table_name:
-    :type table_name:
-    :return:
-    :rtype:
-    """
-    parts = table_name.split('_')
-    domain_name = ''
-    for part in parts:
-        domain_name = domain_name + part.capitalize()
-    return domain_name
-
-
-# def get_entity_schema(entity_type: EntityType) -> object:
-#     """
-#     get entity schema from name
-
-#     :param entity_type:
-#     :type entity_type:
-#     :return:
-#     :rtype:
-#     """
-#     return zvt_context.zvt_entity_schema_map[entity_type]
-
-
 def get_schema_by_name(name: str) -> DeclarativeMeta:
-    """
-    get domain schema by the name
-
-    :param name:
-    :type name:
-    :return:
-    :rtype:
-    """
     for schema in zvt_context.schemas:
         if schema.__name__ == name:
             return schema
 
 
 def get_schema_columns(schema: DeclarativeMeta) -> object:
-    """
-    get all columns of the domain schema
-
-    :param schema:
-    :type schema:
-    :return:
-    :rtype:
-    """
     return schema.__table__.columns.keys()
 
 
@@ -237,7 +113,7 @@ def common_filter(query: Query,
                   end_timestamp=None,
                   filters=None,
                   order=None,
-                  limit=None,
+                  limit: int = None,
                   time_field='timestamp'):
     assert data_schema is not None
     time_col = eval('data_schema.{}'.format(time_field))
@@ -252,12 +128,23 @@ def common_filter(query: Query,
             query = query.filter(filter)
     if order is not None:
         query = query.order_by(order)
-    else:
-        query = query.order_by(time_col.asc())
     if limit:
         query = query.limit(limit)
 
     return query
+
+
+def del_data(region: Region, data_schema: Type[Mixin], filters: List = None, provider: Provider = None):
+    if not provider:
+        provider = data_schema.providers[region][0]
+
+    session = get_db_session(region=region, provider=provider, data_schema=data_schema)
+    query = session.query(data_schema)
+    if filters:
+        for f in filters:
+            query = query.filter(f)
+    query.delete()
+    session.commit()
 
 
 def get_data(data_schema,
@@ -284,14 +171,13 @@ def get_data(data_schema,
     assert provider.value is not None
     assert provider in zvt_context.providers[region]
 
-    # step1 = time.time()
+    step1 = time.time()
+    precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
 
     if not session:
         session = get_db_session(region=region, provider=provider, data_schema=data_schema)
 
     time_col = eval('data_schema.{}'.format(time_field))
-
-    # logger.info("get_data step1: {}".format(time.time()-step1))
 
     if columns:
         # support str
@@ -319,80 +205,107 @@ def get_data(data_schema,
     else:
         query = session.query(data_schema)
 
-    # logger.info("get_data step2: {}".format(time.time()-step1))
+    if zvt_config['debug'] == 2:
+        cost = precision_str.format(time.time() - step1)
+        logger.debug("get_data query column: {}".format(cost))
 
-    if entity_id:
+    if entity_id is not None:
         query = query.filter(data_schema.entity_id == entity_id)
-    if entity_ids:
+    if entity_ids is not None:
         query = query.filter(data_schema.entity_id.in_(entity_ids))
-    if code:
+    if code is not None:
         query = query.filter(data_schema.code == code)
-    if codes:
+    if codes is not None:
         query = query.filter(data_schema.code.in_(codes))
-    if ids:
+    if ids is not None:
         query = query.filter(data_schema.id.in_(ids))
 
-    # logger.info("get_data step3: {}".format(time.time()-step1))
-
     # we always store different level in different schema,the level param is not useful now
-    if level:
-        try:
-            # some schema has no level,just ignore it
-            data_schema.level
-            if type(level) == IntervalLevel:
-                level = level.value
-            query = query.filter(data_schema.level == level)
-        except Exception as _:
-            pass
+    # if level:
+    #     try:
+    #         # some schema has no level,just ignore it
+    #         data_schema.level
+    #         if type(level) == IntervalLevel:
+    #             level = level.value
+    #         query = query.filter(data_schema.level == level)
+    #     except Exception as _:
+    #         pass
 
     query = common_filter(query, data_schema=data_schema, start_timestamp=start_timestamp,
                           end_timestamp=end_timestamp, filters=filters, order=order, limit=limit,
                           time_field=time_field)
 
-    # logger.info("get_data step4: {}".format(time.time()-step1))
+    if zvt_config['debug'] == 2:
+        cost = precision_str.format(time.time() - step1)
+        logger.debug("get_data query common: {}".format(cost))
 
     if return_type == 'df':
-        df = pd.read_sql(query.statement, query.session.bind)
+        df = pd.read_sql(query.statement, query.session.bind, index_col=['id'])
         if pd_is_not_null(df):
             if index:
                 df = index_df(df, index=index, time_field=time_field)
+
+        if zvt_config['debug'] == 2:
+            cost = precision_str.format(time.time() - step1)
+            logger.debug("get_data do query cost: {} type: {} size: {}".format(cost, return_type, len(df)))
         return df
+
     elif return_type == 'domain':
-        temp = []
-        try:
-            temp = list(window_query(query, 100000))
-        except:
-            pass
-        return temp
+        # if limit is not None and limit == 1:
+        #     result = [query.first()]
+        # else:
+        #     result = list(window_query(query, window_size, step1))
+        # result = list(query.yield_per(window_size))
+
+        if zvt_config['debug'] == 2:
+            with profiled():
+                result = query.all()
+        else:
+            result = query.all()
+
+        if zvt_config['debug'] == 2:
+            cost = precision_str.format(time.time() - step1)
+            res_cnt = len(result) if result else 0
+            logger.debug("get_data do query cost: {} type: {} limit: {} size: {}".format(cost, return_type, limit, res_cnt))
+
+        return result
+
     elif return_type == 'dict':
-        return [item.__dict__ for item in list(window_query(query, 100000))]
+        # if limit is not None and limit == 1:
+        #     result = [item.__dict__ for item in query.first()]
+        # else:
+        #     result = [item.__dict__ for item in list(window_query(query, window_size, step1))]
+        # result = [item.__dict__ for item in list(query.yield_per(window_size))]
+
+        if zvt_config['debug'] == 2:
+            with profiled():
+                result = [item.__dict__ for item in query.all()]
+        else:
+            result = [item.__dict__ for item in query.all()]
+
+        if zvt_config['debug'] == 2:
+            cost = precision_str.format(time.time() - step1)
+            res_cnt = len(result) if result else 0
+            logger.debug("get_data do query cost: {} type: {} limit: {} size: {}".format(cost, return_type, limit, res_cnt))
+
+        return result
 
 
-def window_query(query, window_size):
-    start = 0
-    while True:
-        stop = start + window_size
-        things = query.slice(start, stop).all()
-        if len(things) == 0:
-            break
-        for thing in things:
-            yield thing
-        start += window_size
+# def window_query(query, window_size, timestamp):
+#     start = 0
+#     precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
 
-
-def data_exist(session, schema, id):
-    return session.query(exists().where(and_(schema.id == id))).scalar()
-
-
-def get_data_count(data_schema, filters=None, session=None):
-    query = session.query(data_schema)
-    if filters:
-        for filter in filters:
-            query = query.filter(filter)
-
-    count_q = query.statement.with_only_columns([func.count()]).order_by(None)
-    count = session.execute(count_q).scalar()
-    return count
+#     while True:
+#         stop = start + window_size
+#         things = query.slice(start, stop).all()
+#         if len(things) == 0:
+#             break
+#         for thing in things:
+#             yield thing
+#         start += window_size
+#         if zvt_config['debug']:
+#             cost = precision_str.format(time.time()-timestamp)
+#             logger.info("get_data do slice: {}".format(cost))
 
 
 def get_group(region: Region, provider: Provider, data_schema, column, group_func=func.count, session=None):
@@ -430,93 +343,78 @@ def get_entity_code(entity_id: str):
 
 
 def df_to_db(df: pd.DataFrame,
+             ref_df: pd.DataFrame,
              region: Region,
              data_schema: DeclarativeMeta,
              provider: Provider,
-             force_update: bool = False,
-             sub_size: int = 5000) -> object:
-    """
-    FIXME:improve
-    store the df to db
+             drop_duplicates: bool = True,
+             fix_duplicate_way: str = 'ignore',
+             force_update=False) -> object:
+    step1 = time.time()
+    precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
 
-    :param df:
-    :type df:
-    :param data_schema:
-    :type data_schema:
-    :param provider:
-    :type provider:
-    :param force_update:
-    :type force_update:
-    :param sub_size:
-    :return:
-    :rtype:
-    """
     if not pd_is_not_null(df):
-        return
+        return 0
 
-    db_engine = get_db_engine(region, provider, data_schema=data_schema)
+    if drop_duplicates and df.duplicated(subset='id').any():
+        df.drop_duplicates(subset='id', keep='last', inplace=True)
 
     schema_cols = get_schema_columns(data_schema)
-    cols = set(df.columns.tolist()) & set(schema_cols)
+    cols = list(set(df.columns.tolist()) & set(schema_cols))
 
     if not cols:
-        print('wrong cols')
-        return
+        logger.error("{} get columns failed".format(data_schema.__tablename__))
+        return 0
 
     df = df[cols]
 
-    size = len(df)
-
-    if platform.system() == "Windows":
-        sub_size = 900
-    elif zvt_env['db_engine'] == "postgresql":
-        sub_size = 50000
-
-    if size >= sub_size:
-        step_size = int(size / sub_size)
-        if size % sub_size:
-            step_size = step_size + 1
-    else:
-        step_size = 1
-
-    # prepare variable
+    # force update mode, delete duplicate id data in db, and write new data back
     if force_update:
+        ids = df["id"].tolist()
+        if len(ids) == 1:
+            sql = f"delete from {data_schema.__tablename__} where id = '{ids[0]}'"
+        else:
+            sql = f"delete from {data_schema.__tablename__} where id in {tuple(ids)}"
+
         session = get_db_session(region=region, provider=provider, data_schema=data_schema)
-    if zvt_env['db_engine'] == "postgresql":
-        conn = db_engine.raw_connection()
+        session.execute(sql)
+        session.commit()
+        df_new = df
 
-    for step in range(step_size):
-        df_current = df.iloc[sub_size * step:sub_size * (step + 1)]
-        if force_update:
-            # session = get_db_session(region=region, provider=provider, data_schema=data_schema)
-            ids = df_current["id"].tolist()
-            if len(ids) == 1:
-                sql = f"delete from {data_schema.__tablename__} where id = '{ids[0]}'"
-            else:
-                sql = f"delete from {data_schema.__tablename__} where id in {tuple(ids)}"
-            session.execute(sql)
-            session.commit()
+    else:
+        if ref_df is None:
+            ref_df = get_data(region=region,
+                              provider=provider,
+                              columns=['id', 'timestamp'],
+                              data_schema=data_schema,
+                              return_type='df')
+        if ref_df.empty:
+            df_new = df
         else:
-            current = get_data(data_schema=data_schema, region=region, columns=[data_schema.id], provider=provider,
-                               ids=df_current['id'].tolist())
-            if pd_is_not_null(current):
-                df_current = df_current[~df_current['id'].isin(current['id'])]
-        
-        if zvt_env['db_engine'] == "postgresql":
-            to_postgresql(df_current, conn, data_schema.__tablename__)
-        else:
-            df_current.to_sql(data_schema.__tablename__, db_engine, index=False, 
-                              if_exists='append', method='multi')
+            df_new = df[~df.id.isin(ref_df.index)]
 
-    # post processing
-    if force_update:
-        session.close()
-    if zvt_env['db_engine'] == "postgresql":
-        conn.close()
+        # 不能单靠ID决定是否新增，要全量比对
+        # if fix_duplicate_way == 'add':
+        #     df_add = df[df.id.isin(ref_df.index)]
+        #     if not df_add.empty:
+        #         df_add.id = uuid.uuid1()
+        #         df_new = pd.concat([df_new, df_add])
+
+    cost = precision_str.format(time.time() - step1)
+    logger.debug("remove duplicated: {}".format(cost))
+
+    saved = 0
+    if pd_is_not_null(df_new):
+        saved = to_postgresql(region, df_new, data_schema.__tablename__)
+
+    cost = precision_str.format(time.time() - step1)
+    logger.debug("write db: {}, size: {}".format(cost, saved))
+
+    return saved
 
 
 def get_entities(
-        region: Region, 
+        region: Region,
         entity_schema: EntityMixin = None,
         entity_type: EntityType = None,
         exchanges: List[str] = None,
@@ -539,11 +437,11 @@ def get_entities(
     if not entity_schema:
         entity_schema = zvt_context.entity_schema_map[entity_type]
 
-    if provider.value is not None:
+    if not provider.value:
         provider = entity_schema.providers[region][0]
 
-    if not order:
-        order = entity_schema.code.asc()
+    # if not order:
+    #     order = entity_schema.code.asc()
 
     if exchanges:
         if filters:
@@ -556,15 +454,3 @@ def get_entities(
                     return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                     filters=filters, session=session, order=order, limit=limit, index=index)
 
-
-def get_entity_ids(region: Region,
-                   entity_type: EntityType = EntityType.Stock, 
-                   entity_schema: EntityMixin = None, 
-                   exchanges=None, 
-                   codes=None, 
-                   provider: Provider = Provider.Default):
-    df = get_entities(region=region, entity_type=entity_type, entity_schema=entity_schema, exchanges=exchanges, codes=codes,
-                      provider=provider)
-    if pd_is_not_null(df):
-        return df['entity_id'].to_list()
-    return None

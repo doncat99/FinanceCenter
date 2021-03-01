@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, String, DateTime, Float, Integer
+from sqlalchemy import Column, String, DateTime, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 FinanceBase = declarative_base()
 
@@ -815,7 +815,6 @@ class CashFlowStatement(FinanceBase, Mixin):
 
 
 # 主要财务指标
-
 class FinanceFactor(FinanceBase, Mixin):
     @classmethod
     def important_cols(cls):
@@ -962,9 +961,13 @@ class FinanceFactor(FinanceBase, Mixin):
     broker_self_operated_fixed_income_securities_net_capital_ratio = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.EastMoney], 
-                           Region.US: [Provider.Default]}, 
-                db_name='finance', schema_base=FinanceBase)
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.EastMoney],
+                           Region.US: [Provider.Default]},
+                db_name='finance',
+                schema_base=FinanceBase,
+                entity_type=EntityType.Stock)
 
-__all__ = ['FinanceFactor', 'BalanceSheet', 'IncomeStatement', 'CashFlowStatement']
+
+# the __all__ is generated
+__all__ = ['BalanceSheet', 'IncomeStatement', 'CashFlowStatement', 'FinanceFactor']

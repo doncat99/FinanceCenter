@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from zvt.contract.common import Provider
-from zvt.contract.api import get_data_count, get_data
+import pandas as pd
+
+from zvt.api.data_type import Region, Provider
+from zvt.domain import CompanyType, StockDetail
 from zvt.contract.recorder import TimestampsDataRecorder, TimeSeriesDataRecorder
-from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.request_utils import request_post
-from zvt.domain import CompanyType, Stock, StockDetail
+from zvt.networking.request import sync_post
+from zvt.utils.time_utils import to_pd_timestamp, PD_TIME_FORMAT_DAY
+from zvt.utils.pd_utils import pd_is_not_null
+
 
 logger = logging.getLogger(__name__)
 
 
 class ApiWrapper(object):
-    def request(self, http_session, url=None, method='post', param=None, path_fields=None):
+    def request(self, url=None, method='post', param=None, path_fields=None):
         raise NotImplementedError
 
 
@@ -21,7 +24,6 @@ def get_fc(security_item):
         fc = "{}01".format(security_item.code)
     if security_item.exchange == 'sz':
         fc = "{}02".format(security_item.code)
-
     return fc
 
 
@@ -51,52 +53,39 @@ def company_type_flag(security_item, http_session):
         if company_type == CompanyType.yinhang:
             return "3"
     except Exception as e:
-        logger.exception(e)
+        logger.warning(e)
 
     param = {
         "color": "w",
         "fc": get_fc(security_item)
     }
 
-    resp = request_post(http_session=http_session, 
-                        url='https://emh5.eastmoney.com/api/CaiWuFenXi/GetCompanyType', 
-                        json=param)
+    url = 'https://emh5.eastmoney.com/api/CaiWuFenXi/GetCompanyType'
+    json_result = sync_post(http_session, url, json=param)
+    if json_result is None:
+        return {}
 
-    ct = resp.json().get('Result').get('CompanyType')
-
+    ct = json_result.get('CompanyType')
     logger.warning("{} not catching company type:{}".format(security_item, ct))
-
     return ct
 
 
 def call_eastmoney_api(http_session, url=None, method='post', param=None, path_fields=None):
-    
     if method == 'post':
-        resp = request_post(http_session=http_session, 
-                            url=url, 
-                            json=param)
+        json_result = sync_post(http_session, url, json=param)
+        if json_result is None:
+            return {}
 
-    resp.encoding = 'utf8'
+        if path_fields:
+            the_data = get_from_path_fields(json_result, path_fields)
+            # if not the_data:
+            #     logger.warning(
+            #         "url: {}, param: {}, origin_result: {}, could not get data for nested_fields: {}".format(
+            #             url, param, json_result, path_fields))
+            return the_data
 
-    try:
-        origin_result = resp.json().get('Result')
-        if origin_result is None:
-            origin_result = {}
-    except Exception as e:
-        logger.exception('code:{},content:{}'.format(resp.status_code, resp.text))
-        raise e
-        # origin_result = {}
-
-    if path_fields:
-        the_data = get_from_path_fields(origin_result, path_fields)
-        if not the_data:
-            logger.warning(
-                "url:{},param:{},origin_result:{},could not get data for nested_fields:{}".format(url, param,
-                                                                                                  origin_result,
-                                                                                                  path_fields))
-        return the_data
-
-    return origin_result
+        return json_result
+    return {}
 
 
 def get_from_path_fields(the_json, path_fields):
@@ -114,42 +103,61 @@ class EastmoneyApiWrapper(ApiWrapper):
         return call_eastmoney_api(http_session, url=url, method=method, param=param, path_fields=path_fields)
 
 
-class BaseEastmoneyRecorder(TimestampsDataRecorder):
+class BaseEastmoneyRecorder(object):
     request_method = 'post'
     path_fields = None
     api_wrapper = EastmoneyApiWrapper()
 
-    def generate_request_param(self, security_item, start, end, size, timestamp):
+    def generate_request_param(self, security_item, start, end, size, timestamp, http_session):
         raise NotImplementedError
 
     def record(self, entity_item, start, end, size, timestamps, http_session):
         if timestamps:
             original_list = []
             for the_timestamp in timestamps:
-                param = self.generate_request_param(entity_item, start, end, size, the_timestamp)
-                tmp_list = self.api_wrapper.request(http_session, url=self.url, param=param, method=self.request_method,
-                                                    path_fields=self.path_fields)
-                self.logger.info("record {} for id: {}, timestamp: {}".format(
-                    self.data_schema, entity_item.id, the_timestamp))
+                param = self.generate_request_param(entity_item, start, end, size, the_timestamp, http_session)
+                tmp_list = None
+                try:
+                    tmp_list = self.api_wrapper.request(http_session, url=self.url, param=param,
+                                                        method=self.request_method,
+                                                        path_fields=self.path_fields)
+                except Exception as e:
+                    self.logger.error("url: {}, error: {}".format(self.url, e))
+
+                if tmp_list is None:
+                    continue
+
                 # fill timestamp field
                 for tmp in tmp_list:
                     tmp[self.get_evaluated_time_field()] = the_timestamp
                 original_list += tmp_list
                 if len(original_list) == self.batch_size:
                     break
-            return original_list
+            return pd.DataFrame.from_records(original_list)
 
         else:
-            param = self.generate_request_param(entity_item, start, end, size, None)
-            return self.api_wrapper.request(http_session, url=self.url, param=param, method=self.request_method,
-                                            path_fields=self.path_fields)
+            param = self.generate_request_param(entity_item, start, end, size, None, http_session)
+            try:
+                result = self.api_wrapper.request(http_session, url=self.url, param=param,
+                                                  method=self.request_method,
+                                                  path_fields=self.path_fields)
+                df = pd.DataFrame.from_records(result)
+
+                if pd_is_not_null(df):
+                    timefield = self.get_original_time_field()
+                    df[timefield] = pd.to_datetime(df[timefield], format=PD_TIME_FORMAT_DAY)
+                    return df
+
+            except Exception as e:
+                self.logger.error("url: {}, error: {}".format(self.url, e))
+
+        return None
 
 
-class EastmoneyTimestampsDataRecorder(BaseEastmoneyRecorder):
-    entity_provider = Provider.JoinQuant
-    entity_schema = StockDetail
-
+class EastmoneyTimestampsDataRecorder(BaseEastmoneyRecorder, TimestampsDataRecorder):
+    region = Region.CHN
     provider = Provider.EastMoney
+    entity_schema = StockDetail
 
     timestamps_fetching_url = None
     timestamp_list_path_fields = None
@@ -161,8 +169,7 @@ class EastmoneyTimestampsDataRecorder(BaseEastmoneyRecorder):
             "fc": get_fc(entity)
         }
 
-        timestamp_json_list = call_eastmoney_api(http_session, 
-                                                 url=self.timestamps_fetching_url,
+        timestamp_json_list = call_eastmoney_api(http_session, url=self.timestamps_fetching_url,
                                                  path_fields=self.timestamp_list_path_fields,
                                                  param=param)
 
@@ -172,11 +179,10 @@ class EastmoneyTimestampsDataRecorder(BaseEastmoneyRecorder):
         return []
 
 
-class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder):
-    entity_provider = Provider.JoinQuant
-    entity_schema = StockDetail
-
+class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
+    region = Region.CHN
     provider = Provider.EastMoney
+    entity_schema = StockDetail
 
     page_url = None
 
@@ -187,24 +193,30 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder):
             "pageNum": 1,
             "pageSize": 1
         }
-        return call_eastmoney_api(http_session, self.page_url, param=param, path_fields=['TotalCount'])
+        result = call_eastmoney_api(http_session, self.page_url, param=param, path_fields=['TotalCount'])
+        if isinstance(result, dict):
+            return 0
+        else:
+            return result
 
-    def evaluate_start_end_size_timestamps(self, now, entity, trade_day, stock_detail, http_session):
+    def eval_fetch_timestamps(self, entity, referenced_record, http_session):
         remote_count = self.get_remote_count(entity, http_session)
 
         if remote_count == 0:
-            return None, None, None, 0, None
+            return None, None, 0, None
 
         # get local count
-        local_count = get_data_count(data_schema=self.data_schema, session=self.session,
-                                     filters=[self.data_schema.entity_id == entity.id])
+        local_count = len(referenced_record)
+
         # FIXME:the > case
-        if local_count >= remote_count:
-            return None, None, None, 0, None
+        size = remote_count - local_count
 
-        return None, None, None, remote_count - local_count, None
+        if size <= 0:
+            return None, None, 0, None
 
-    def generate_request_param(self, security_item, start, end, size, timestamp):
+        return None, None, size, None
+
+    def generate_request_param(self, security_item, start, end, size, timestamp, http_session):
         return {
             "color": "w",
             "fc": get_fc(security_item),
@@ -214,11 +226,10 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder):
         }
 
 
-class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder):
-    entity_provider = Provider.JoinQuant
-    entity_schema = StockDetail
-
+class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
+    region = Region.CHN
     provider = Provider.EastMoney
+    entity_schema = StockDetail
 
     def get_remote_latest_record(self, security_item, http_session):
         param = {
@@ -228,29 +239,32 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder):
             "pageSize": 1
         }
         results = call_eastmoney_api(http_session, self.url, param=param, path_fields=self.path_fields)
-        _, result = self.generate_domain(security_item, results[0])
-        return result
+        if len(results) > 0:
+            df = pd.DataFrame.from_records(results)
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+            df['id'] = self.generate_domain_id(security_item, df)
+            return df.loc[df[self.get_evaluated_time_field()].idxmax()]
+        return None
 
-    def evaluate_start_end_size_timestamps(self, now, entity, trade_day, stock_detail, http_session):
+    def eval_fetch_timestamps(self, entity, referenced_record, http_session):
         # get latest record
-        latest_record = get_data(region=self.region,
-                                 entity_id=entity.id,
-                                 provider=self.provider,
-                                 data_schema=self.data_schema,
-                                 order=self.data_schema.timestamp.desc(), limit=1,
-                                 return_type='domain',
-                                 session=self.session)
-        if latest_record:
+        latest_record = None
+        try:
+            if pd_is_not_null(referenced_record):
+                latest_record = referenced_record.loc[referenced_record[self.get_evaluated_time_field()].idxmax()]
+        except Exception as e:
+            self.logger.warning("get referenced_record failed with error: {}".format(e))
+
+        if latest_record is not None:
             remote_record = self.get_remote_latest_record(entity, http_session)
-            if not remote_record or (
-                    latest_record[0].id == remote_record.id):
-                return None, None, None, 0, None
+            if remote_record is None or (latest_record.index == remote_record.id):
+                return None, None, 0, None
             else:
-                return None, None, None, 10, None
+                return None, None, 10, None
 
-        return None, None, None, 1000, None
+        return None, None, 1000, None
 
-    def generate_request_param(self, security_item, start, end, size, timestamp):
+    def generate_request_param(self, security_item, start, end, size, timestamp, http_session):
         return {
             "color": "w",
             "fc": get_fc(security_item),

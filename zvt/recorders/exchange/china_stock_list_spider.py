@@ -4,48 +4,56 @@ import io
 
 import pandas as pd
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import Recorder
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.domain import Stock, StockDetail
-from zvt.contract.common import Region, Provider, EntityType
+from zvt.contract.recorder import RecorderForEntities
+from zvt.contract.api import df_to_db
 from zvt.recorders.consts import DEFAULT_SH_HEADER, DEFAULT_SZ_HEADER
+from zvt.networking.request import sync_get
 from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.request_utils import get_http_session, request_get
 
 
-class ExchangeChinaStockListRecorder(Recorder):
+class ExchangeChinaStockListRecorder(RecorderForEntities):
     data_schema = Stock
+
+    region = Region.CHN
     provider = Provider.Exchange
 
-    def run(self):
-        http_session = get_http_session()
+    category_map_url = {
+        'sh': 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',
+        'sz': 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1110&TABKEY=tab1&random=0.20932135244582617',
+    }
+    category_map_header = {
+        'sh': DEFAULT_SH_HEADER,
+        'sz': DEFAULT_SZ_HEADER
+    }
 
-        url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1'
+    def init_entities(self):
+        self.entities = [(category, url) for category, url in self.category_map_url.items()]
 
-        resp = request_get(http_session, url, headers=DEFAULT_SH_HEADER)
-        self.download_stock_list(response=resp, exchange='sh')
+    def process_loop(self, entity, http_session):
+        category, url = entity
+        content = sync_get(http_session, url, headers=self.category_map_header[category], return_type='content')
+        if content is None:
+            return
 
-        url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1110&TABKEY=tab1&random=0.20932135244582617'
+        self.download_stock_list(content=content, exchange=category)
 
-        resp = request_get(http_session, url, headers=DEFAULT_SZ_HEADER)
-        self.download_stock_list(response=resp, exchange='sz')
-
-    def download_stock_list(self, response, exchange):
+    def download_stock_list(self, content, exchange):
         df = None
         if exchange == 'sh':
-            df = pd.read_csv(io.BytesIO(response.content), sep='\s+', encoding='GB2312', dtype=str,
+            df = pd.read_csv(io.BytesIO(content), sep='/s+', encoding='GB2312', dtype=str,
                              parse_dates=['上市日期'])
             if df is not None:
                 df = df.loc[:, ['公司代码', '公司简称', '上市日期']]
 
         elif exchange == 'sz':
-            df = pd.read_excel(io.BytesIO(response.content), sheet_name='A股列表', dtype=str, parse_dates=['A股上市日期'])
+            df = pd.read_excel(io.BytesIO(content), sheet_name='A股列表', dtype=str, parse_dates=['A股上市日期'])
             if df is not None:
                 df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
 
         if df is not None:
             df.columns = ['code', 'name', 'list_date']
-
             df = df.dropna(subset=['code'])
 
             # handle the dirty data
@@ -60,9 +68,9 @@ class ExchangeChinaStockListRecorder(Recorder):
             df['timestamp'] = df['list_date']
             df = df.dropna(axis=0, how='any')
             df = df.drop_duplicates(subset=('id'), keep='last')
-            df_to_db(df=df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider, force_update=False)
+            df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
             # persist StockDetail too
-            df_to_db(df=df, region=Region.CHN, data_schema=StockDetail, provider=self.provider, force_update=False)
+            df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=StockDetail, provider=self.provider)
             # self.logger.info(df.tail())
             self.logger.info("persist stock list successs")
 

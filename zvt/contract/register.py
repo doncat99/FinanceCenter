@@ -6,24 +6,16 @@ import sqlalchemy
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.engine.reflection import Inspector
 
+from zvt import zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import EntityMixin, zvt_context, Mixin
 from zvt.contract.api import get_db_engine, get_db_session_factory
-from zvt.contract.common import Region, Provider, EntityType
 from zvt.utils.utils import add_to_map_list
 
 logger = logging.getLogger(__name__)
 
 
 def register_entity(entity_type: EntityType = None):
-    """
-    function for register entity type
-
-    :param entity_type:
-    :type entity_type:
-    :return:
-    :rtype:
-    """
-
     def register(cls):
         # register the entity
         if issubclass(cls, EntityMixin):
@@ -34,10 +26,7 @@ def register_entity(entity_type: EntityType = None):
             if entity_type_ not in zvt_context.entity_types:
                 zvt_context.entity_types.append(entity_type_)
             zvt_context.entity_schema_map[entity_type_] = cls
-
-            add_to_map_list(the_map=zvt_context.entity_map_schemas, key=entity_type, value=cls)
         return cls
-
     return register
 
 
@@ -45,7 +34,7 @@ def register_schema(regions: List[Region],
                     providers: Dict[(Region, List[Provider])],
                     db_name: str,
                     schema_base: DeclarativeMeta,
-                    entity_type: EntityType = EntityType.Stock):
+                    entity_type: EntityType = None):
     """
     function for register schema,please declare them before register
 
@@ -73,7 +62,9 @@ def register_schema(regions: List[Region],
                 if zvt_context.dbname_map_schemas.get(db_name):
                     schemas = zvt_context.dbname_map_schemas[db_name]
                 zvt_context.schemas.append(cls)
-                add_to_map_list(the_map=zvt_context.entity_map_schemas, key=entity_type, value=cls)
+
+                if entity_type:
+                    add_to_map_list(the_map=zvt_context.entity_map_schemas, key=entity_type, value=cls)
                 schemas.append(cls)
 
         for provider in providers[region]:
@@ -82,7 +73,7 @@ def register_schema(regions: List[Region],
                 if provider not in zvt_context.providers[region]:
                     zvt_context.providers[region].append(provider)
             else:
-                zvt_context.providers.update({region:[provider]})
+                zvt_context.providers.update({region: [provider]})
 
             if not zvt_context.provider_map_dbnames.get(provider):
                 zvt_context.provider_map_dbnames[provider] = []
@@ -91,7 +82,8 @@ def register_schema(regions: List[Region],
 
             # create the db & table
             engine = get_db_engine(region, provider, db_name=db_name)
-            if engine is None: continue
+            if engine is None:
+                continue
             schema_base.metadata.create_all(engine)
 
             session_fac = get_db_session_factory(region, provider, db_name=db_name)
@@ -99,28 +91,33 @@ def register_schema(regions: List[Region],
 
         for provider in providers[region]:
             engine = get_db_engine(region, provider, db_name=db_name)
-            if engine is None: continue
+            if engine is None:
+                continue
             inspector = Inspector.from_engine(engine)
 
-            # create index for 'id','timestamp','entity_id','code','report_period','updated_timestamp
+            # create index for 'id', 'timestamp', 'entity_id', 'code', 'report_period', 'updated_timestamp
             for table_name, table in iter(schema_base.metadata.tables.items()):
                 index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
-                
 
-                logger.debug('engine:{},table:{},index:{}'.format(engine, table_name, index_column_names))
+                if zvt_config['debug'] == 2:
+                    logger.debug(f'create index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
 
-                for col in ['id', 'timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
+                for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
                     if col in table.c:
                         index_name = '{}_{}_index'.format(table_name, col)
                         if index_name not in index_column_names:
                             column = eval('table.c.{}'.format(col))
-                            # if col == 'timestamp': column = '-' + column
+                            if col == 'timestamp':
+                                column = eval('table.c.{}.desc()'.format(col))
+                            else:
+                                column = eval('table.c.{}'.format(col))
                             # index = sqlalchemy.schema.Index(index_name, column, unique=(col=='id'))
                             index = sqlalchemy.schema.Index(index_name, column)
                             index.create(engine)
+
                 for cols in [('timestamp', 'entity_id'), ('timestamp', 'code')]:
                     if (cols[0] in table.c) and (col[1] in table.c):
-                        index_name = '{}_{}_{}_index'.format(table_name, col[0], col[1])
+                        index_name = f'{table_name}_{col[0]}_{col[1]}_index'
                         if index_name not in index_column_names:
                             column0 = eval('table.c.{}'.format(col[0]))
                             column1 = eval('table.c.{}'.format(col[1]))

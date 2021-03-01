@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from zvt.contract import IntervalLevel
-from zvt.contract.common import EntityType
-from zvt.domain import ReportPeriod
-from zvt.api import AdjustType
+from zvt.api.data_type import EntityType
+from zvt.contract import IntervalLevel, AdjustType
 
 
 def to_bao_trading_level(trading_level: IntervalLevel):
@@ -50,13 +48,15 @@ def to_bao_adjust_flag(adjustflag):
     if adjustflag == AdjustType.hfq:
         return "1"
 
-def to_bao_entity_type(entity_type : EntityType):
+
+def to_bao_entity_type(entity_type: EntityType):
     if entity_type == EntityType.Stock:
         return "1"
     if entity_type == EntityType.Index:
         return "2"
     if entity_type == EntityType.ETF:
         return "3"
+
 
 def to_entity_id(bao_code: str, entity_type: EntityType):
     exchange, code = bao_code.split('.')

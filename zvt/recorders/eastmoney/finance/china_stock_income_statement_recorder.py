@@ -1,162 +1,162 @@
 # -*- coding: utf-8 -*-
-from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.utils import add_func_to_value, first_item_to_float
+from datetime import datetime
+
+import pandas as pd
+import numpy as np
+
 from zvt.api.quote import to_report_period_type
 from zvt.domain import IncomeStatement
 from zvt.recorders.eastmoney.finance.base_china_stock_finance_recorder import BaseChinaStockFinanceRecorder
+from zvt.utils.utils import to_float
 
 income_statement_map = {
     # 营业总收入
     #
     # 营业收入
-    "operating_income": "Operatereve",
+    "Operatereve": "operating_income",
     # 营业总成本
-    "total_operating_costs": "Totaloperateexp",
+    "Totaloperateexp": "total_operating_costs",
     # 营业成本
-    "operating_costs": "Operateexp",
+    "Operateexp": "operating_costs",
     # 研发费用
-    "rd_costs": "Rdexp",
+    "Rdexp": "rd_costs",
     # 提取保险合同准备金净额
-    "net_change_in_insurance_contract_reserves": "Netcontactreserve",
+    "Netcontactreserve": "net_change_in_insurance_contract_reserves",
     # 营业税金及附加
-    "business_taxes_and_surcharges": "Operatetax",
+    "Operatetax": "business_taxes_and_surcharges",
     # 销售费用
-    "sales_costs": "Saleexp",
+    "Saleexp": "sales_costs",
     # 管理费用
-    "managing_costs": "Manageexp",
+    "Manageexp": "managing_costs",
     # 财务费用
-    "financing_costs": "Financeexp",
+    "Financeexp": "financing_costs",
     # 资产减值损失
-    "assets_devaluation": "Assetdevalueloss",
+    "Assetdevalueloss": "assets_devaluation",
     # 其他经营收益
     #
     # 加: 投资收益
-    "investment_income": "Investincome",
+    "Investincome": "investment_income",
     # 其中: 对联营企业和合营企业的投资收益
-    "investment_income_from_related_enterprise": "Investjointincome",
+    "Investjointincome": "investment_income_from_related_enterprise",
     # 营业利润
-    "operating_profit": "Operateprofit",
+    "Operateprofit": "operating_profit",
     # 加: 营业外收入
-    "non_operating_income": "Nonoperatereve",
+    "Nonoperatereve": "non_operating_income",
     # 减: 营业外支出
-    "non_operating_costs": "Nonoperateexp",
+    "Nonoperateexp": "non_operating_costs",
     # 其中: 非流动资产处置净损失
-    "loss_on_disposal_non_current_asset": "Nonlassetnetloss",
+    "Nonlassetnetloss": "loss_on_disposal_non_current_asset",
 
     # 利润总额
-    "total_profits": "Sumprofit",
+    "Sumprofit": "total_profits",
     # 减: 所得税费用
-    "tax_expense": "Incometax",
+    "Incometax": "tax_expense",
     # 净利润
-    "net_profit": "Netprofit",
+    "Netprofit": "net_profit",
     # 其中: 归属于母公司股东的净利润
-    "net_profit_as_parent": "Parentnetprofit",
+    "Parentnetprofit": "net_profit_as_parent",
     # 少数股东损益
-    "net_profit_as_minority_interest": "Minorityincome",
+    "Minorityincome": "net_profit_as_minority_interest",
     # 扣除非经常性损益后的净利润
-    "deducted_net_profit": "Kcfjcxsyjlr",
+    "Kcfjcxsyjlr": "deducted_net_profit",
     # 每股收益
     # 基本每股收益
-    "eps": "Basiceps",
+    "Basiceps": "eps",
     # 稀释每股收益
-    "diluted_eps": "Dilutedeps",
+    "Dilutedeps": "diluted_eps",
     # 其他综合收益
-    "other_comprehensive_income": "Othercincome",
+    "Othercincome": "other_comprehensive_income",
     # 归属于母公司股东的其他综合收益
-    "other_comprehensive_income_as_parent": "Parentothercincome",
+    "Parentothercincome": "other_comprehensive_income_as_parent",
     # 归属于少数股东的其他综合收益
-    "other_comprehensive_income_as_minority_interest": "Minorityothercincome",
+    "Minorityothercincome": "other_comprehensive_income_as_minority_interest",
     # 综合收益总额
-    "total_comprehensive_income": "Sumcincome",
+    "Sumcincome": "total_comprehensive_income",
     # 归属于母公司所有者的综合收益总额
-    "total_comprehensive_income_as_parent": "Parentcincome",
+    "Parentcincome": "total_comprehensive_income_as_parent",
     # 归属于少数股东的综合收益总额
-    "total_comprehensive_income_as_minority_interest": "Minoritycincome",
+    "Minoritycincome": "total_comprehensive_income_as_minority_interest",
 
     # 银行相关
     # 利息净收入
-    "fi_net_interest_income": "Intnreve",
+    "Intnreve": "fi_net_interest_income",
     # 其中:利息收入
-    "fi_interest_income": "Intreve",
+    "Intreve": "fi_interest_income",
     # 利息支出
-    "fi_interest_expenses": "Intexp",
+    "Intexp": "fi_interest_expenses",
     # 手续费及佣金净收入
-    "fi_net_incomes_from_fees_and_commissions": "Commnreve",
+    "Commnreve": "fi_net_incomes_from_fees_and_commissions",
     # 其中:手续费及佣金收入
-    "fi_incomes_from_fees_and_commissions": "Commreve",
+    "Commreve": "fi_incomes_from_fees_and_commissions",
     # 手续费及佣金支出
-    "fi_expenses_for_fees_and_commissions": "Commexp",
+    "Commexp": "fi_expenses_for_fees_and_commissions",
     # 公允价值变动收益
-    "fi_income_from_fair_value_change": "Fvalueincome",
+    "Fvalueincome": "fi_income_from_fair_value_change",
     # 汇兑收益
-    "fi_income_from_exchange": "Exchangeincome",
+    "Exchangeincome": "fi_income_from_exchange",
     # 其他业务收入
-    "fi_other_income": "Otherreve",
+    "Otherreve": "fi_other_income",
     # 业务及管理费
-    "fi_operate_and_manage_expenses": "Operatemanageexp",
+    "Operatemanageexp": "fi_operate_and_manage_expenses",
 
     # 保险相关
     # 已赚保费
-    "fi_net_income_from_premium": "Premiumearned",
+    "Premiumearned": "fi_net_income_from_premium",
     # 其中:保险业务收入
-    "fi_income_from_premium": "Insurreve",
+    "Insurreve": "fi_income_from_premium",
     # 分保费收入
-    "fi_income_from_reinsurance_premium": "Rireve",
+    "Rireve": "fi_income_from_reinsurance_premium",
     # 减:分出保费
-    "fi_reinsurance_premium": "Ripremium",
+    "Ripremium": "fi_reinsurance_premium",
     # 提取未到期责任准备金
-    "fi_undue_duty_reserve": "Unduereserve",
+    "Unduereserve": "fi_undue_duty_reserve",
     # 银行业务利息净收入
-    "fi_net_income_from_bank_interest": "Bankintnreve",
+    "Bankintnreve": "fi_net_income_from_bank_interest",
     # 其中:银行业务利息收入
-    "fi_income_from_bank_interest": "Bankintreve",
+    "Bankintreve": "fi_income_from_bank_interest",
     # 银行业务利息支出
-    "fi_expenses_for_bank_interest": "Bankintexp",
+    "Bankintexp": "fi_expenses_for_bank_interest",
     # 非保险业务手续费及佣金净收入
-    "fi_net_incomes_from_fees_and_commissions_of_non_insurance": "Ninsurcommnreve",
+    "Ninsurcommnreve": "fi_net_incomes_from_fees_and_commissions_of_non_insurance",
     # 非保险业务手续费及佣金收入
-    "fi_incomes_from_fees_and_commissions_of_non_insurance": "Ninsurcommreve",
+    "Ninsurcommreve": "fi_incomes_from_fees_and_commissions_of_non_insurance",
     # 非保险业务手续费及佣金支出
-    "fi_expenses_for_fees_and_commissions_of_non_insurance": "Ninsurcommexp",
+    "Ninsurcommexp": "fi_expenses_for_fees_and_commissions_of_non_insurance",
     # 退保金
-    "fi_insurance_surrender_costs": "Surrenderpremium",
+    "Surrenderpremium": "fi_insurance_surrender_costs",
     # 赔付支出
-    "fi_insurance_claims_expenses": "Indemnityexp",
+    "Indemnityexp": "fi_insurance_claims_expenses",
     # 减:摊回赔付支出
-    "fi_amortized_insurance_claims_expenses": "Amortiseindemnityexp",
+    "Amortiseindemnityexp": "fi_amortized_insurance_claims_expenses",
     # 提取保险责任准备金
-    "fi_insurance_duty_reserve": "Dutyreserve",
+    "Dutyreserve": "fi_insurance_duty_reserve",
     # 减:摊回保险责任准备金
-    "fi_amortized_insurance_duty_reserve": "Amortisedutyreserve",
+    "Amortisedutyreserve": "fi_amortized_insurance_duty_reserve",
     # 保单红利支出
-    "fi_dividend_expenses_to_insured": "Policydiviexp",
+    "Policydiviexp": "fi_dividend_expenses_to_insured",
     # 分保费用
-    "fi_reinsurance_expenses": "Riexp",
+    "Riexp": "fi_reinsurance_expenses",
     # 减:摊回分保费用
-    "fi_amortized_reinsurance_expenses": "Amortiseriexp",
+    "Amortiseriexp": "fi_amortized_reinsurance_expenses",
     # 其他业务成本
-    "fi_other_op_expenses": "Otherexp",
+    "Otherexp": "fi_other_op_expenses",
 
     # 券商相关
     # 手续费及佣金净收入
     #
     # 其中:代理买卖证券业务净收入
-    "fi_net_incomes_from_trading_agent": "Agenttradesecurity",
+    "Agenttradesecurity": "fi_net_incomes_from_trading_agent",
     # 证券承销业务净收入
-    "fi_net_incomes_from_underwriting": "Securityuw",
+    "Securityuw": "fi_net_incomes_from_underwriting",
     # 受托客户资产管理业务净收入
-    "fi_net_incomes_from_customer_asset_management": "Clientassetmanage",
+    "Clientassetmanage": "fi_net_incomes_from_customer_asset_management",
     # 手续费及佣金净收入其他项目
-    "fi_fees_from_other": "Commnreveother",
+    "Commnreveother": "fi_fees_from_other",
     # 公允价值变动收益
     #
     # 其中:可供出售金融资产公允价值变动损益
-    "fi_income_from_fair_value_change_of_fi_salable": "Fvalueosalable",
+    "Fvalueosalable": "fi_income_from_fair_value_change_of_fi_salable",
 }
-
-add_func_to_value(income_statement_map, first_item_to_float)
-income_statement_map["report_period"] = ("ReportDate", to_report_period_type)
-income_statement_map["report_date"] = ("ReportDate", to_pd_timestamp)
 
 
 class ChinaStockIncomeStatementRecorder(BaseChinaStockFinanceRecorder):
@@ -167,8 +167,33 @@ class ChinaStockIncomeStatementRecorder(BaseChinaStockFinanceRecorder):
 
     data_type = 2
 
-    def get_data_map(self):
-        return income_statement_map
+    def format(self, entity, df):
+        cols = list(df.columns)
+        str_cols = ['Title']
+        date_cols = [self.get_original_time_field()]
+        float_cols = list(set(cols) - set(str_cols) - set(date_cols))
+        for column in float_cols:
+            df[column] = df[column].apply(lambda x: to_float(x[0]))
+
+        df.rename(columns=income_statement_map, inplace=True)
+
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['report_period'] = df['timestamp'].apply(lambda x: to_report_period_type(x))
+        df['report_date'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+        df['name'] = entity.name
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
 
 
 __all__ = ['ChinaStockIncomeStatementRecorder']

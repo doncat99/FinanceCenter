@@ -1,148 +1,152 @@
 # -*- coding: utf-8 -*-
-from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.utils import add_func_to_value, first_item_to_float
+from datetime import datetime
+
+import pandas as pd
+import numpy as np
+
 from zvt.api.quote import to_report_period_type
 from zvt.domain import BalanceSheet
 from zvt.recorders.eastmoney.finance.base_china_stock_finance_recorder import BaseChinaStockFinanceRecorder
+from zvt.utils.utils import to_float
 
 balance_sheet_map = {
     # 流动资产
     #
     # 货币资金
-    "cash_and_cash_equivalents": "Monetaryfund",
+    "Monetaryfund": "cash_and_cash_equivalents",
     # 应收票据
-    "note_receivable": "Billrec",
+    "Billrec": "note_receivable",
     # 应收账款
-    "accounts_receivable": "Accountrec",
+    "Accountrec": "accounts_receivable",
     # 预付款项
-    "advances_to_suppliers": "Advancepay",
+    "Advancepay": "advances_to_suppliers",
     # 其他应收款
-    "other_receivables": "Otherrec",
+    "Otherrec": "other_receivables",
     # 存货
-    "inventories": "Inventory",
+    "Inventory": "inventories",
     # 一年内到期的非流动资产
-    "current_portion_of_non_current_assets": "Nonlassetoneyear",
+    "Nonlassetoneyear": "current_portion_of_non_current_assets",
     # 其他流动资产
-    "other_current_assets": "Otherlasset",
+    "Otherlasset": "other_current_assets",
     # 流动资产合计
-    "total_current_assets": "Sumlasset",
+    "Sumlasset": "total_current_assets",
     # 非流动资产
     #
     # 可供出售金融资产
-    "fi_assets_saleable": "Saleablefasset",
+    "Saleablefasset": "fi_assets_saleable",
     # 长期应收款
-    "long_term_receivables": "Ltrec",
+    "Ltrec": "long_term_receivables",
     # 长期股权投资
-    "long_term_equity_investment": "Ltequityinv",
+    "Ltequityinv": "long_term_equity_investment",
     # 投资性房地产
-    "real_estate_investment": "Estateinvest",
+    "Estateinvest": "real_estate_investment",
     # 固定资产
-    "fixed_assets": "Fixedasset",
+    "Fixedasset": "fixed_assets",
     # 在建工程
-    "construction_in_process": "Constructionprogress",
+    "Constructionprogress": "construction_in_process",
     # 无形资产
-    "intangible_assets": "Intangibleasset",
+    "Intangibleasset": "intangible_assets",
     # 商誉
-    "goodwill": "Goodwill",
+    "Goodwill": "goodwill",
     # 长期待摊费用
-    "long_term_prepaid_expenses": "Ltdeferasset",
+    "Ltdeferasset": "long_term_prepaid_expenses",
     # 递延所得税资产
-    "deferred_tax_assets": "Deferincometaxasset",
+    "Deferincometaxasset": "deferred_tax_assets",
     # 其他非流动资产
-    "other_non_current_assets": "Othernonlasset",
+    "Othernonlasset": "other_non_current_assets",
     # 非流动资产合计
-    "total_non_current_assets": "Sumnonlasset",
+    "Sumnonlasset": "total_non_current_assets",
     # 资产总计
-    "total_assets": "Sumasset",
+    "Sumasset": "total_assets",
     # 流动负债
     #
     # 短期借款
-    "short_term_borrowing": "Stborrow",
+    "Stborrow": "short_term_borrowing",
     # 吸收存款及同业存放
-    "accept_money_deposits": "Deposit",
+    "Deposit": "accept_money_deposits",
     # 应付账款
-    "accounts_payable": "Accountpay",
+    "Accountpay": "accounts_payable",
     # 预收款项
-    "advances_from_customers": "Advancereceive",
+    "Advancereceive": "advances_from_customers",
     # 应付职工薪酬
-    "employee_benefits_payable": "Salarypay",
+    "Salarypay": "employee_benefits_payable",
     # 应交税费
-    "taxes_payable": "Taxpay",
+    "Taxpay": "taxes_payable",
     # 应付利息
-    "interest_payable": "Interestpay",
+    "Interestpay": "interest_payable",
     # 其他应付款
-    "other_payable": "Otherpay",
+    "Otherpay": "other_payable",
     # 一年内到期的非流动负债
-    "current_portion_of_non_current_liabilities": "Nonlliaboneyear",
+    "Nonlliaboneyear": "current_portion_of_non_current_liabilities",
     # 其他流动负债
-    "other_current_liabilities": "Otherlliab",
+    "Otherlliab": "other_current_liabilities",
     # 流动负债合计
-    "total_current_liabilities": "Sumlliab",
+    "Sumlliab": "total_current_liabilities",
     # 非流动负债
     #
     # 长期借款
-    "long_term_borrowing": "Ltborrow",
+    "Ltborrow": "long_term_borrowing",
     # 长期应付款
-    "long_term_payable": "Ltaccountpay",
+    "Ltaccountpay": "long_term_payable",
     # 递延收益
-    "deferred_revenue": "Deferincome",
+    "Deferincome": "deferred_revenue",
     # 递延所得税负债
-    "deferred_tax_liabilities": "Deferincometaxliab",
+    "Deferincometaxliab": "deferred_tax_liabilities",
     # 其他非流动负债
-    "other_non_current_liabilities": "Othernonlliab",
+    "Othernonlliab": "other_non_current_liabilities",
     # 非流动负债合计
-    "total_non_current_liabilities": "Sumnonlliab",
+    "Sumnonlliab": "total_non_current_liabilities",
     # 负债合计
-    "total_liabilities": "Sumliab",
+    "Sumliab": "total_liabilities",
     # 所有者权益(或股东权益)
     #
     # 实收资本（或股本）
-    "capital": "Sharecapital",
+    "Sharecapital": "capital",
     # 资本公积
-    "capital_reserve": "Capitalreserve",
+    "Capitalreserve": "capital_reserve",
     # 专项储备
-    "special_reserve": "Specialreserve",
+    "Specialreserve": "special_reserve",
     # 盈余公积
-    "surplus_reserve": "Surplusreserve",
+    "Surplusreserve": "surplus_reserve",
     # 未分配利润
-    "undistributed_profits": "Retainedearning",
+    "Retainedearning": "undistributed_profits",
     # 归属于母公司股东权益合计
-    "equity": "Sumparentequity",
+    "Sumparentequity": "equity",
     # 少数股东权益
-    "equity_as_minority_interest": "Minorityequity",
+    "Minorityequity": "equity_as_minority_interest",
     # 股东权益合计
-    "total_equity": "Sumshequity",
+    "Sumshequity": "total_equity",
     # 负债和股东权益合计
-    "total_liabilities_and_equity": "Sumliabshequity",
+    "Sumliabshequity": "total_liabilities_and_equity",
 
     # 银行相关
     # 资产
     # 现金及存放中央银行款项
-    "fi_cash_and_deposit_in_central_bank": "Cashanddepositcbank",
+    "Cashanddepositcbank": "fi_cash_and_deposit_in_central_bank",
     # 存放同业款项
-    "fi_deposit_in_other_fi": "Depositinfi",
+    "Depositinfi": "fi_deposit_in_other_fi",
     # 贵金属
-    "fi_expensive_metals": "Preciousmetal",
+    "Preciousmetal": "fi_expensive_metals",
     # 拆出资金
-    "fi_lending_to_other_fi": "Lendfund",
+    "Lendfund": "fi_lending_to_other_fi",
     # 以公允价值计量且其变动计入当期损益的金融资产
-    "fi_financial_assets_effect_current_income": "Fvaluefasset",
+    "Fvaluefasset": "fi_financial_assets_effect_current_income",
     # 衍生金融资产
-    "fi_financial_derivative_asset": "Derivefasset",
+    "Derivefasset": "fi_financial_derivative_asset",
     # 买入返售金融资产
-    "fi_buying_sell_back_fi__asset": "Buysellbackfasset",
+    "Buysellbackfasset": "fi_buying_sell_back_fi__asset",
     # 应收账款
     #
     # 应收利息
-    "fi_interest_receivable": "Interestrec",
+    "Interestrec": "fi_interest_receivable",
     # 发放贷款及垫款
-    "fi_disbursing_loans_and_advances": "Loanadvances",
+    "Loanadvances": "fi_disbursing_loans_and_advances",
     # 可供出售金融资产
     #
     # 持有至到期投资
-    "fi_held_to_maturity_investment": "Heldmaturityinv",
+    "Heldmaturityinv": "fi_held_to_maturity_investment",
     # 应收款项类投资
-    "fi_account_receivable_investment": "Investrec",
+    "Investrec": "fi_account_receivable_investment",
     # 投资性房地产
     #
     # 固定资产
@@ -154,27 +158,27 @@ balance_sheet_map = {
     # 递延所得税资产
     #
     # 其他资产
-    "fi_other_asset": "Otherasset",
+    "Otherasset": "fi_other_asset",
     # 资产总计
     #
     # 负债
     #
     # 向中央银行借款
-    "fi_borrowings_from_central_bank": "Borrowfromcbank",
+    "Borrowfromcbank": "fi_borrowings_from_central_bank",
     # 同业和其他金融机构存放款项
-    "fi_deposit_from_other_fi": "Fideposit",
+    "Fideposit": "fi_deposit_from_other_fi",
     # 拆入资金
-    "fi_borrowings_from_fi": "Borrowfund",
+    "Borrowfund": "fi_borrowings_from_fi",
     # 以公允价值计量且其变动计入当期损益的金融负债
-    "fi_financial_liability_effect_current_income": "Fvaluefliab",
+    "Fvaluefliab": "fi_financial_liability_effect_current_income",
     # 衍生金融负债
-    "fi_financial_derivative_liability": "Derivefliab",
+    "Derivefliab": "fi_financial_derivative_liability",
     # 卖出回购金融资产款
-    "fi_sell_buy_back_fi_asset": "Sellbuybackfasset",
+    "Sellbuybackfasset": "fi_sell_buy_back_fi_asset",
     # 吸收存款
-    "fi_savings_absorption": "Acceptdeposit",
+    "Acceptdeposit": "fi_savings_absorption",
     # 存款证及应付票据
-    "fi_notes_payable": "Cdandbillrec",
+    "Cdandbillrec": "fi_notes_payable",
     # 应付职工薪酬
     #
     # 应交税费
@@ -182,26 +186,26 @@ balance_sheet_map = {
     # 应付利息
     #
     # 预计负债
-    "fi_estimated_liabilities": "Anticipateliab",
+    "Anticipateliab": "fi_estimated_liabilities",
     # 应付债券
-    "fi_bond_payable": "Bondpay",
+    "Bondpay": "fi_bond_payable",
     # 其他负债
-    "fi_other_liability": "Otherliab",
+    "Otherliab": "fi_other_liability",
     # 负债合计
     #
     # 所有者权益(或股东权益)
     # 股本
-    "fi_capital": "Shequity",
+    "Shequity": "fi_capital",
     # 其他权益工具
-    "fi_other_equity_instruments": "Otherequity",
+    "Otherequity": "fi_other_equity_instruments",
     # 其中:优先股
-    "fi_preferred_stock": "Preferredstock",
+    "Preferredstock": "fi_preferred_stock",
     # 资本公积
     #
     # 盈余公积
     #
     # 一般风险准备
-    "fi_generic_risk_reserve": "Generalriskprepare",
+    "Generalriskprepare": "fi_generic_risk_reserve",
     # 未分配利润
     #
     # 归属于母公司股东权益合计
@@ -216,13 +220,13 @@ balance_sheet_map = {
     # 货币资金
     #
     # 其中: 客户资金存款
-    "fi_client_fund": "Clientfund",
+    "Clientfund": "fi_client_fund",
     # 结算备付金
-    "fi_deposit_reservation_for_balance": "Settlementprovision",
+    "Settlementprovision": "fi_deposit_reservation_for_balance",
     # 其中: 客户备付金
-    "fi_client_deposit_reservation_for_balance": "Clientprovision",
+    "Clientprovision": "fi_client_deposit_reservation_for_balance",
     # 融出资金
-    "fi_margin_out_fund": "Marginoutfund",
+    "Marginoutfund": "fi_margin_out_fund",
     # 以公允价值计量且其变动计入当期损益的金融资产
     #
     # 衍生金融资产
@@ -232,9 +236,9 @@ balance_sheet_map = {
     # 应收利息
     #
     # 应收款项
-    "fi_receivables": "Receivables",
+    "Receivables": "fi_receivables",
     # 存出保证金
-    "fi_deposit_for_recognizance": "Gdepositpay",
+    "Gdepositpay": "fi_deposit_for_recognizance",
     # 可供出售金融资产
     #
     # 持有至到期投资
@@ -268,7 +272,7 @@ balance_sheet_map = {
     # 卖出回购金融资产款
     #
     # 代理买卖证券款
-    "fi_receiving_as_agent": "Agenttradesecurity",
+    "Agenttradesecurity": "fi_receiving_as_agent",
     # 应付账款
     #
     # 应付职工薪酬
@@ -278,7 +282,7 @@ balance_sheet_map = {
     # 应付利息
     #
     # 应付短期融资款
-    "fi_short_financing_payable": "Shortfinancing",
+    "Shortfinancing": "fi_short_financing_payable",
     # 预计负债
     #
     # 应付债券
@@ -302,7 +306,7 @@ balance_sheet_map = {
     # 一般风险准备
     #
     # 交易风险准备
-    "fi_trade_risk_reserve": "Traderiskprepare",
+    "Traderiskprepare": "fi_trade_risk_reserve",
     # 未分配利润
     #
     # 归属于母公司股东权益合计
@@ -315,14 +319,14 @@ balance_sheet_map = {
 
     # 保险相关
     # 应收保费
-    "fi_premiums_receivable": "Premiumrec",
-    "fi_reinsurance_premium_receivable": "Rirec",
+    "Premiumrec": "fi_premiums_receivable",
+    "Rirec": "fi_reinsurance_premium_receivable",
     # 应收分保合同准备金
-    "fi_reinsurance_contract_reserve": "Ricontactreserverec",
+    "Ricontactreserverec": "fi_reinsurance_contract_reserve",
     # 保户质押贷款
-    "fi_policy_pledge_loans": "Insuredpledgeloan",
+    "Insuredpledgeloan": "fi_policy_pledge_loans",
     # 定期存款
-    "fi_time_deposit": "Tdeposit",
+    "Tdeposit": "fi_time_deposit",
     # 可供出售金融资产
     #
     # 持有至到期投资
@@ -334,7 +338,7 @@ balance_sheet_map = {
     # 长期股权投资
     #
     # 存出资本保证金
-    "fi_deposit_for_capital_recognizance": "Capitalgdepositpay",
+    "Capitalgdepositpay": "fi_deposit_for_capital_recognizance",
     # 投资性房地产
     #
     # 固定资产
@@ -348,7 +352,7 @@ balance_sheet_map = {
     # 其他资产
     #
     # 独立账户资产
-    "fi_capital_in_independent_accounts": "Independentasset",
+    "Independentasset": "fi_capital_in_independent_accounts",
     # 资产总计
     #
     # 负债
@@ -372,13 +376,13 @@ balance_sheet_map = {
     # 应付账款
     #
     # 预收账款
-    "fi_advance_from_customers": "Advancerec",
+    "Advancerec": "fi_advance_from_customers",
     # 预收保费
-    "fi_advance_premium": "Premiumadvance",
+    "Premiumadvance": "fi_advance_premium",
     # 应付手续费及佣金
-    "fi_fees_and_commissions_payable": "Commpay",
+    "Commpay": "fi_fees_and_commissions_payable",
     # 应付分保账款
-    "fi_dividend_payable_for_reinsurance": "Ripay",
+    "Ripay": "fi_dividend_payable_for_reinsurance",
     # 应付职工薪酬
     #
     # 应交税费
@@ -388,13 +392,13 @@ balance_sheet_map = {
     # 预计负债
     #
     # 应付赔付款
-    "fi_claims_payable": "Claimpay",
+    "Claimpay": "fi_claims_payable",
     # 应付保单红利
-    "fi_policy_holder_dividend_payable": "Policydivipay",
+    "Policydivipay": "fi_policy_holder_dividend_payable",
     # 保户储金及投资款
-    "fi_policy_holder_deposits_and_investment_funds": "Insureddepositinv",
+    "Insureddepositinv": "fi_policy_holder_deposits_and_investment_funds",
     # 保险合同准备金
-    "fi_contract_reserve": "Contactreserve",
+    "Contactreserve": "fi_contract_reserve",
     # 长期借款
     #
     # 应付债券
@@ -404,7 +408,7 @@ balance_sheet_map = {
     # 其他负债
     #
     # 独立账户负债
-    "fi_independent_liability": "Independentliab",
+    "Independentliab": "fi_independent_liability",
     # 负债合计
     #
     # 所有者权益(或股东权益)
@@ -429,10 +433,6 @@ balance_sheet_map = {
 
 }
 
-add_func_to_value(balance_sheet_map, first_item_to_float)
-balance_sheet_map["report_period"] = ("ReportDate", to_report_period_type)
-balance_sheet_map["report_date"] = ("ReportDate", to_pd_timestamp)
-
 
 class ChinaStockBalanceSheetRecorder(BaseChinaStockFinanceRecorder):
     data_schema = BalanceSheet
@@ -441,8 +441,33 @@ class ChinaStockBalanceSheetRecorder(BaseChinaStockFinanceRecorder):
     finance_report_type = 'ZiChanFuZhaiBiaoList'
     data_type = 3
 
-    def get_data_map(self):
-        return balance_sheet_map
+    def format(self, entity, df):
+        cols = list(df.columns)
+        str_cols = ['Title']
+        date_cols = [self.get_original_time_field()]
+        float_cols = list(set(cols) - set(str_cols) - set(date_cols))
+        for column in float_cols:
+            df[column] = df[column].apply(lambda x: to_float(x[0]))
+
+        df.rename(columns=balance_sheet_map, inplace=True)
+
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['report_period'] = df['timestamp'].apply(lambda x: to_report_period_type(x))
+        df['report_date'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+        df['name'] = entity.name
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
 
 
 __all__ = ['ChinaStockBalanceSheetRecorder']

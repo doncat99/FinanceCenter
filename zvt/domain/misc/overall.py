@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 OverallBase = declarative_base()
 
@@ -13,10 +13,9 @@ OverallBase = declarative_base()
 
 class StockSummary(OverallBase, Mixin):
     __tablename__ = 'stock_summary'
-
     provider = Column(String(length=32))
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
 
     total_value = Column(Float)
     total_tradable_vaule = Column(Float)
@@ -33,7 +32,7 @@ class MarginTradingSummary(OverallBase, Mixin):
     __tablename__ = 'margin_trading_summary'
     provider = Column(String(length=32))
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
 
     # 融资余额
     margin_value = Column(Float)
@@ -55,7 +54,7 @@ class CrossMarketSummary(OverallBase, Mixin):
     __tablename__ = 'cross_market_summary'
     provider = Column(String(length=32))
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
 
     buy_amount = Column(Float)
     buy_volume = Column(Float)
@@ -65,9 +64,13 @@ class CrossMarketSummary(OverallBase, Mixin):
     quota_daily_balance = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.JoinQuant], 
-                           Region.US: [Provider.Exchange]}, 
-                db_name='overall', schema_base=OverallBase)
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.JoinQuant, Provider.Exchange],
+                           Region.US: [Provider.Default]},
+                db_name='overall',
+                schema_base=OverallBase,
+                entity_type=EntityType.Stock)
 
+
+# the __all__ is generated
 __all__ = ['StockSummary', 'MarginTradingSummary', 'CrossMarketSummary']

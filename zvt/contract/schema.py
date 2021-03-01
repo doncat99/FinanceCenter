@@ -4,21 +4,25 @@ from datetime import timedelta
 from typing import List, Union
 
 import pandas as pd
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, Float, String, DateTime
 from sqlalchemy.orm import Session
 
+from zvt.api.data_type import Region, Provider
 from zvt.contract import IntervalLevel
-from zvt.contract.common import Region, Provider
 from zvt.utils.time_utils import date_and_time, is_same_time, now_pd_timestamp
 
 
 class Mixin(object):
-    id = Column(String(length=256), primary_key=True)
+    id = Column(String, primary_key=True)
     # entity id for this model
-    entity_id = Column(String(length=32))
+    entity_id = Column(String)
 
     # the meaning could be different for different case,most of time it means 'happen time'
     timestamp = Column(DateTime)
+
+    # __mapper_args__ = {
+    #    "order_by": timestamp.desc()
+    # }
 
     @classmethod
     def help(cls):
@@ -33,19 +37,23 @@ class Mixin(object):
         return 'timestamp'
 
     @classmethod
-    def register_recorder_cls(cls, provider: Provider, recorder_cls):
+    def register_recorder_cls(cls, region: Region, provider: Provider, recorder_cls):
         """
         register the recorder for the schema
 
         :param provider:
         :param recorder_cls:
         """
-        # dont't make provider_map_recorder as class field,it should be created for the sub class as need
+        # don't make provider_map_recorder as class field,it should be created for the sub class as need
         if not hasattr(cls, 'provider_map_recorder'):
             cls.provider_map_recorder = {}
 
-        if provider not in cls.provider_map_recorder:
-            cls.provider_map_recorder[provider] = recorder_cls
+        if region not in cls.provider_map_recorder:
+            cls.provider_map_recorder[region] = {}
+            cls.provider_map_recorder[region][provider] = recorder_cls
+
+        elif provider not in cls.provider_map_recorder[region]:
+            cls.provider_map_recorder[region][provider] = recorder_cls
 
     @classmethod
     def register_provider(cls, region: Region, provider: Provider):
@@ -57,7 +65,18 @@ class Mixin(object):
             if provider not in cls.providers[region]:
                 cls.providers[region].append(provider)
         else:
-            cls.providers.update({region:[provider]})
+            cls.providers.update({region: [provider]})
+
+    @classmethod
+    def test_data_correctness(cls, region, provider, data_samples):
+        for data in data_samples:
+            item = cls.query_data(region=region, provider=provider, ids=[data['id']], return_type='dict')
+            print(item)
+            for k in data:
+                if k == 'timestamp':
+                    assert is_same_time(item[0][k], data[k])
+                else:
+                    assert item[0][k] == data[k]
 
     @classmethod
     def query_data(cls,
@@ -91,6 +110,7 @@ class Mixin(object):
 
     @classmethod
     def record_data(cls,
+                    region: Region,
                     provider_index: int = 0,
                     provider: Provider = Provider.Default,
                     exchanges=None,
@@ -107,20 +127,19 @@ class Mixin(object):
                     close_hour=None,
                     close_minute=None,
                     one_day_trading_minutes=None,
-                    share_para=None):
+                    **kwargs):
         if cls.provider_map_recorder:
             # print(f'{cls.__name__} registered recorders:{cls.provider_map_recorder}')
-
             if provider:
-                recorder_class = cls.provider_map_recorder[provider]
+                recorder_class = cls.provider_map_recorder[region][provider]
             else:
-                recorder_class = cls.provider_map_recorder[cls.providers[provider_index]]
+                recorder_class = cls.provider_map_recorder[region][cls.providers[region][provider_index]]
 
             # get args for specific recorder class
             from zvt.contract.recorder import TimeSeriesDataRecorder
             if issubclass(recorder_class, TimeSeriesDataRecorder):
                 args = [item for item in inspect.getfullargspec(cls.record_data).args if
-                        item not in ('cls', 'provider_index', 'provider')]
+                        item not in ('cls', 'region', 'provider_index', 'provider')]
             else:
                 args = ['batch_size', 'force_update', 'sleeping_time']
 
@@ -144,19 +163,18 @@ class Mixin(object):
                         adjust_type = items[2]
                         kw['adjust_type'] = adjust_type
                     level = IntervalLevel(items[1])
-                except:
+                except Exception as _:
                     # for other schema not with normal format,but need to calculate size for remaining days
                     level = IntervalLevel.LEVEL_1DAY
 
                 kw['level'] = level
 
-            kw['share_para'] = share_para
-            # print(recorder_class)
-            # print(*kw)  
+            # add other custom args
+            for k in kwargs:
+                kw[k] = kwargs[k]
+
             r = recorder_class(**kw)
             r.run()
-            return
-
         else:
             print(f'no recorders for {cls.__name__}')
 
@@ -169,10 +187,18 @@ class NormalMixin(Mixin):
 
 
 class EntityMixin(Mixin):
+    # 标的类型
     entity_type = Column(String(length=64))
+    # 所属交易所
     exchange = Column(String(length=32))
+    # 编码
     code = Column(String(length=64))
-    name = Column(String(length=128))
+    # 名字
+    name = Column(String(length=256))
+    # 上市日
+    list_date = Column(DateTime)
+    # 退市日
+    end_date = Column(DateTime)
 
     @classmethod
     def get_trading_dates(cls, start_date=None, end_date=None):
@@ -276,3 +302,60 @@ class NormalEntityMixin(EntityMixin):
     created_timestamp = Column(DateTime, default=now_pd_timestamp(Region.CHN))
     # the record updated time in db, some recorder would check it for whether need to refresh
     updated_timestamp = Column(DateTime)
+
+
+class Portfolio(EntityMixin):
+    @classmethod
+    def get_stocks(cls, region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
+        """
+        the publishing policy of portfolio positions is different for different types,
+        overwrite this function for get the holding stocks in specific date
+
+        :param code: portfolio(etf/block/index...) code
+        :param codes: portfolio(etf/block/index...) codes
+        :param ids: portfolio(etf/block/index...) ids
+        :param timestamp: the date of the holding stocks
+        :param provider: the data provider
+        :return:
+        """
+        from zvt.contract.api import get_schema_by_name
+        schema_str = f'{cls.__name__}Stock'
+        portfolio_stock = get_schema_by_name(schema_str)
+        return portfolio_stock.query_data(region=region, provider=provider, code=code, codes=codes, timestamp=timestamp, ids=ids)
+
+
+# 组合(Fund,Etf,Index,Block等)和个股(Stock)的关系 应该继承自该类
+# 该基础类可以这样理解:
+# entity为组合本身,其包含了stock这种entity,timestamp为持仓日期,从py的"你知道你在干啥"的哲学出发，不加任何约束
+class PortfolioStock(Mixin):
+    # portfolio标的类型
+    entity_type = Column(String(length=64))
+    # portfolio所属交易所
+    exchange = Column(String(length=32))
+    # portfolio编码
+    code = Column(String(length=64))
+    # portfolio名字
+    name = Column(String(length=128))
+
+    stock_id = Column(String)
+    stock_code = Column(String(length=64))
+    stock_name = Column(String(length=256))
+
+
+# 支持时间变化,报告期标的调整
+class PortfolioStockHistory(PortfolioStock):
+    # 报告期,season1,half_year,season3,year
+    report_period = Column(String(length=32))
+    # 3-31,6-30,9-30,12-31
+    report_date = Column(DateTime)
+
+    # 占净值比例
+    proportion = Column(Float)
+    # 持有股票的数量
+    shares = Column(Float)
+    # 持有股票的市值
+    market_cap = Column(Float)
+
+
+__all__ = ['EntityMixin', 'Mixin', 'NormalMixin', 'NormalEntityMixin', 'Portfolio', 'PortfolioStock',
+           'PortfolioStockHistory']

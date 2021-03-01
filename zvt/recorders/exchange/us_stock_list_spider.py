@@ -1,58 +1,65 @@
 # -*- coding: utf-8 -*-
-
-import io
-
 import pandas as pd
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import Recorder
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.domain import Stock, StockDetail
-from zvt.contract.common import Region, Provider, EntityType
 from zvt.recorders.consts import YAHOO_STOCK_LIST_HEADER
+from zvt.contract.recorder import RecorderForEntities
+from zvt.contract.api import df_to_db
+from zvt.networking.request import sync_get
 from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.request_utils import get_http_session, request_get
 
 
-class ExchangeUsStockListRecorder(Recorder):
-    data_schema = Stock
+class ExchangeUsStockListRecorder(RecorderForEntities):
+    region = Region.CHN
     provider = Provider.Exchange
+    data_schema = Stock
 
-    def run(self):
-        http_session = get_http_session()
+    def init_entities(self):
+        self.entities = ['nyse', 'nasdaq', 'amex']
 
-        exchanges = ['NYSE', 'NASDAQ', 'AMEX']
+    def generate_domain_id(self, entity, df):
+        return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
 
-        for exchange in exchanges:
-            url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&render=download&exchange={}'.format(exchange)
-            resp = request_get(http_session, url, headers=YAHOO_STOCK_LIST_HEADER)
-            self.download_stock_list(response=resp, exchange=exchange)
+    def get_original_time_field(self):
+        return 'list_date'
 
+    def process_loop(self, entity, http_session):
+        url = 'https://api.nasdaq.com/api/screener/stocks'
+        params = {'download': 'true', 'exchange': entity}
+        resp = sync_get(http_session, url, headers=YAHOO_STOCK_LIST_HEADER, params=params, enable_proxy=False)
+        if resp is None:
+            return
 
-    def download_stock_list(self, response, exchange):
-        df = pd.read_csv(io.BytesIO(response.content), encoding='UTF8', dtype=str)
+        json = resp.json()['data']['rows']
+        self.format(content=json, exchange=entity)
+
+    def format(self, content, exchange):
+        df = pd.DataFrame(content)
 
         if df is not None:
-            df.rename(columns = {'Symbol':'code', 'Name':'name', 'IPOyear':'list_date', 'industry':'industry', 'Sector':'sector'}, inplace = True) 
-            df = df[['code', 'name', 'list_date', 'industry', 'sector']]
+            df.rename(columns={'symbol': 'code', 'ipoyear': 'list_date', 'marketCap': 'market_cap'}, inplace=True)
 
-            df.fillna({'list_date':'1980'}, inplace=True)
+            timestamp_str = self.get_original_time_field()
+            df.fillna({timestamp_str: '1980'}, inplace=True)
+            df[timestamp_str] = df[timestamp_str].apply(lambda x: to_pd_timestamp(x))
 
-            df['list_date'] = df['list_date'].apply(lambda x: to_pd_timestamp(x))
-            df['exchange'] = exchange
             df['entity_type'] = EntityType.Stock.value
-            df['id'] = df[['entity_type', 'exchange', 'code']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
-            df['entity_id'] = df['id'].str.strip()
-            df['timestamp'] = df['list_date']
-            df = df.dropna(axis=0, how='any')
-            df = df.drop_duplicates(subset=('id'), keep='last')
+            df['exchange'] = exchange
+            df['code'] = df['code'].str.strip()
+            df['id'] = self.generate_domain_id(exchange, df)
+            df['entity_id'] = df['id']
 
-            # persist StockDetail
-            df_to_db(df=df, region=Region.US, data_schema=StockDetail, provider=self.provider, force_update=True)
+            df.drop_duplicates(subset=('id'), keep='last', inplace=True)
 
-            df.drop(['industry','sector'], axis=1, inplace=True)
-            df_to_db(df=df, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=True)
+            # persist to Stock
+            df_to_db(df=df, ref_df=None, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=True)
 
-            self.logger.info("persist stock list successs")
+            # persist to StockDetail
+            df_to_db(df=df, ref_df=None, region=Region.US, data_schema=StockDetail, provider=self.provider, force_update=True)
+
+    def on_finish(self):
+        self.logger.info("persist stock list successs")
 
 
 __all__ = ['ExchangeUsStockListRecorder']

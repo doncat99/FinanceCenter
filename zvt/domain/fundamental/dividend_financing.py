@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, DateTime, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 DividendFinancingBase = declarative_base()
 
@@ -70,9 +70,13 @@ class RightsIssueDetail(DividendFinancingBase, Mixin):
     rights_raising_fund = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.EastMoney], 
-                           Region.US: [Provider.Default]}, 
-                db_name='dividend_financing', schema_base=DividendFinancingBase)
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.EastMoney],
+                           Region.US: [Provider.Default]},
+                db_name='dividend_financing',
+                schema_base=DividendFinancingBase,
+                entity_type=EntityType.Stock)
 
+
+# the __all__ is generated
 __all__ = ['DividendFinancing', 'DividendDetail', 'SpoDetail', 'RightsIssueDetail']

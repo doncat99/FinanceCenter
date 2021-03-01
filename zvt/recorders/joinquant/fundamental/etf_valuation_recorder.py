@@ -1,39 +1,43 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import pandas as pd
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import TimeSeriesDataRecorder
+from zvt import zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.api.quote import get_etf_stocks
 from zvt.domain import StockValuation, Etf, EtfValuation
-from zvt.contract.common import Region, Provider, EntityType
+from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import now_pd_timestamp
 
 
 class JqChinaEtfValuationRecorder(TimeSeriesDataRecorder):
-    entity_provider = Provider.JoinQuant
-    entity_schema = Etf
-
     # 数据来自jq
+    region = Region.CHN
     provider = Provider.JoinQuant
-
+    entity_schema = Etf
     data_schema = EtfValuation
 
-    def __init__(self, entity_type=EntityType.ETF, exchanges=None, entity_ids=None, codes=None, batch_size=10,
-                 force_update=False, sleeping_time=5, default_size=2000, real_time=False, fix_duplicate_way='add',
-                 start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0, share_para=None) -> None:
-        super().__init__(entity_type, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
+    def __init__(self, entity_type=EntityType.ETF, exchanges=None, entity_ids=None,
+                 codes=None, batch_size=10, force_update=False, sleeping_time=5,
+                 default_size=zvt_config['batch_size'], real_time=False,
+                 fix_duplicate_way='add', start_timestamp=None, end_timestamp=None,
+                 close_hour=0, close_minute=0, share_para=None) -> None:
+        super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
+                         force_update, sleeping_time, default_size, real_time,
+                         fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, share_para=share_para)
 
     def record(self, entity, start, end, size, timestamps, http_session):
         if not end:
             end = now_pd_timestamp(Region.CHN)
 
+        result_df = pd.DataFrame()
         date_range = pd.date_range(start=start, end=end, freq='1D').tolist()
         for date in date_range:
             # etf包含的个股和比例
-            etf_stock_df = get_etf_stocks(code=entity.code, timestamp=date, provider=self.provider)
+            etf_stock_df = get_etf_stocks(region=self.region, code=entity.code, timestamp=date, provider=self.provider)
 
             if pd_is_not_null(etf_stock_df):
                 all_pct = etf_stock_df['proportion'].sum()
@@ -64,11 +68,7 @@ class JqChinaEtfValuationRecorder(TimeSeriesDataRecorder):
                         self.logger.error(f'ignore etf:{entity.id}  date:{date} pct:{pct}')
                         break
 
-                    se = pd.Series({'id': "{}_{}".format(entity.id, date),
-                                    'entity_id': entity.id,
-                                    'timestamp': date,
-                                    'code': entity.code,
-                                    'name': entity.name})
+                    se = pd.Series({'timestamp': date})
                     for col in ['pe', 'pe_ttm', 'pb', 'ps', 'pcf']:
                         # PE=P/E
                         # 这里的算法为：将其价格都设为PE,那么Earning为1(亏钱为-1)，结果为 总价格(PE)/总Earning
@@ -104,18 +104,30 @@ class JqChinaEtfValuationRecorder(TimeSeriesDataRecorder):
                         price = positive_df.sum() + abs(negative_df.sum())
 
                         se[col] = price / value
-                    df = se.to_frame().T
 
-                    self.logger.info(df)
+                    result_df = pd.concat(result_df, se.to_frame().T)
 
-                    df_to_db(df=df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider,
-                             force_update=self.force_update)
+        return result_df if pd_is_not_null(result_df) else None
 
-        return None
+    def format(self, entity, df):
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
 
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+        df['name'] = entity.name
 
-__all__ = ['JqChinaEtfValuationRecorder']
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
+
 
 if __name__ == '__main__':
     # 上证50
     JqChinaEtfValuationRecorder(codes=['512290']).run()
+
+
+# the __all__ is generated
+__all__ = ['JqChinaEtfValuationRecorder']

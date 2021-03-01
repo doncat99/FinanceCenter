@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
-
 import io
 
 import demjson
 import pandas as pd
-import requests
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import Recorder
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.api.quote import china_stock_code_to_id
 from zvt.domain import IndexStock, Index
-from zvt.contract.common import Region, Provider, EntityType
+from zvt.contract.recorder import Recorder
+from zvt.contract.api import df_to_db
+from zvt.networking.request import get_http_session, sync_get
 from zvt.utils.time_utils import to_pd_timestamp, now_pd_timestamp
-from zvt.utils.request_utils import get_http_session, request_get
 
 
 class ChinaIndexListSpider(Recorder):
     data_schema = IndexStock
 
-    def __init__(self, batch_size=10, force_update=False, sleeping_time=2.0, provider: Provider=Provider.Exchange) -> None:
+    region = Region.CHN
+
+    def __init__(self, region: Region, batch_size=10, force_update=False, sleeping_time=2.0, provider: Provider = Provider.Exchange) -> None:
+        self.region = region
         self.provider = provider
         super().__init__(batch_size, force_update, sleeping_time)
 
     def run(self):
-        http_session = get_http_session()
+        http_session = get_http_session(self.mode)
 
         # 上证、中证
         self.fetch_csi_index(http_session)
@@ -48,8 +49,11 @@ class ChinaIndexListSpider(Recorder):
 
         while True:
             query_url = url.format(page, page_size)
-            response = request_get(http_session, query_url)
-            response_dict = demjson.decode(response.text)
+            text = sync_get(http_session, query_url, return_type='text')
+            if text is None:
+                continue
+
+            response_dict = demjson.decode(text)
             response_index_list = response_dict.get('list', [])
 
             if len(response_index_list) == 0:
@@ -83,17 +87,12 @@ class ChinaIndexListSpider(Recorder):
 
         for _, index in df.iterrows():
             index_code = index['code']
-
             url = query_url.format(index_code)
-
-            try:
-                response = request_get(http_session, url)
-                response.raise_for_status()
-            except requests.HTTPError as error:
-                self.logger.error(f'{index["name"]} - {index_code} 成分股抓取错误 ({error})')
+            content = sync_get(http_session, url, return_type='content')
+            if content is None:
                 continue
 
-            response_df = pd.read_excel(io.BytesIO(response.content))
+            response_df = pd.read_excel(io.BytesIO(content))
 
             response_df = response_df[['成分券代码Constituent Code', '成分券名称Constituent Name']].rename(
                 columns={'成分券代码Constituent Code': 'stock_code',
@@ -105,13 +104,13 @@ class ChinaIndexListSpider(Recorder):
             response_df['exchange'] = 'cn'
             response_df['code'] = index_code
             response_df['name'] = index['name']
-            response_df['timestamp'] = now_pd_timestamp(Region.CHN)
+            response_df['timestamp'] = now_pd_timestamp(self.region)
 
             response_df['stock_id'] = response_df['stock_code'].apply(lambda x: china_stock_code_to_id(str(x)))
             response_df['id'] = response_df['stock_id'].apply(
                 lambda x: f'{index_id}_{x}')
 
-            df_to_db(df=response_df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider, force_update=True)
+            df_to_db(df=response_df, ref_df=None, region=self.region, data_schema=self.data_schema, provider=self.provider)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
             self.sleep()
@@ -121,9 +120,11 @@ class ChinaIndexListSpider(Recorder):
         抓取深证指数列表
         """
         url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1812_zs&TABKEY=tab1'
-        response = request_get(http_session, url)
-        df = pd.read_excel(io.BytesIO(response.content), dtype='str')
+        content = sync_get(http_session, url, return_type='content')
+        if content is None:
+            return
 
+        df = pd.read_excel(io.BytesIO(content), dtype='str')
         df.columns = ['code', 'name', 'timestamp', 'base_point', 'list_date']
         df['category'] = 'szse'
         df = df.loc[df['code'].str.contains(r'^\d{6}$')]
@@ -144,9 +145,11 @@ class ChinaIndexListSpider(Recorder):
             index_code = index['code']
 
             url = query_url.format(index_code)
-            response = request_get(http_session, url)
+            content = sync_get(http_session, url, return_type='content')
+            if content is None:
+                continue
 
-            response_df = pd.read_excel(io.BytesIO(response.content), dtype='str')
+            response_df = pd.read_excel(io.BytesIO(content), dtype='str')
 
             index_id = f'index_cn_{index_code}'
             response_df['entity_id'] = index_id
@@ -154,7 +157,7 @@ class ChinaIndexListSpider(Recorder):
             response_df['exchange'] = 'cn'
             response_df['code'] = index_code
             response_df['name'] = index['name']
-            response_df['timestamp'] = now_pd_timestamp(Region.CHN)
+            response_df['timestamp'] = now_pd_timestamp(self.region)
 
             response_df.rename(columns={'证券代码': 'stock_code', '证券简称': 'stock_name'}, inplace=True)
             response_df['stock_id'] = response_df['stock_code'].apply(lambda x: china_stock_code_to_id(str(x)))
@@ -162,7 +165,7 @@ class ChinaIndexListSpider(Recorder):
             response_df['id'] = response_df['stock_id'].apply(
                 lambda x: f'{index_id}_{x}')
 
-            df_to_db(df=response_df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
+            df_to_db(df=response_df, ref_df=None, region=self.region, data_schema=self.data_schema, provider=self.provider)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
             self.sleep()
@@ -172,10 +175,11 @@ class ChinaIndexListSpider(Recorder):
         抓取国证指数列表
         """
         url = 'http://www.cnindex.com.cn/zstx/jcxl/'
+        text = sync_get(http_session, url, return_type='text')
+        if text is None:
+            return
 
-        response = request_get(http_session, url)
-        response.encoding = 'utf-8'
-        dfs = pd.read_html(response.text)
+        dfs = pd.read_html(text)
 
         # 第 9 个 table 之后为非股票指数
         dfs = dfs[1:9]
@@ -213,15 +217,11 @@ class ChinaIndexListSpider(Recorder):
             index_code = index['code']
 
             url = query_url.format(index_code)
-
-            try:
-                response = request_get(http_session, url)
-                response.raise_for_status()
-            except requests.HTTPError as error:
-                self.logger.error(f'{index["name"]} - {index_code} 成分股抓取错误 ({error})')
+            content = sync_get(http_session, url, return_type='content')
+            if content is None:
                 continue
 
-            response_df = pd.read_excel(io.BytesIO(response.content), dtype='str')
+            response_df = pd.read_excel(io.BytesIO(content), dtype='str')
 
             index_id = f'index_cn_{index_code}'
 
@@ -242,7 +242,7 @@ class ChinaIndexListSpider(Recorder):
             response_df['id'] = response_df['stock_id'].apply(
                 lambda x: f'{index_id}_{x}')
 
-            df_to_db(df=response_df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
+            df_to_db(df=response_df, ref_df=None, region=self.region, data_schema=self.data_schema, provider=self.provider)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
             self.sleep()
@@ -258,11 +258,11 @@ class ChinaIndexListSpider(Recorder):
         df = df.dropna(axis=0, how='any')
         df = df.drop_duplicates(subset='id', keep='last')
 
-        df_to_db(df=df, region=Region.CHN, data_schema=Index, provider=self.provider, force_update=False)
+        df_to_db(df=df, ref_df=None, region=self.region, data_schema=Index, provider=self.provider)
 
 
 __all__ = ['ChinaIndexListSpider']
 
 if __name__ == '__main__':
-    spider = ChinaIndexListSpider(provider=Provider.Exchange)
+    spider = ChinaIndexListSpider(region=Region.CHN, provider=Provider.Exchange)
     spider.run()

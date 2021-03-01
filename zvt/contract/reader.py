@@ -6,10 +6,10 @@ from typing import List, Union, Type, Optional
 
 import pandas as pd
 
+from zvt.api.data_type import Region, Provider
 from zvt.contract import IntervalLevel, Mixin, EntityMixin
 from zvt.contract.api import get_entities
-from zvt.drawer.drawer import Drawable
-from zvt.contract.common import Region, Provider
+from zvt.contract.drawer import Drawable
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
@@ -48,11 +48,10 @@ class DataReader(Drawable):
     logger = logging.getLogger(__name__)
 
     def __init__(self,
+                 region: Region,
                  data_schema: Type[Mixin],
                  entity_schema: Type[EntityMixin],
-                 region: Region,
                  provider: Provider = Provider.Default,
-                 entity_provider: Provider = Provider.Default,
                  entity_ids: List[str] = None,
                  exchanges: List[str] = None,
                  codes: List[str] = None,
@@ -63,7 +62,7 @@ class DataReader(Drawable):
                  filters: List = None,
                  order: object = None,
                  limit: int = None,
-                 level: IntervalLevel = IntervalLevel.LEVEL_1DAY,
+                 level: IntervalLevel = None,
                  category_field: str = 'entity_id',
                  time_field: str = 'timestamp',
                  computing_window: int = None) -> None:
@@ -75,7 +74,6 @@ class DataReader(Drawable):
 
         self.region = region
         self.provider = provider
-        self.entity_provider = entity_provider
 
         if end_timestamp is None:
             end_timestamp = now_pd_timestamp(self.region)
@@ -106,7 +104,8 @@ class DataReader(Drawable):
 
         # 转换成标准entity_id
         if entity_schema and not self.entity_ids:
-            df = get_entities(region=self.region, entity_schema=entity_schema, provider=self.entity_provider,
+            df = get_entities(region=self.region, entity_schema=entity_schema,
+                              provider=self.provider,
                               exchanges=self.exchanges, codes=self.codes)
             if pd_is_not_null(df):
                 self.entity_ids = df['entity_id'].to_list()
@@ -151,7 +150,7 @@ class DataReader(Drawable):
 
         dfs = []
         for entity_id in self.entity_ids:
-            df = data_schema.query_data(region=self.region, 
+            df = data_schema.query_data(region=self.region,
                                         provider=provider,
                                         index=[self.category_field, self.time_field],
                                         order=data_schema.timestamp.desc(),
@@ -167,13 +166,20 @@ class DataReader(Drawable):
     def load_data(self):
         self.logger.info('load_data start')
         start_time = time.time()
+        params = dict(entity_ids=self.entity_ids, provider=self.provider,
+                      columns=self.columns, start_timestamp=self.start_timestamp,
+                      end_timestamp=self.end_timestamp, filters=self.filters,
+                      order=self.order, limit=self.limit, level=self.level,
+                      index=[self.category_field, self.time_field],
+                      time_field=self.time_field)
+        self.logger.info(f'query_data params:{params}')
 
         self.data_df = self.data_schema.query_data(region=self.region,
                                                    entity_ids=self.entity_ids,
-                                                   provider=self.provider, 
+                                                   provider=self.provider,
                                                    columns=self.columns,
                                                    start_timestamp=self.start_timestamp,
-                                                   end_timestamp=self.end_timestamp, 
+                                                   end_timestamp=self.end_timestamp,
                                                    filters=self.filters,
                                                    order=self.order,
                                                    limit=self.limit,
@@ -232,7 +238,7 @@ class DataReader(Drawable):
                 added_df = self.data_schema.query_data(region=self.region,
                                                        provider=self.provider,
                                                        columns=self.columns,
-                                                       end_timestamp=to_timestamp, 
+                                                       end_timestamp=to_timestamp,
                                                        filters=filters, level=self.level,
                                                        index=[self.category_field, self.time_field])
 
@@ -265,7 +271,7 @@ class DataReader(Drawable):
 
         if dfs:
             self.data_df = pd.concat(dfs, sort=False)
-            self.data_df.sort_index(level=[0, 1])
+            self.data_df.sort_index(level=[0, 1], inplace=True)
 
             if changed:
                 for listener in self.data_listeners:
@@ -286,19 +292,20 @@ class DataReader(Drawable):
     def empty(self):
         return not pd_is_not_null(self.data_df)
 
-    def get_main_df(self) -> Optional[pd.DataFrame]:
+    def drawer_main_df(self) -> Optional[pd.DataFrame]:
         return self.data_df
+
 
 __all__ = ['DataListener', 'DataReader']
 
 if __name__ == '__main__':
     from zvt.domain import Stock1dKdata, Stock
 
-    data_reader = DataReader(region=Region.CHN, 
-                             codes=['002572', '000338'], 
-                             data_schema=Stock1dKdata, 
+    data_reader = DataReader(region=Region.CHN,
+                             codes=['002572', '000338'],
+                             data_schema=Stock1dKdata,
                              entity_schema=Stock,
                              start_timestamp='2017-01-01',
                              end_timestamp='2019-06-10')
 
-    print(data_reader.data_df)
+    data_reader.draw(show=True)

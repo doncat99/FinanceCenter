@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 TradingBase = declarative_base()
 
@@ -157,9 +157,13 @@ class DragonAndTiger(TradingBase, Mixin):
     net_out_dep5_rate = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.EastMoney, Provider.JoinQuant], 
-                           Region.US: [Provider.Default]}, 
-                db_name='trading', schema_base=TradingBase)
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.EastMoney, Provider.JoinQuant],
+                           Region.US: [Provider.Default]},
+                db_name='trading',
+                schema_base=TradingBase,
+                entity_type=EntityType.Stock)
 
-__all__ = ['ManagerTrading', 'HolderTrading', 'MarginTrading', 'BigDealTrading', 'DragonAndTiger']
+
+# the __all__ is generated
+__all__ = ['ManagerTrading', 'HolderTrading', 'BigDealTrading', 'MarginTrading', 'DragonAndTiger']

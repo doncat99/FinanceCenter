@@ -1,145 +1,145 @@
 # -*- coding: utf-8 -*-
-from zvt.utils.time_utils import to_pd_timestamp
-from zvt.utils.utils import add_func_to_value, to_float
+from datetime import datetime
+
+import pandas as pd
+import numpy as np
+
 from zvt.api.quote import to_report_period_type
 from zvt.domain import FinanceFactor
 from zvt.recorders.eastmoney.finance.base_china_stock_finance_recorder import BaseChinaStockFinanceRecorder
+from zvt.utils.utils import to_float
 
 finance_factor_map = {
     # 基本每股收益(元)
-    "basic_eps": "Epsjb",
+    "Epsjb": "basic_eps",
     # 扣非每股收益(元)
-    "deducted_eps": "Epskcjb",
+    "Epskcjb": "deducted_eps",
     # 稀释每股收益(元)
-    "diluted_eps": "Epsxs",
+    "Epsxs": "diluted_eps",
     # 每股净资产(元)
-    "bps": "Bps",
+    "Bps": "bps",
     # 每股资本公积(元)
-    "capital_reserve_ps": "Mgzbgj",
+    "Mgzbgj": "capital_reserve_ps",
     # 每股未分配利润(元)
-    "undistributed_profit_ps": "Mgwfplr",
+    "Mgwfplr": "undistributed_profit_ps",
     # 每股经营现金流(元)
-    "op_cash_flow_ps": "Mgjyxjje",
+    "Mgjyxjje": "op_cash_flow_ps",
     # 成长能力指标
     #
     # 营业总收入(元)
-    "total_op_income": "Totalincome",
+    "Totalincome": "total_op_income",
     # 毛利润(元)
-    "gross_profit": "Grossprofit",
+    "Grossprofit": "gross_profit",
     # 归属净利润(元)
-    "net_profit": "Parentnetprofit",
+    "Parentnetprofit": "net_profit",
     # 扣非净利润(元)
-    "deducted_net_profit": "Bucklenetprofit",
+    "Bucklenetprofit": "deducted_net_profit",
     # 营业总收入同比增长
-    "op_income_growth_yoy": "Totalincomeyoy",
+    "Totalincomeyoy": "op_income_growth_yoy",
     # 归属净利润同比增长
-    "net_profit_growth_yoy ": "Parentnetprofityoy",
+    "Parentnetprofityoy": "net_profit_growth_yoy ",
     # 扣非净利润同比增长
-    "deducted_net_profit_growth_yoy": "Bucklenetprofityoy",
+    "Bucklenetprofityoy": "deducted_net_profit_growth_yoy",
     # 营业总收入滚动环比增长
-    "op_income_growth_qoq": "Totalincomerelativeratio",
+    "Totalincomerelativeratio": "op_income_growth_qoq",
     # 归属净利润滚动环比增长
-    "net_profit_growth_qoq": "Parentnetprofitrelativeratio",
+    "Parentnetprofitrelativeratio": "net_profit_growth_qoq",
     # 扣非净利润滚动环比增长
-    "deducted_net_profit_growth_qoq": "Bucklenetprofitrelativeratio",
+    "Bucklenetprofitrelativeratio": "deducted_net_profit_growth_qoq",
     # 盈利能力指标
     #
     # 净资产收益率(加权)
-    "roe": "Roejq",
+    "Roejq": "roe",
     # 净资产收益率(扣非/加权)
-    "deducted_roe": "Roekcjq",
+    "Roekcjq": "deducted_roe",
     # 总资产收益率(加权)
-    "rota": "Allcapitalearningsrate",
+    "Allcapitalearningsrate": "rota",
     # 毛利率
-    "gross_profit_margin": "Grossmargin",
+    "Grossmargin": "gross_profit_margin",
     # 净利率
-    "net_margin": "Netinterest",
+    "Netinterest": "net_margin",
     # 收益质量指标
     #
     # 预收账款/营业收入
-    "advance_receipts_per_op_income": "Accountsrate",
+    "Accountsrate": "advance_receipts_per_op_income",
     # 销售净现金流/营业收入
-    "sales_net_cash_flow_per_op_income": "Salesrate",
+    "Salesrate": "sales_net_cash_flow_per_op_income",
     # 经营净现金流/营业收入
-    "op_net_cash_flow_per_op_income": "Operatingrate",
+    "Operatingrate": "op_net_cash_flow_per_op_income",
     # 实际税率
-    "actual_tax_rate": "Taxrate",
+    "Taxrate": "actual_tax_rate",
     # 财务风险指标
     #
     # 流动比率
-    "current_ratio": "Liquidityratio",
+    "Liquidityratio": "current_ratio",
     # 速动比率
-    "quick_ratio": "Quickratio",
+    "Quickratio": "quick_ratio",
     # 现金流量比率
-    "cash_flow_ratio": "Cashflowratio",
+    "Cashflowratio": "cash_flow_ratio",
     # 资产负债率
-    "debt_asset_ratio": "Assetliabilityratio",
+    "Assetliabilityratio": "debt_asset_ratio",
     # 权益乘数
-    "em": "Equitymultiplier",
+    "Equitymultiplier": "em",
     # 产权比率
-    "equity_ratio": "Equityratio",
+    "Equityratio": "equity_ratio",
     # 营运能力指标(一般企业)
     #
     # 总资产周转天数(天)
-    "total_assets_turnover_days": "Totalassetsdays",
+    "Totalassetsdays": "total_assets_turnover_days",
     # 存货周转天数(天)
-    "inventory_turnover_days": "Inventorydays",
+    "Inventorydays": "inventory_turnover_days",
     # 应收账款周转天数(天)
-    "receivables_turnover_days": "Accountsreceivabledays",
+    "Accountsreceivabledays": "receivables_turnover_days",
     # 总资产周转率(次)
-    "total_assets_turnover": "Totalassetrate",
+    "Totalassetrate": "total_assets_turnover",
     # 存货周转率(次)
-    "inventory_turnover": "Inventoryrate",
+    "Inventoryrate": "inventory_turnover",
     # 应收账款周转率(次)
-    "receivables_turnover": "Accountsreceiveablerate",
+    "Accountsreceiveablerate": "receivables_turnover",
 
     # 专项指标(银行)
     #
     # 存款总额
-    "fi_total_deposit": "Totaldeposit",
+    "Totaldeposit": "fi_total_deposit",
     # 贷款总额
-    "fi_total_loan": "Totalloan",
+    "Totalloan": "fi_total_loan",
     # 存贷款比例
-    "fi_loan_deposit_ratio": "Depositloanratio",
+    "Depositloanratio": "fi_loan_deposit_ratio",
     # 资本充足率
-    "fi_capital_adequacy_ratio": "Capitaladequacyratio",
+    "Capitaladequacyratio": "fi_capital_adequacy_ratio",
     # 核心资本充足率
-    "fi_core_capital_adequacy_ratio": "Corecapitaladequacyratio",
+    "Corecapitaladequacyratio": "fi_core_capital_adequacy_ratio",
     # 不良贷款率
-    "fi_npl_ratio": "Nplratio",
+    "Nplratio": "fi_npl_ratio",
     # 不良贷款拨备覆盖率
-    "fi_npl_provision_coverage": "Nplprovisioncoverage",
+    "Nplprovisioncoverage": "fi_npl_provision_coverage",
     # 资本净额
-    "fi_net_capital": "Netcapital_b",
+    "Netcapital_b": "fi_net_capital",
     # 专项指标(保险)
     #
     # 总投资收益率
-    "insurance_roi": "Tror",
+    "Tror": "insurance_roi",
     # 净投资收益率
-    "insurance_net_investment_yield": "Nror",
+    "Nror": "insurance_net_investment_yield",
     # 已赚保费
-    "insurance_earned_premium": "Eapre",
+    "Eapre": "insurance_earned_premium",
     # 赔付支出
-    "insurance_payout": "Comexpend",
+    "Comexpend": "insurance_payout",
     # 退保率
-    "insurance_surrender_rate": "Surrate",
+    "Surrate": "insurance_surrender_rate",
     # 偿付能力充足率
-    "insurance_solvency_adequacy_ratio": "Solvenra",
+    "Solvenra": "insurance_solvency_adequacy_ratio",
     # 专项指标(券商)
     #
     # 净资本
-    "broker_net_capital": "Netcapital",
+    "Netcapital": "broker_net_capital",
     # 净资产
-    "broker_net_assets": "Netassets",
+    "Netassets": "broker_net_assets",
     # 净资本/净资产
-    "broker_net_capital_assets_ratio": "Captialrate",
+    "Captialrate": "broker_net_capital_assets_ratio",
     # 自营固定收益类证券规模/净资本
-    "broker_self_operated_fixed_income_securities_net_capital_ratio": "Incomesizerate",
+    "Incomesizerate": "broker_self_operated_fixed_income_securities_net_capital_ratio",
 }
-
-add_func_to_value(finance_factor_map, to_float)
-finance_factor_map["report_period"] = ("ReportDate", to_report_period_type)
-finance_factor_map["report_date"] = ("ReportDate", to_pd_timestamp)
 
 
 class ChinaStockFinanceFactorRecorder(BaseChinaStockFinanceRecorder):
@@ -149,8 +149,33 @@ class ChinaStockFinanceFactorRecorder(BaseChinaStockFinanceRecorder):
     data_schema = FinanceFactor
     data_type = 1
 
-    def get_data_map(self):
-        return finance_factor_map
+    def format(self, entity, df):
+        cols = list(df.columns)
+        str_cols = ['Title']
+        date_cols = [self.get_original_time_field()]
+        float_cols = list(set(cols) - set(str_cols) - set(date_cols))
+        for column in float_cols:
+            df[column] = df[column].apply(lambda x: to_float(x))
+
+        df.rename(columns=finance_factor_map, inplace=True)
+
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['report_period'] = df['timestamp'].apply(lambda x: to_report_period_type(x))
+        df['report_date'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+        df['name'] = entity.name
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
 
 
 __all__ = ['ChinaStockFinanceFactorRecorder']

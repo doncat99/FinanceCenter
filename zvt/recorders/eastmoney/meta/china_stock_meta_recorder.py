@@ -1,115 +1,114 @@
 # -*- coding: utf-8 -*-
-import multiprocessing
 import time
-import random
 
-from zvt.contract.recorder import Recorder, Region, Provider, EntityType
+from zvt import zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
+from zvt.domain.meta.stock_meta import StockDetail, Stock
+from zvt.contract.recorder import RecorderForEntities
+from zvt.contract.api import get_entities, get_db_session
+from zvt.recorders.exchange.china_stock_list_spider import ExchangeChinaStockListRecorder
+from zvt.networking.request import sync_post
 from zvt.utils.time_utils import to_pd_timestamp
 from zvt.utils.utils import to_float, pct_to_float
-from zvt.utils.request_utils import get_http_session, request_post
-from zvt.contract.api import get_entities
-from zvt.domain.meta.stock_meta import StockDetail, Stock
-from zvt.recorders.exchange.china_stock_list_spider import ExchangeChinaStockListRecorder
-
-from tqdm import tqdm
 
 
 class EastmoneyChinaStockListRecorder(ExchangeChinaStockListRecorder):
-    data_schema = Stock
+    region = Region.CHN
     provider = Provider.EastMoney
-    
-    def __init__(self, batch_size=10, force_update=False, sleeping_time=5, share_para=None) -> None:
-        super().__init__(batch_size, force_update, sleeping_time)
+    data_schema = Stock
 
 
-class EastmoneyChinaStockDetailRecorder(Recorder):
+class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
+    region = Region.CHN
     provider = Provider.EastMoney
     data_schema = StockDetail
-    region = Region.CHN
 
     def __init__(self, batch_size=10, force_update=False, sleeping_time=5, codes=None, share_para=None) -> None:
-        super().__init__(batch_size, force_update, sleeping_time)
-
-        # get list at first
-        # EastmoneyChinaStockListRecorder().run()
-
-        self.codes = codes
-        self.share_para = share_para
-        
-        if not self.force_update:
+        if not force_update:
             assert self.region is not None
             self.entities = get_entities(region=self.region,
-                                         session=self.session,
                                          entity_type=EntityType.StockDetail,
                                          exchanges=['sh', 'sz'],
-                                         codes=self.codes,
+                                         codes=codes,
                                          filters=[StockDetail.profile.is_(None)],
                                          return_type='domain',
                                          provider=self.provider)
 
-    def run(self):
-        time.sleep(random.randint(0, self.share_para[1]))
-        process_identity = multiprocessing.current_process()._identity
-        if len(process_identity) > 0:
-            #  The worker process tqdm bar shall start at Position 1
-            worker_id = (process_identity[0]-1)%self.share_para[1] + 1
+        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
+
+    def process_loop(self, entity, http_session):
+        assert isinstance(entity, StockDetail)
+
+        step1 = time.time()
+        precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
+
+        self.result = None
+
+        if entity.exchange == 'sh':
+            fc = "{}01".format(entity.code)
+        if entity.exchange == 'sz':
+            fc = "{}02".format(entity.code)
+
+        # 基本资料
+        param = {"color": "w", "fc": fc, "SecurityCode": "SZ300059"}
+        url = 'https://emh5.eastmoney.com/api/GongSiGaiKuang/GetJiBenZiLiao'
+        json_result = sync_post(http_session, url, json=param)
+        if json_result is None:
+            return
+
+        resp_json = json_result['JiBenZiLiao']
+
+        entity.profile = resp_json['CompRofile']
+        entity.main_business = resp_json['MainBusiness']
+        entity.date_of_establishment = to_pd_timestamp(resp_json['FoundDate'])
+
+        # 关联行业
+        industry = ','.join(resp_json['Industry'].split('-'))
+        entity.industry = industry
+
+        # 关联概念
+        entity.sector = resp_json['Block']
+
+        # 关联地区
+        entity.area = resp_json['Provice']
+
+        self.sleep()
+
+        # 发行相关
+        param = {"color": "w", "fc": fc}
+        url = 'https://emh5.eastmoney.com/api/GongSiGaiKuang/GetFaXingXiangGuan'
+        json_result = sync_post(http_session, url, json=param)
+        if json_result is None:
+            return
+
+        resp_json = json_result['FaXingXiangGuan']
+
+        entity.issue_pe = to_float(resp_json['PEIssued'])
+        entity.price = to_float(resp_json['IssuePrice'])
+        entity.issues = to_float(resp_json['ShareIssued'])
+        entity.raising_fund = to_float((resp_json['NetCollection']))
+        entity.net_winning_rate = pct_to_float(resp_json['LotRateOn'])
+
+        session = get_db_session(region=self.region,
+                                 provider=self.provider,
+                                 data_schema=self.data_schema)
+        session.commit()
+
+        cost = precision_str.format(time.time() - step1)
+
+        prefix = "finish~ " if zvt_config['debug'] else ""
+        postfix = "\n" if zvt_config['debug'] else ""
+
+        if self.result is not None:
+            self.logger.info("{}{}, {}, time: {}, size: {:>7,}, date: [ {}, {} ]{}".format(
+                prefix, self.data_schema.__name__, entity.id, cost,
+                self.result[0], self.result[1], self.result[2], postfix))
         else:
-            worker_id = 0
-        desc = "{:02d} : {}".format(worker_id, self.share_para[0])
+            self.logger.info("{}{}, {}, time: {}{}".format(
+                prefix, self.data_schema.__name__, entity.id, cost, postfix))
 
-        with tqdm(total=len(self.entities), ncols=80, position=worker_id, desc=desc, leave=self.share_para[3]) as pbar:
-            http_session = get_http_session()
-            
-            for security_item in self.entities:
-                assert isinstance(security_item, StockDetail)
-
-                if security_item.exchange == 'sh':
-                    fc = "{}01".format(security_item.code)
-                if security_item.exchange == 'sz':
-                    fc = "{}02".format(security_item.code)
-
-                # 基本资料
-                param = {"color": "w", "fc": fc, "SecurityCode": "SZ300059"}
-                resp =  request_post(http_session, 'https://emh5.eastmoney.com/api/GongSiGaiKuang/GetJiBenZiLiao', json=param)
-                resp.encoding = 'utf8'
-
-                resp_json = resp.json()['Result']['JiBenZiLiao']
-
-                security_item.profile = resp_json['CompRofile']
-                security_item.main_business = resp_json['MainBusiness']
-                security_item.date_of_establishment = to_pd_timestamp(resp_json['FoundDate'])
-
-                # 关联行业
-                industry = ','.join(resp_json['Industry'].split('-'))
-                security_item.industry = industry
-
-                # 关联概念
-                security_item.concept_indices = resp_json['Block']
-
-                # 关联地区
-                security_item.area_indices = resp_json['Provice']
-
-                # 发行相关
-                param = {"color": "w", "fc": fc}
-                resp = request_post(http_session, 'https://emh5.eastmoney.com/api/GongSiGaiKuang/GetFaXingXiangGuan', json=param)
-                resp.encoding = 'utf8'
-
-                resp_json = resp.json()['Result']['FaXingXiangGuan']
-
-                security_item.issue_pe = to_float(resp_json['PEIssued'])
-                security_item.price = to_float(resp_json['IssuePrice'])
-                security_item.issues = to_float(resp_json['ShareIssued'])
-                security_item.raising_fund = to_float((resp_json['NetCollection']))
-                security_item.net_winning_rate = pct_to_float(resp_json['LotRateOn'])
-                
-                self.session.commit()
-                self.logger.info('finish recording stock meta for: {}'.format(security_item.code))
-
-                self.share_para[2].acquire()
-                pbar.update()
-                self.share_para[2].release()
-                
-                self.sleep()
+    def on_finish(self):
+        pass
 
 
 __all__ = ['EastmoneyChinaStockListRecorder', 'EastmoneyChinaStockDetailRecorder']

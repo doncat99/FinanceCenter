@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, DateTime, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 HolderBase = declarative_base()
 
@@ -14,11 +14,11 @@ class HkHolder(HolderBase, Mixin):
     # 股票代码
     code = Column(String(length=32))
     # 股票名称
-    name = Column(String(length=128))
+    name = Column(String(length=256))
 
-    # 市场通编码	三种类型：310001-沪股通，310002-深股通，310005-港股通
+    # 市场通编码    三种类型：310001-沪股通，310002-深股通，310005-港股通
     holder_code = Column(String(length=32))
-    # 市场通名称	三种类型：沪股通，深股通，港股通
+    # 市场通名称    三种类型：沪股通，深股通，港股通
     holder_name = Column(String(length=256))
 
     # 持股数量
@@ -94,9 +94,13 @@ class InstitutionalInvestorHolder(HolderBase, Mixin):
     shareholding_ratio = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.EastMoney], 
-                           Region.US: [Provider.JoinQuant]}, 
-                db_name='holder', schema_base=HolderBase)
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.EastMoney, Provider.JoinQuant],
+                           Region.US: [Provider.Default]},
+                db_name='holder',
+                schema_base=HolderBase,
+                entity_type=EntityType.Stock)
 
-__all__ = ['TopTenTradableHolder', 'TopTenHolder', 'InstitutionalInvestorHolder', 'HkHolder']
+
+# the __all__ is generated
+__all__ = ['HkHolder', 'TopTenTradableHolder', 'TopTenHolder', 'InstitutionalInvestorHolder']

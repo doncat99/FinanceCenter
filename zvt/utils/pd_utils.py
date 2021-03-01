@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from typing import List, Union
-from io import StringIO
 
 import pandas as pd
 
@@ -73,12 +72,6 @@ def fill_with_same_index(df_list: List[pd.DataFrame]):
     return result
 
 
-def to_postgresql(df, conn, table_name):
-    output = StringIO()
-    df.to_csv(output, sep='\t', index=False, header=False)
-    output1 = output.getvalue()
-    
-    cur = conn.cursor()
-    cur.copy_from(StringIO(output1), table_name, columns=list(df.columns))
-    conn.commit()
-    cur.close()
+# the __all__ is generated
+__all__ = ['pd_is_not_null', 'index_df', 'normal_index_df', 'is_normal_df',
+           'df_subset', 'fill_with_same_index']

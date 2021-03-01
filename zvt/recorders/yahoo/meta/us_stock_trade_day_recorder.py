@@ -1,51 +1,70 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import pandas as pd
 import pandas_market_calendars as mcal
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import TimeSeriesDataRecorder
+from zvt.api.data_type import Region, Provider
 from zvt.domain import StockTradeDay, Stock
-from zvt.contract.common import Region, Provider, EntityType
-from zvt.utils.time_utils import to_time_str, now_pd_timestamp, is_datetime
+from zvt.contract.recorder import RecorderForEntities
+from zvt.contract.api import df_to_db
+from zvt.utils.time_utils import to_time_str, now_pd_timestamp, PD_TIME_FORMAT_DAY
 
 
-class UsStockTradeDayRecorder(TimeSeriesDataRecorder):
-    entity_provider = Provider.Yahoo
-    entity_schema = Stock
-
+class UsStockTradeDayRecorder(RecorderForEntities):
     provider = Provider.Yahoo
     region = Region.US
+    entity_schema = Stock
     data_schema = StockTradeDay
 
-    def __init__(self, entity_type=EntityType.Stock, exchanges=['NYSE', 'NASDAQ'], entity_ids=None, codes=None, batch_size=10,
-                 force_update=False, sleeping_time=5, default_size=2000, real_time=False, fix_duplicate_way='add',
-                 start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0, share_para=None) -> None:
-        super().__init__(entity_type, exchanges, entity_ids, ['A'], batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
-                         close_minute, share_para=share_para)
-        self.nyse = mcal.get_calendar('NYSE')
-        self.nasdaq = mcal.get_calendar('NASDAQ')
+    def init_entities(self):
+        self.entities = ['NYSE']
 
-    def record(self, entity, start, end, size, timestamps, http_session):
-        try:
-            trade_day = StockTradeDay.query_data(region=self.region, limit=1, order=StockTradeDay.timestamp.desc(), return_type='domain')
-            if len(trade_day) > 0:
-                start = trade_day[0].timestamp
-        except Exception as _:
-            pass
+    def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
+        return df['timestamp'].dt.strftime(time_fmt)
 
-        df = pd.DataFrame()
-        dates = self.nyse.schedule(start_date=to_time_str(start), end_date=to_time_str(now_pd_timestamp(Region.US)))
+    def process_loop(self, entity, http_session):
+        calendar = mcal.get_calendar(entity)
+
+        trade_days = StockTradeDay.query_data(region=self.region,
+                                              return_type='df')
+        if len(trade_days) > 0:
+            start = to_time_str(trade_days['timestamp'].max(axis=0))
+        else:
+            start = "1980-01-01"
+
+        dates = calendar.schedule(start_date=start, end_date=to_time_str(now_pd_timestamp(Region.US)))
         dates = dates.index.to_list()
         self.logger.info(f'add dates:{dates}')
-        df['timestamp'] = pd.to_datetime(dates)
-        df['id'] = [to_time_str(date) for date in dates]
-        df['entity_id'] = 'nyse'
 
-        df_to_db(df=df, region=self.region, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+        if len(dates) > 0:
+            df = pd.DataFrame(dates, columns=['timestamp'])
+            df = self.format(entity, df)
+            self.persist(df)
+
+        return None
+
+    def format(self, entity, df):
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = 'nyse'
+        df['provider'] = self.provider.value
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
+
+    def persist(self, df):
+        df_to_db(df=df, ref_df=None, region=self.region, data_schema=self.data_schema, provider=self.provider)
+
+    def on_finish(self):
+        pass
 
 
 __all__ = ['UsStockTradeDayRecorder']
+
 
 if __name__ == '__main__':
     r = UsStockTradeDayRecorder()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from zvt.utils.utils import chrome_copy_header_to_dict
 
+
 SSE_KDATA_HEADER = chrome_copy_header_to_dict('''
 Host: yunhq.sse.com.cn:32041
 Connection: keep-alive
@@ -122,20 +123,15 @@ User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (
 Referer: http://fund.eastmoney.com/
 ''')
 
-YAHOO_STOCK_LIST_HEADER = chrome_copy_header_to_dict('''
-:authority: old.nasdaq.com
-:method: GET
-:path: /screening/companies-by-name.aspx?letter=0&render=download&exchange=NYSE
-:scheme: https
-accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-accept-encoding: gzip, deflate, br
-accept-language: en,en-US;q=0.9,zh-TW;q=0.8,zh;q=0.7,zh-CN;q=0.6
-cookie: _ga=GA1.2.1847103698.1579482049; __gads=ID=1184e10ceffdde5e:T=1579482050:S=ALNI_MbAMSD8jl8wgdSBviXWiVoJxvvKnQ; tc_ptidexpiry=1642554555244; tc_ptid=7doW7SACADuAThlqW0ygaZ; _gcl_au=1.1.1197068765.1598515706; _gid=GA1.2.1580260093.1598515710; _fbp=fb.1.1598515723767.218434430; _uetsid=bda30eddd0c9417bf2c23e2815a9b657; _uetvid=68d65873fa5984c8ca205e778f86236c; _mkto_trk=id:303-QKM-463&token:_mch-nasdaq.com-1598515808146-94159; c_enabled$=true; tc_q=; clientPrefs=||||lightg; rewrite=true; RT="z=1&dm=nasdaq.com&si=tusq7hp4g7g&ss=keciz6hm&sl=3&tt=1kzh&obo=1&rl=1&ld=skvs&r=e15927bdf670acc0dec5299aa3020505&ul=skvw&hd=skws"; s_pers=%20s_nr%3D1598536112710-Repeat%7C1606312112710%3B%20bc%3D1%7C1598622512712%3B; s_sess=%20s_cc%3Dtrue%3B%20s_sq%3D%3B; __qca=P0-1346984370-1598536118632; GED_PLAYLIST_ACTIVITY=W3sidSI6IkM3a3ciLCJ0c2wiOjE1OTg1NDI0NjEsIm52IjowLCJ1cHQiOjE1OTg1MzYyMTAsImx0IjoxNTk4NTM2MjEwfV0.; NSC_W.TJUFEFGFOEFS.OBTEBR.443=ffffffffc3a08e3345525d5f4f58455e445a4a42378b
-dnt: 1
-sec-fetch-dest: document
-sec-fetch-mode: navigate
-sec-fetch-site: none
-sec-fetch-user: ?1
-upgrade-insecure-requests: 1
-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36
-''')
+YAHOO_STOCK_LIST_HEADER = {
+    'authority': 'old.nasdaq.com',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'sec-fetch-site': 'cross-site',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-user': '?1',
+    'sec-fetch-dest': 'document',
+    'accept-language': 'en-US,en;q=0.9',
+    'cookie': 'AKA_A2=A; NSC_W.TJUFEFGFOEFS.OBTEBR.443=ffffffffc3a0f70e45525d5f4f58455e445a4a42378b',
+}

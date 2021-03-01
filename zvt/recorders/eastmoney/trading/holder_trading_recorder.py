@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-from zvt.utils.utils import to_float
-from zvt.domain import HolderTrading
+from datetime import datetime
 
+import pandas as pd
+import numpy as np
+
+from zvt.domain import HolderTrading
 from zvt.recorders.eastmoney.common import EastmoneyMoreDataRecorder
+from zvt.utils.time_utils import PD_TIME_FORMAT_DAY
+from zvt.utils.utils import to_float
 
 
 class HolderTradingRecorder(EastmoneyMoreDataRecorder):
@@ -14,22 +19,34 @@ class HolderTradingRecorder(EastmoneyMoreDataRecorder):
     def get_original_time_field(self):
         return 'RiQi'
 
-    def get_data_map(self):
-        return {
-            "holder_name": ("GuDongMingCheng", str),
-            "volume": ("BianDongShuLiang", to_float),
-            "change_pct": ("BianDongBiLi", to_float),
-            "holding_pct": ("BianDongHouChiGuBiLi", to_float)
-        }
+    def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
+        return entity.id + '_' + df[self.get_evaluated_time_field()].dt.strftime(time_fmt) + '_' + df['GuDongMingCheng']
 
-    def generate_domain_id(self, entity, original_data):
-        the_name = original_data.get("GuDongMingCheng")
-        timestamp = original_data[self.get_original_time_field()]
-        the_id = "{}_{}_{}".format(entity.id, timestamp, the_name)
-        return the_id
+    def format(self, entity, df):
+        df['volume'] = df['BianDongShuLiang'].apply(lambda x: to_float(x))
+        df['change_pct'] = df['BianDongBiLi'].apply(lambda x: to_float(x))
+        df['holding_pct'] = df['BianDongHouChiGuBiLi'].apply(lambda x: to_float(x))
+
+        df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        df['holder_name'] = df['GuDongMingCheng'].astype(str)
+        df['holder_name'] = df['holder_name'].apply(lambda x: x.replace('\n', '').replace('\r', ''))
+
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])
+        elif not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+        df['entity_id'] = entity.id
+        df['provider'] = self.provider.value
+        df['code'] = entity.code
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
 
 
 __all__ = ['HolderTradingRecorder']
+
 
 if __name__ == '__main__':
     # init_log('holder_trading.log')

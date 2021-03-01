@@ -7,12 +7,11 @@ from zvt.contract import Mixin
 class KdataCommon(Mixin):
     provider = Column(String(length=32))
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
     # Enum constraint is not extendable
     # level = Column(Enum(IntervalLevel, values_callable=enum_value))
     level = Column(String(length=32))
 
-    # 如果是股票，代表前复权数据
     # 开盘价
     open = Column(Float)
     # 收盘价
@@ -32,7 +31,7 @@ class KdataCommon(Mixin):
 class TickCommon(Mixin):
     provider = Column(String(length=32))
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
     level = Column(String(length=32))
 
     order = Column(String(length=32))
@@ -66,12 +65,40 @@ class StockKdataCommon(KdataCommon):
     # 换手率
     turnover_rate = Column(Float)
 
-    amount = Column(Float)
-    adjustflag = Column(String(length=8))
 
+# the __all__ is generated
+__all__ = ['KdataCommon', 'TickCommon', 'BlockKdataCommon', 'IndexKdataCommon', 'EtfKdataCommon', 'StockKdataCommon']
 
-from zvt.domain.quotes.block import *
-from zvt.domain.quotes.stock import *
-from zvt.domain.quotes.etf import *
-from zvt.domain.quotes.index import *
-from zvt.domain.quotes.trade_day import *
+# __init__.py structure:
+# common code of the package
+# export interface in __all__ which contains __all__ of its sub modules
+
+# import all from submodule trade_day
+from .trade_day import *
+from .trade_day import __all__ as _trade_day_all
+__all__ += _trade_day_all
+
+# import all from submodule common
+from .common import *
+from .common import __all__ as _common_all
+__all__ += _common_all
+
+# import all from submodule index
+from .index import *
+from .index import __all__ as _index_all
+__all__ += _index_all
+
+# import all from submodule etf
+from .etf import *
+from .etf import __all__ as _etf_all
+__all__ += _etf_all
+
+# import all from submodule stock
+from .stock import *
+from .stock import __all__ as _stock_all
+__all__ += _stock_all
+
+# import all from submodule block
+from .block import *
+from .block import __all__ as _block_all
+__all__ += _block_all

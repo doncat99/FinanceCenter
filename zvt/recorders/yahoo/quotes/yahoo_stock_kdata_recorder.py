@@ -2,40 +2,35 @@
 import argparse
 
 import pandas as pd
-from sqlalchemy.exc import IntegrityError
 
-from zvt import init_log
-from zvt.api import get_kdata, AdjustType
-from zvt.api.quote import generate_kdata_id, get_kdata_schema
-from zvt.contract import IntervalLevel
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import FixedCycleDataRecorder
-from zvt.contract.common import Region, Provider, EntityType
-from zvt.recorders.joinquant.common import to_yahoo_trading_level
+from zvt import init_log, zvt_config
+from zvt.api.data_type import Region, Provider, EntityType
+from zvt.api.quote import get_kdata, get_kdata_schema
 from zvt.domain import Stock, StockKdataCommon, Stock1dKdata
+from zvt.contract import IntervalLevel, AdjustType
+from zvt.contract.recorder import FixedCycleDataRecorder
+from zvt.recorders.yahoo.common import to_yahoo_trading_level
+from zvt.networking.request import yh_get_bars
 from zvt.utils.pd_utils import pd_is_not_null
-from zvt.utils.time_utils import to_time_str, TIME_FORMAT_DAY, TIME_FORMAT_ISO8601
-from zvt.utils.request_utils import yh_get_bars
+from zvt.utils.time_utils import to_time_str, PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601
 
 
 class YahooUsStockKdataRecorder(FixedCycleDataRecorder):
-    entity_provider = Provider.Yahoo
-    entity_schema = Stock
-
     # 数据来自yahoo
+    region = Region.US
     provider = Provider.Yahoo
-
+    entity_schema = Stock
     # 只是为了把recorder注册到data_schema
     data_schema = StockKdataCommon
 
     def __init__(self,
-                 exchanges=['NYSE', 'NASDAQ'],
+                 exchanges=['nyse', 'nasdaq', 'amex'],
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
                  force_update=True,
                  sleeping_time=0,
-                 default_size=2000,
+                 default_size=zvt_config['batch_size'],
                  real_time=False,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
@@ -57,11 +52,9 @@ class YahooUsStockKdataRecorder(FixedCycleDataRecorder):
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
         self.adjust_type = adjust_type
 
-    def generate_domain_id(self, entity, original_data):
-        return generate_kdata_id(entity_id=entity.id, timestamp=original_data['timestamp'], level=self.level)
-
-    def on_finish(self):
-        super().on_finish()
+    def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
+        format = PD_TIME_FORMAT_DAY if self.level >= IntervalLevel.LEVEL_1DAY else PD_TIME_FORMAT_ISO8601
+        return entity.id + '_' + df[self.get_evaluated_time_field()].dt.strftime(format)
 
     def record(self, entity, start, end, size, timestamps, http_session):
         if self.end_timestamp:
@@ -70,42 +63,36 @@ class YahooUsStockKdataRecorder(FixedCycleDataRecorder):
         else:
             end_timestamp = None
             df = yh_get_bars(code=entity.code, interval=self.yahoo_trading_level, start=start, actions=False)
-        
-        self.logger.info("record {} for {}, size:{}".format(self.data_schema.__name__, entity.id, len(df)))
-        
+
         if pd_is_not_null(df):
-            df.reset_index(inplace=True)
-            df['name'] = entity.name
-            df.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', \
-                               'Close': 'close','Adj Close': 'adj_close', \
-                               'Volume': 'volume', 'Date': 'timestamp', 'Datetime': 'timestamp'}, inplace=True)
-
-            df['entity_id'] = entity.id
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df['provider'] = Provider.Yahoo.value
-            df['level'] = self.level.value
-            df['code'] = entity.code
-
-            def generate_kdata_id(se):
-                if self.level >= IntervalLevel.LEVEL_1DAY:
-                    return "{}_{}".format(se['entity_id'], to_time_str(se['timestamp'], fmt=TIME_FORMAT_DAY))
-                else:
-                    return "{}_{}".format(se['entity_id'], to_time_str(se['timestamp'], fmt=TIME_FORMAT_ISO8601))
-
-            df['id'] = df[['entity_id', 'timestamp']].apply(generate_kdata_id, axis=1)
-
-            try:
-                df_to_db(df=df, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
-                self.logger.info("persist {} for {}, size:{}, time interval:[{}, {}]".format(self.data_schema.__name__, entity.id, len(df), start, end_timestamp))
-            except IntegrityError as e:
-                if "psycopg2.errors.UniqueViolation" in e.__str__():
-                    self.logger.info("UniqueViolation for id:{}, {}".format(entity.id, self.data_schema))
-                    df.drop_duplicates(subset=['id'], keep='first', inplace=True)
-                    df_to_db(df=df, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            return df
         return None
+
+    def format(self, entity, df):
+        df.reset_index(inplace=True)
+        df.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low',
+                           'Close': 'close', 'Adj Close': 'adj_close',
+                           'Volume': 'volume', 'Date': 'timestamp',
+                           'Datetime': 'timestamp'}, inplace=True)
+
+        # df.update(df.select_dtypes(include=[np.number]).fillna(0))
+
+        df['entity_id'] = entity.id
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df['provider'] = Provider.Yahoo.value
+        df['level'] = self.level.value
+        df['code'] = entity.code
+        df['name'] = entity.name
+
+        df['id'] = self.generate_domain_id(entity, df)
+        return df
+
+    def on_finish(self):
+        super().on_finish()
 
 
 __all__ = ['YahooUsStockKdataRecorder']
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

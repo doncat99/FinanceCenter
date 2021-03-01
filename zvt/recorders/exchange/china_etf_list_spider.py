@@ -1,34 +1,39 @@
 # -*- coding: utf-8 -*-
-
 import io
 import re
 
 import demjson
 import pandas as pd
 
-from zvt.contract.api import df_to_db
-from zvt.contract.recorder import Recorder
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.api.quote import china_stock_code_to_id
 from zvt.domain import EtfStock, BlockCategory, Etf
-from zvt.contract.common import Region, Provider, EntityType
+from zvt.contract.recorder import Recorder
+from zvt.contract.api import df_to_db
 from zvt.recorders.consts import DEFAULT_SH_ETF_LIST_HEADER
+from zvt.networking.request import get_http_session, sync_get
 from zvt.utils.time_utils import now_pd_timestamp
-from zvt.utils.request_utils import get_http_session, request_get
+
 
 class ChinaETFListSpider(Recorder):
     data_schema = EtfStock
 
-    def __init__(self, batch_size=10, force_update=False, sleeping_time=10.0, provider: Provider=Provider.Exchange) -> None:
+    region = Region.CHN
+
+    def __init__(self, batch_size=10, force_update=False, sleeping_time=10.0, provider: Provider = Provider.Exchange) -> None:
         self.provider = provider
         super().__init__(batch_size, force_update, sleeping_time)
 
     def run(self):
-        http_session = get_http_session()
+        http_session = get_http_session(self.mode)
 
         # 抓取沪市 ETF 列表
         url = 'http://query.sse.com.cn/commonQuery.do?sqlId=COMMON_SSE_ZQPZ_ETFLB_L_NEW'
-        response = request_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER)
-        response_dict = demjson.decode(response.text)
+        text = sync_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER, return_type='text')
+        if text is None:
+            return
+
+        response_dict = demjson.decode(text)
 
         df = pd.DataFrame(response_dict.get('result', []))
         self.persist_etf_list(df, exchange='sh')
@@ -40,9 +45,11 @@ class ChinaETFListSpider(Recorder):
 
         # 抓取深市 ETF 列表
         url = 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1945'
-        response = request_get(http_session, url)
+        content = sync_get(http_session, url, return_type='content')
+        if content is None:
+            return
 
-        df = pd.read_excel(io.BytesIO(response.content), dtype=str)
+        df = pd.read_excel(io.BytesIO(content), dtype=str)
         self.persist_etf_list(df, exchange='sz')
         self.logger.info('深市 ETF 列表抓取完成...')
 
@@ -70,7 +77,7 @@ class ChinaETFListSpider(Recorder):
         df = df.dropna(axis=0, how='any')
         df = df.drop_duplicates(subset='id', keep='last')
 
-        df_to_db(df=df, region=Region.CHN, data_schema=Etf, provider=self.provider, force_update=False)
+        df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=Etf, provider=self.provider)
 
     def download_sh_etf_component(self, df: pd.DataFrame, http_session):
         """
@@ -87,8 +94,10 @@ class ChinaETFListSpider(Recorder):
 
         for _, etf in etf_df.iterrows():
             url = query_url.format(etf['ETF_TYPE'], etf['ETF_CLASS'])
-            response = request_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER)
-            response_dict = demjson.decode(response.text)
+            text = sync_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER, return_type='text')
+            if text is None:
+                continue
+            response_dict = demjson.decode(text)
             response_df = pd.DataFrame(response_dict.get('result', []))
 
             etf_code = etf['FUND_ID']
@@ -107,7 +116,7 @@ class ChinaETFListSpider(Recorder):
             response_df['id'] = response_df['stock_id'].apply(
                 lambda x: f'{etf_id}_{x}')
 
-            df_to_db(df=response_df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
+            df_to_db(df=response_df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
             self.logger.info(f'{etf["FUND_NAME"]} - {etf_code} 成分股抓取完成...')
 
             self.sleep()
@@ -125,13 +134,14 @@ class ChinaETFListSpider(Recorder):
                 continue
 
             url = query_url.format(underlying_index)
-            response = request_get(http_session, url)
-            response.encoding = 'gbk'
+            text = sync_get(http_session, url, encoding='gbk', return_type='text')
+            if text is None:
+                continue
 
             try:
-                dfs = pd.read_html(response.text, header=1)
+                dfs = pd.read_html(text, header=1)
             except ValueError as error:
-                self.logger.error(f'HTML parse error: {error}, response: {response.text}')
+                self.logger.error(f'HTML parse error: {error}, response: {text}')
                 continue
 
             if len(dfs) < 4:
@@ -156,13 +166,12 @@ class ChinaETFListSpider(Recorder):
             response_df['id'] = response_df['stock_id'].apply(
                 lambda x: f'{etf_id}_{x}')
 
-            df_to_db(df=response_df, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
+            df_to_db(df=response_df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
             self.logger.info(f'{etf["证券简称"]} - {etf_code} 成分股抓取完成...')
 
             self.sleep()
 
-    @staticmethod
-    def populate_sh_etf_type(df: pd.DataFrame, http_session):
+    def populate_sh_etf_type(self, df: pd.DataFrame, http_session):
         """
         填充沪市 ETF 代码对应的 TYPE 到列表数据中
         :param df: ETF 列表数据
@@ -174,8 +183,10 @@ class ChinaETFListSpider(Recorder):
         type_df = pd.DataFrame()
         for etf_class in [1, 2]:
             url = query_url.format(etf_class)
-            response = request_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER)
-            response_dict = demjson.decode(response.text)
+            text = sync_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER, return_type='text')
+            if text is None:
+                continue
+            response_dict = demjson.decode(text)
             response_df = pd.DataFrame(response_dict.get('result', []))
             response_df = response_df[['fundid1', 'etftype']]
 

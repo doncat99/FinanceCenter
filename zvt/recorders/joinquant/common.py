@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from zvt.contract import IntervalLevel
-from zvt.contract.common import EntityType
+from zvt.api.data_type import EntityType
 from zvt.domain import ReportPeriod
+from zvt.contract import IntervalLevel
 
 
 def to_jq_trading_level(trading_level: IntervalLevel):
@@ -29,10 +29,14 @@ def to_jq_entity_id(security_item):
 
 
 def to_entity_id(jq_code: str, entity_type: EntityType):
-    code, exchange = jq_code.split('.')
-    if exchange == 'XSHG':
-        exchange = 'sh'
-    elif exchange == 'XSHE':
+    try:
+        code, exchange = jq_code.split('.')
+        if exchange == 'XSHG':
+            exchange = 'sh'
+        elif exchange == 'XSHE':
+            exchange = 'sz'
+    except:
+        code = jq_code
         exchange = 'sz'
 
     return f'{entity_type.value}_{exchange}_{code}'
@@ -53,15 +57,6 @@ def jq_to_report_period(jq_report_type):
         return ReportPeriod.year.value
     assert False
 
-def to_yahoo_trading_level(trading_level: IntervalLevel):
-    if trading_level < IntervalLevel.LEVEL_1HOUR:
-        return trading_level.value
 
-    if trading_level == IntervalLevel.LEVEL_1HOUR:
-        return '60m'
-    if trading_level == IntervalLevel.LEVEL_1DAY:
-        return '1d'
-    if trading_level == IntervalLevel.LEVEL_1WEEK:
-        return '1wk'
-    if trading_level == IntervalLevel.LEVEL_1MON:
-        return '1mo'
+# the __all__ is generated
+__all__ = ['to_jq_trading_level', 'to_jq_entity_id', 'to_entity_id', 'jq_to_report_period']

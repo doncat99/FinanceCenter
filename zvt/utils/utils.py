@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import numbers
 from decimal import getcontext, Decimal
 from enum import Enum
 
@@ -14,20 +13,6 @@ logger = logging.getLogger(__name__)
 
 none_values = ['不变', '--', '-', '新进']
 zero_values = ['不变', '--', '-', '新进']
-
-
-def first_item_to_float(the_list):
-    return to_float(the_list[0])
-
-
-def second_item_to_float(the_list):
-    return to_float(the_list[1])
-
-
-def add_func_to_value(the_map, the_func):
-    for k, v in the_map.items():
-        the_map[k] = (v, the_func)
-    return the_map
 
 
 def to_float(the_str, default=None):
@@ -112,24 +97,6 @@ def fill_domain_from_dict(the_domain, the_dict: dict, the_map: dict = None, defa
                 exec('the_domain.{}=result_value'.format(k))
 
 
-SUPPORT_ENCODINGS = ['GB2312', 'GBK', 'GB18030', 'UTF-8']
-
-
-def read_csv(f, encoding, sep=None, na_values=None):
-    encodings = [encoding] + SUPPORT_ENCODINGS
-    for encoding in encodings:
-        try:
-            if sep:
-                return pd.read_csv(f, sep=sep, encoding=encoding, na_values=na_values)
-            else:
-                return pd.read_csv(f, encoding=encoding, na_values=na_values)
-        except UnicodeDecodeError as e:
-            logger.warning('read_csv failed by using encoding:{}'.format(encoding), e)
-            f.seek(0)
-            continue
-    return None
-
-
 def marshal_object_for_ui(object):
     if isinstance(object, Enum):
         return object.value
@@ -157,20 +124,6 @@ def chrome_copy_header_to_dict(src):
     return header
 
 
-def to_positive_number(number):
-    if isinstance(number, numbers.Number):
-        return abs(number)
-
-    return 0
-
-
-def multiple_number(number, factor):
-    try:
-        return number * factor
-    except:
-        return number
-
-
 def add_to_map_list(the_map, key, value):
     result = []
     if key in the_map:
@@ -180,3 +133,8 @@ def add_to_map_list(the_map, key, value):
 
     if value not in result:
         result.append(value)
+
+
+# the __all__ is generated
+__all__ = ['to_float', 'pct_to_float', 'json_callback_param', 'fill_domain_from_dict',
+           'marshal_object_for_ui', 'chrome_copy_header_to_dict', 'add_to_map_list']

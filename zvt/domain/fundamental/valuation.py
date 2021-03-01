@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import Mixin
 from zvt.contract.register import register_schema
-from zvt.contract.common import Region, Provider
 
 ValuationBase = declarative_base()
 
@@ -13,7 +13,7 @@ class StockValuation(ValuationBase, Mixin):
     __tablename__ = 'stock_valuation'
 
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
     # 总股本(股)
     capitalization = Column(Float)
     # 公司已发行的普通股股份总数(包含A股，B股和H股的总股本)
@@ -40,7 +40,7 @@ class EtfValuation(ValuationBase, Mixin):
     __tablename__ = 'etf_valuation'
 
     code = Column(String(length=32))
-    name = Column(String(length=128))
+    name = Column(String(length=256))
     # 静态pe
     pe = Column(Float)
     # 加权
@@ -63,9 +63,13 @@ class EtfValuation(ValuationBase, Mixin):
     pcf1 = Column(Float)
 
 
-register_schema(regions=[Region.CHN, Region.US], 
-                providers={Region.CHN: [Provider.JoinQuant], 
+register_schema(regions=[Region.CHN, Region.US],
+                providers={Region.CHN: [Provider.JoinQuant],
                            Region.US: [Provider.Default]},
-                db_name='valuation', schema_base=ValuationBase)
+                db_name='valuation',
+                schema_base=ValuationBase,
+                entity_type=EntityType.Stock)
 
+
+# the __all__ is generated
 __all__ = ['StockValuation', 'EtfValuation']

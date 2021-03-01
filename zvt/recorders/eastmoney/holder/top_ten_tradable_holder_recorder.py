@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+from zvt.api.data_type import Region, Provider
 from zvt.domain import TopTenTradableHolder
-from zvt.contract.common import Provider
 from zvt.recorders.eastmoney.holder.top_ten_holder_recorder import TopTenHolderRecorder
 
 
 class TopTenTradableHolderRecorder(TopTenHolderRecorder):
-    provider = Provider.EastMoney
     data_schema = TopTenTradableHolder
+
+    region = Region.CHN
+    provider = Provider.EastMoney
 
     url = 'https://emh5.eastmoney.com/api/GuBenGuDong/GetShiDaLiuTongGuDong'
     path_fields = ['ShiDaLiuTongGuDongList']
