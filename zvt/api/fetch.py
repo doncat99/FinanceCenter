@@ -6,7 +6,7 @@ from datetime import datetime
 from tqdm.auto import tqdm
 
 from zvt.api.data_type import Region, Provider, RunMode
-from zvt.domain import Stock, Etf, Index, StockTradeDay, StockSummary, StockDetail, FinanceFactor, \
+from zvt.domain import Stock, Etf, StockTradeDay, StockSummary, StockDetail, FinanceFactor, \
                        BalanceSheet, IncomeStatement, CashFlowStatement, StockMoneyFlow, \
                        DividendFinancing, DividendDetail, RightsIssueDetail, SpoDetail, \
                        MarginTradingSummary, CrossMarketSummary, HolderTrading, TopTenHolder, \
