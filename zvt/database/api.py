@@ -64,8 +64,8 @@ def build_engine(region: Region):
     #     min_size=12,
     #     max_size=12)
     db_name = "{}_{}".format(zvt_config['db_name'], region.value)
-    link = 'postgresql+psycopg2://{}:{}@{}/{}'.format(
-        zvt_config['db_user'], zvt_config['db_pass'], zvt_config['db_host'], db_name)
+    link = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
+        zvt_config['db_user'], zvt_config['db_pass'], zvt_config['db_host'], zvt_config['db_port'], db_name)
     database = create_engine(link,
                              encoding='utf-8',
                              echo=False,
@@ -80,17 +80,21 @@ def build_engine(region: Region):
                              executemany_batch_page_size=500,
                              )
 
-    with psycopg2.connect(database='postgres', user=zvt_config['db_user'], password=zvt_config['db_pass']) as connection:
-        if connection is not None:
-            connection.autocommit = True
-            cur = connection.cursor()
-            cur.execute("SELECT datname FROM pg_database;")
-            list_database = cur.fetchall()
-            database_name = "{}_{}".format(zvt_config['db_name'], region.value)
-            if (database_name,) not in list_database:
-                with create_engine('postgresql:///postgres', isolation_level='AUTOCOMMIT').connect() as conn:
-                    cmd = "CREATE DATABASE {}".format(database_name)
-                    conn.execute(cmd)
+    try:
+        with psycopg2.connect(database='postgres', user=zvt_config['db_user'], password=zvt_config['db_pass'],
+                              host=zvt_config['db_host'], port=zvt_config['db_port']) as connection:
+            if connection is not None:
+                connection.autocommit = True
+                cur = connection.cursor()
+                cur.execute("SELECT datname FROM pg_database;")
+                list_database = cur.fetchall()
+                database_name = "{}_{}".format(zvt_config['db_name'], region.value)
+                if (database_name,) not in list_database:
+                    with create_engine('postgresql:///postgres', isolation_level='AUTOCOMMIT').connect() as conn:
+                        cmd = "CREATE DATABASE {}".format(database_name)
+                        conn.execute(cmd)
+    except:
+        pass
 
     zvt_context.db_engine_map[region] = database
     return database
