@@ -14,7 +14,7 @@ from zvt.api.fetch import fetch_data
 
 # @sched.scheduled_job('interval', days=1)
 def main():
-    multiprocessing.set_start_method('spawn')
+    multiprocessing.set_start_method('fork')
 
     fetch_data(Region.CHN)
     # fetch_data(Region.US)

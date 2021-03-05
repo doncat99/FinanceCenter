@@ -35,7 +35,7 @@ def progress_count(total_count, desc, prog_count):
 def run_amp(mode, process_cnt, func, entities, desc, prog_count):
     entity_cnt = len(entities)
 
-    ctx = multiprocessing.get_context('spawn')
+    ctx = multiprocessing.get_context('fork')
 
     progress = ctx.Process(name='ProgressBar', target=progress_count, args=(entity_cnt, desc, prog_count))
     progress.start()
