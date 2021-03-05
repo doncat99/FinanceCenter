@@ -69,6 +69,8 @@ def run_amp(mode, process_cnt, func, entities, desc, prog_count):
 
     tq.join()
 
+    time.sleep(5)
+
     logger.info('terminate processes start')
 
     for process in multiprocesses:
@@ -78,10 +80,7 @@ def run_amp(mode, process_cnt, func, entities, desc, prog_count):
 
     prog_count.value = entity_cnt
 
-    time.sleep(1)
-
-    logger.info('progress processes join start')
-
+    logger.info('progressbar terminated')
     progress.terminate()
 
 
