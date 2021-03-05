@@ -10,8 +10,8 @@ from zvt.api.quote import get_kdata
 from zvt.domain import Etf, Etf1dKdata
 from zvt.contract import IntervalLevel
 from zvt.contract.recorder import FixedCycleDataRecorder
-from zvt.contract.api import get_db_session
 from zvt.recorders.consts import EASTMONEY_ETF_NET_VALUE_HEADER
+from zvt.database.api import get_db_session
 from zvt.networking.request import sync_get
 from zvt.utils.time_utils import to_time_str
 from zvt.utils.pd_utils import pd_is_not_null

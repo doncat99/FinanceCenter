@@ -10,8 +10,8 @@ from zvt.api.quote import get_kdata_schema, get_kdata
 from zvt.domain import Stock, StockKdataCommon, Stock1dHfqKdata
 from zvt.contract import IntervalLevel, AdjustType
 from zvt.contract.recorder import FixedCycleDataRecorder
-from zvt.contract.api import get_db_session
 from zvt.recorders.joinquant.common import to_jq_trading_level, to_jq_entity_id
+from zvt.database.api import get_db_session
 from zvt.networking.request import jq_get_token, jq_get_bars
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import to_time_str, now_pd_timestamp, PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601

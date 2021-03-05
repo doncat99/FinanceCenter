@@ -7,6 +7,7 @@ from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.recorders.baostock.common import to_entity_id, to_bao_entity_type
 from zvt.networking.request import bao_get_all_securities
+from zvt.utils.pd_utils import pd_is_not_null
 
 
 class BaseBaoChinaMetaRecorder(Recorder):
@@ -42,7 +43,8 @@ class BaoChinaStockRecorder(BaseBaoChinaMetaRecorder):
     def run(self):
         # 抓取股票列表
         df_entity = bao_get_all_securities(to_bao_entity_type(EntityType.Stock))
-        if not df_entity.empty:
+
+        if pd_is_not_null(df_entity):
             df_stock = self.to_zvt_entity(df_entity, entity_type=EntityType.Stock)
 
             df_to_db(df=df_stock, ref_df=None, region=Region.CHN, data_schema=Stock, provider=self.provider)
@@ -59,8 +61,12 @@ class BaoChinaEtfRecorder(BaseBaoChinaMetaRecorder):
 
     def run(self):
         # 抓取etf列表
-        df_index = self.to_zvt_entity(bao_get_all_securities(to_bao_entity_type(EntityType.ETF)), entity_type=EntityType.ETF, category='etf')
-        df_to_db(df=df_index, ref_df=None, region=Region.CHN, data_schema=Etf, provider=self.provider)
+        df_entity = bao_get_all_securities(to_bao_entity_type(EntityType.ETF))
+
+        if pd_is_not_null(df_entity):
+            df_index = self.to_zvt_entity(df_entity, entity_type=EntityType.ETF, category='etf')
+
+            df_to_db(df=df_index, ref_df=None, region=Region.CHN, data_schema=Etf, provider=self.provider)
 
         # self.logger.info(df_index)
         self.logger.info("persist etf list success")

@@ -9,10 +9,19 @@ from sqlalchemy.engine.reflection import Inspector
 from zvt import zvt_config
 from zvt.api.data_type import Region, Provider, EntityType
 from zvt.contract import EntityMixin, zvt_context, Mixin
-from zvt.contract.api import get_db_engine, get_db_session_factory
+from zvt.database.api import get_db_engine, get_db_session_factory, set_db_name
 from zvt.utils.utils import add_to_map_list
 
 logger = logging.getLogger(__name__)
+
+# db_name -> [declarative_meta1,declarative_meta2...]
+dbname_map_schemas = {}
+
+# provider -> [db_name1,db_name2...]
+provider_map_dbnames = {}
+
+# all registered entity types
+entity_types = []
 
 
 def register_entity(entity_type: EntityType = None):
@@ -23,8 +32,8 @@ def register_entity(entity_type: EntityType = None):
             if not entity_type:
                 entity_type_ = EntityType(cls.__name__.lower())
 
-            if entity_type_ not in zvt_context.entity_types:
-                zvt_context.entity_types.append(entity_type_)
+            if entity_type_ not in entity_types:
+                entity_types.append(entity_type_)
             zvt_context.entity_schema_map[entity_type_] = cls
         return cls
     return register
@@ -59,8 +68,8 @@ def register_schema(regions: List[Region],
                     if issubclass(cls, Mixin):
                         cls.register_provider(region, provider)
 
-                if zvt_context.dbname_map_schemas.get(db_name):
-                    schemas = zvt_context.dbname_map_schemas[db_name]
+                if dbname_map_schemas.get(db_name):
+                    schemas = dbname_map_schemas[db_name]
                 zvt_context.schemas.append(cls)
 
                 if entity_type:
@@ -68,6 +77,9 @@ def register_schema(regions: List[Region],
                 schemas.append(cls)
 
         for provider in providers[region]:
+            if provider == Provider.Default:
+                continue
+
             # track in in  _providers
             if region in zvt_context.providers.keys():
                 if provider not in zvt_context.providers[region]:
@@ -75,24 +87,20 @@ def register_schema(regions: List[Region],
             else:
                 zvt_context.providers.update({region: [provider]})
 
-            if not zvt_context.provider_map_dbnames.get(provider):
-                zvt_context.provider_map_dbnames[provider] = []
-            zvt_context.provider_map_dbnames[provider].append(db_name)
-            zvt_context.dbname_map_base[db_name] = schema_base
+            if not provider_map_dbnames.get(provider):
+                provider_map_dbnames[provider] = []
+            provider_map_dbnames[provider].append(db_name)
+            set_db_name(db_name, schema_base)
 
             # create the db & table
             engine = get_db_engine(region, provider, db_name=db_name)
             if engine is None:
                 continue
-            schema_base.metadata.create_all(engine)
 
+            schema_base.metadata.create_all(engine)
             session_fac = get_db_session_factory(region, provider, db_name=db_name)
             session_fac.configure(bind=engine)
 
-        for provider in providers[region]:
-            engine = get_db_engine(region, provider, db_name=db_name)
-            if engine is None:
-                continue
             inspector = Inspector.from_engine(engine)
 
             # create index for 'id', 'timestamp', 'entity_id', 'code', 'report_period', 'updated_timestamp
@@ -124,4 +132,4 @@ def register_schema(regions: List[Region],
                             index = sqlalchemy.schema.Index(index_name, column0, column1)
                             index.create(engine)
 
-    zvt_context.dbname_map_schemas[db_name] = schemas
+    dbname_map_schemas[db_name] = schemas

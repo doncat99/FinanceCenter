@@ -5,10 +5,10 @@ from zvt import zvt_config
 from zvt.api.data_type import EntityType
 from zvt.api.quote import to_jq_report_period
 from zvt.domain import FinanceFactor
-from zvt.contract.api import get_data, get_db_session
 from zvt.recorders.eastmoney.common import company_type_flag, get_fc, EastmoneyTimestampsDataRecorder, \
                                            call_eastmoney_api, get_from_path_fields
 from zvt.recorders.joinquant.common import to_jq_entity_id
+from zvt.database.api import get_db_session
 from zvt.networking.request import jq_get_fundamentals
 from zvt.utils.pd_utils import pd_is_not_null, index_df
 from zvt.utils.time_utils import to_time_str, to_pd_timestamp

@@ -147,7 +147,7 @@ def init_config(pkg_name: str = None, current_config: dict = None, **kwargs) -> 
             sample_config = pkg_resources.resource_filename(pkg_name, 'config.json')
             if os.path.exists(sample_config):
                 copyfile(sample_config, config_path)
-        except Exception as _:
+        except:
             logger.warning(f'could not load config.json from package {pkg_name}')
 
     if os.path.exists(config_path):
@@ -202,8 +202,8 @@ def init_plugins():
 init_env(zvt_home=ZVT_HOME)
 
 # register to meta
-# import zvt.contract as zvt_contract
-# import zvt.recorders as zvt_recorders
+import zvt.contract as zvt_contract
+import zvt.recorders as zvt_recorders
 
 
 __all__ = ['zvt_env', 'zvt_config', 'init_log', 'init_env', 'init_config', '__version__']

@@ -6,8 +6,8 @@ import numpy as np
 
 from zvt.api.data_type import Region, Provider
 from zvt.domain.fundamental.dividend_financing import DividendFinancing
-from zvt.contract.api import get_db_session
 from zvt.recorders.eastmoney.common import EastmoneyPageabeDataRecorder
+from zvt.database.api import get_db_session
 from zvt.utils.utils import to_float
 
 

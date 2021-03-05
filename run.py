@@ -1,6 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+import multiprocessing
 # from datetime import datetime
 # from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -13,6 +14,8 @@ from zvt.api.fetch import fetch_data
 
 # @sched.scheduled_job('interval', days=1)
 def main():
+    multiprocessing.set_start_method('spawn')
+
     fetch_data(Region.CHN)
     # fetch_data(Region.US)
 

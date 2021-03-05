@@ -134,5 +134,6 @@ if __name__ == '__main__':
     BaoChinaStockKdataRecorder(level=level, sleeping_time=0, codes=codes,
                                real_time=False, adjust_type=AdjustType.hfq).run()
 
-    print(get_kdata(region=Region.CHN, entity_id='stock_sz_000001', limit=10, order=Stock1dHfqKdata.timestamp.desc(),
+    print(get_kdata(region=Region.CHN, entity_id='stock_sz_000001', limit=10,
+                    order=Stock1dHfqKdata.timestamp.desc(),
                     adjust_type=AdjustType.hfq))

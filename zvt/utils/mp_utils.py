@@ -19,8 +19,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def create_mp_share_value():
-    manager = multiprocessing.Manager()
-    return manager.Value('i', 0)
+    return multiprocessing.Value('i', 0)
 
 
 def progress_count(total_count, desc, prog_count):
@@ -36,7 +35,9 @@ def progress_count(total_count, desc, prog_count):
 def run_amp(mode, process_cnt, func, entities, desc, prog_count):
     entity_cnt = len(entities)
 
-    progress = multiprocessing.Process(target=progress_count, args=(entity_cnt, desc, prog_count))
+    ctx = multiprocessing.get_context('spawn')
+
+    progress = ctx.Process(name='ProgressBar', target=progress_count, args=(entity_cnt, desc, prog_count))
     progress.start()
 
     # spawning multiprocessing limited by the available cores
@@ -94,11 +95,11 @@ class AMP(multiprocessing.Process):
         self.mode = mode
         self.prog_count = prog_count
 
-    # async def aioprocess(self, ticker: str, session: ClientSession) -> str:
+    # async def aioprocess(self, ticker: str, http_session: ClientSession) -> str:
     #     """Issue GET for the ticker and write to file."""
     #     logger.debug(f'{self.name} processing_ticker {ticker}')
     #     fname = f'{self.odir}/{ticker}.csv'
-    #     res = await self.get(ticker=ticker, session=session)
+    #     res = await self.get(ticker=ticker, http_session=http_session)
     #     if not res:
     #         return f'{ticker} fetch failed'
     #     async with aiofiles.open(fname, "a") as f:
@@ -113,8 +114,8 @@ class AMP(multiprocessing.Process):
         # time.sleep(0.01)
 
     async def async_process(self, entities, prog_count):
-        """Create session to concurrently fetch tickers."""
-        logger.info(f'{self.name} session for {len(entities)} entities')
+        """Create http_session to concurrently fetch tickers."""
+        logger.info(f'{self.name} http_session for {len(entities)} entities')
         http_session = get_http_session(self.mode)
 
         tasks = []

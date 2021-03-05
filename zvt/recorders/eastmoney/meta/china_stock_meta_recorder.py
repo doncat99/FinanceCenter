@@ -5,8 +5,8 @@ from zvt import zvt_config
 from zvt.api.data_type import Region, Provider, EntityType
 from zvt.domain.meta.stock_meta import StockDetail, Stock
 from zvt.contract.recorder import RecorderForEntities
-from zvt.contract.api import get_entities, get_db_session
 from zvt.recorders.exchange.china_stock_list_spider import ExchangeChinaStockListRecorder
+from zvt.database.api import get_db_session
 from zvt.networking.request import sync_post
 from zvt.utils.time_utils import to_pd_timestamp
 from zvt.utils.utils import to_float, pct_to_float
