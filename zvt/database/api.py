@@ -9,7 +9,7 @@ import contextlib
 import psycopg2
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy_batch_inserts import enable_batch_inserting
@@ -81,7 +81,10 @@ def build_engine(region: Region) -> Engine:
     engine = create_engine(link,
                            encoding='utf-8',
                            echo=False,
-                           poolclass=NullPool,
+                           poolclass=QueuePool,
+                           pool_size=0,
+                           pool_recycle=-1,
+                           max_overflow=-1,
                            executemany_mode='values',
                            executemany_values_page_size=10000,
                            executemany_batch_page_size=500)
@@ -130,14 +133,13 @@ def to_postgresql(region: Region, df, tablename):
 
 
 def get_db_engine(region: Region,
-                  provider: Provider,
                   db_name: str = None) -> Engine:
     db_engine = db_engine_map.get(region)
     if db_engine:
-        logger.debug("engine cache hit: engine key: {}".format(db_name))
+        logger.debug("engine cache hit: engine key: {}_{}".format(region.value, db_name))
         return db_engine
 
-    logger.debug("create engine key: {}".format(db_name))
+    logger.debug("create engine key: {}_{}".format(region.value, db_name))
     db_engine_map[region] = build_engine(region)
     return db_engine_map[region]
 

@@ -23,6 +23,9 @@ provider_map_dbnames = {}
 # all registered entity types
 entity_types = []
 
+# db_name -> [declarative_meta1,declarative_meta2...]
+dbname_map_index = {}
+
 
 def register_entity(entity_type: EntityType = None):
     def register(cls):
@@ -58,15 +61,16 @@ def register_schema(regions: List[Region],
     :return:
     :rtype:
     """
+    if dbname_map_schemas.get(db_name):
+        return
+
     schemas = []
     for region in regions:
         for item in schema_base._decl_class_registry.items():
             cls = item[1]
             if type(cls) == DeclarativeMeta:
                 # register provider to the schema
-                for provider in providers[region]:
-                    if issubclass(cls, Mixin):
-                        cls.register_provider(region, provider)
+                [cls.register_provider(region, provider) for provider in providers[region] if issubclass(cls, Mixin)]
 
                 if dbname_map_schemas.get(db_name):
                     schemas = dbname_map_schemas[db_name]
@@ -76,10 +80,12 @@ def register_schema(regions: List[Region],
                     add_to_map_list(the_map=zvt_context.entity_map_schemas, key=entity_type, value=cls)
                 schemas.append(cls)
 
-        for provider in providers[region]:
-            if provider == Provider.Default:
-                continue
+        # create the db & table
+        engine = get_db_engine(region, db_name=db_name)
+        if engine is None:
+            continue
 
+        for provider in providers[region]:
             # track in in  _providers
             if region in zvt_context.providers.keys():
                 if provider not in zvt_context.providers[region]:
@@ -90,46 +96,48 @@ def register_schema(regions: List[Region],
             if not provider_map_dbnames.get(provider):
                 provider_map_dbnames[provider] = []
             provider_map_dbnames[provider].append(db_name)
-            set_db_name(db_name, schema_base)
 
-            # create the db & table
-            engine = get_db_engine(region, provider, db_name=db_name)
-            if engine is None:
-                continue
-
-            schema_base.metadata.create_all(engine)
             session_fac = get_db_session_factory(region, provider, db_name=db_name)
             session_fac.configure(bind=engine)
 
-            inspector = Inspector.from_engine(engine)
+        set_db_name(db_name, schema_base)
+        schema_base.metadata.create_all(engine)
+        inspector = Inspector.from_engine(engine)
 
-            # create index for 'id', 'timestamp', 'entity_id', 'code', 'report_period', 'updated_timestamp
-            for table_name, table in iter(schema_base.metadata.tables.items()):
-                index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
+        if not dbname_map_index.get(region):
+            dbname_map_index[region] = []
 
-                if zvt_config['debug'] == 2:
-                    logger.debug(f'create index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
+        # create index for 'id', 'timestamp', 'entity_id', 'code', 'report_period', 'updated_timestamp
+        for table_name, table in iter(schema_base.metadata.tables.items()):
+            if table_name in dbname_map_index[region]:
+                continue
+            dbname_map_index[region].append(table_name)
 
-                for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
-                    if col in table.c:
-                        index_name = '{}_{}_index'.format(table_name, col)
-                        if index_name not in index_column_names:
+            index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
+
+            if zvt_config['debug'] == 2:
+                logger.debug(f'create index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
+
+            for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
+                if col in table.c:
+                    index_name = '{}_{}_index'.format(table_name, col)
+                    if index_name not in index_column_names:
+                        column = eval('table.c.{}'.format(col))
+                        if col == 'timestamp':
+                            column = eval('table.c.{}.desc()'.format(col))
+                        else:
                             column = eval('table.c.{}'.format(col))
-                            if col == 'timestamp':
-                                column = eval('table.c.{}.desc()'.format(col))
-                            else:
-                                column = eval('table.c.{}'.format(col))
-                            # index = sqlalchemy.schema.Index(index_name, column, unique=(col=='id'))
-                            index = sqlalchemy.schema.Index(index_name, column)
-                            index.create(engine)
+                        # index = sqlalchemy.schema.Index(index_name, column, unique=(col=='id'))
+                        index = sqlalchemy.schema.Index(index_name, column)
+                        index.create(engine)
 
-                for cols in [('timestamp', 'entity_id'), ('timestamp', 'code')]:
-                    if (cols[0] in table.c) and (col[1] in table.c):
-                        index_name = f'{table_name}_{col[0]}_{col[1]}_index'
-                        if index_name not in index_column_names:
-                            column0 = eval('table.c.{}'.format(col[0]))
-                            column1 = eval('table.c.{}'.format(col[1]))
-                            index = sqlalchemy.schema.Index(index_name, column0, column1)
-                            index.create(engine)
+            for cols in [('timestamp', 'entity_id'), ('timestamp', 'code')]:
+                if (cols[0] in table.c) and (col[1] in table.c):
+                    index_name = f'{table_name}_{col[0]}_{col[1]}_index'
+                    if index_name not in index_column_names:
+                        column0 = eval('table.c.{}'.format(col[0]))
+                        column1 = eval('table.c.{}'.format(col[1]))
+                        index = sqlalchemy.schema.Index(index_name, column0, column1)
+                        index.create(engine)
 
     dbname_map_schemas[db_name] = schemas
