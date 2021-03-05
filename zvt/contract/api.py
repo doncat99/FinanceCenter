@@ -375,3 +375,4 @@ def get_entities(
                     code=code, level=None, provider=provider, columns=columns, col_label=col_label,
                     return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                     filters=filters, session=session, order=order, limit=limit, index=index)
+

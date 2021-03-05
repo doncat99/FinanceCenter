@@ -2,7 +2,7 @@
 import pandas as pd
 
 from zvt.api.data_type import Region, Provider
-from zvt.domain import Index
+from zvt.domain.meta.stock_meta import Index
 from zvt.contract.api import df_to_db
 from zvt.utils.time_utils import to_pd_timestamp
 

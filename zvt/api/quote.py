@@ -231,7 +231,7 @@ def get_kdata(region: Region, entity_id=None, entity_ids=None,
 
 
 if __name__ == '__main__':
-    from zvt.contract.common import Region
+    from zvt.api.data_type import Region
     df = get_etf_stocks(Region.CHN, timestamp=now_pd_timestamp(Region.CHN), code='510050', provider=Provider.JoinQuant)
     print(df)
 
