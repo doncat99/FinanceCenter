@@ -7,9 +7,9 @@ import numpy as np
 from zvt.consts import SAMPLE_STOCK_CODES
 from zvt.domain import RightsIssueDetail, DividendFinancing
 from zvt.recorders.eastmoney.common import EastmoneyPageabeDataRecorder
-from zvt.database.api import get_db_session
-from zvt.utils.pd_utils import pd_is_not_null
-from zvt.utils.time_utils import now_pd_timestamp
+# from zvt.database.api import get_db_session
+# from zvt.utils.pd_utils import pd_is_not_null
+# from zvt.utils.time_utils import now_pd_timestamp
 from zvt.utils.utils import to_float
 
 
@@ -43,30 +43,31 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
         return df
 
     def on_finish(self):
-        last_year = str(now_pd_timestamp(self.region).year)
-        codes = [item.code for item in self.entities]
-        need_filleds = DividendFinancing.query_data(region=self.region,
-                                                    provider=self.provider,
-                                                    codes=codes,
-                                                    return_type='domain',
-                                                    filters=[DividendFinancing.rights_raising_fund.is_(None)],
-                                                    end_timestamp=last_year)
+        # last_year = str(now_pd_timestamp(self.region).year)
+        # codes = [item.code for item in self.entities]
+        # need_filleds = DividendFinancing.query_data(region=self.region,
+        #                                             provider=self.provider,
+        #                                             codes=codes,
+        #                                             return_type='domain',
+        #                                             filters=[DividendFinancing.rights_raising_fund.is_(None)],
+        #                                             end_timestamp=last_year)
 
-        for item in need_filleds:
-            df = RightsIssueDetail.query_data(region=self.region,
-                                              provider=self.provider,
-                                              entity_id=item.entity_id,
-                                              columns=[RightsIssueDetail.id,
-                                                       RightsIssueDetail.timestamp,
-                                                       RightsIssueDetail.rights_raising_fund],
-                                              start_timestamp=item.timestamp,
-                                              end_timestamp="{}-12-31".format(item.timestamp.year))
-            if pd_is_not_null(df):
-                item.rights_raising_fund = df['rights_raising_fund'].sum()
-                session = get_db_session(region=self.region,
-                                         provider=self.provider,
-                                         data_schema=self.data_schema)
-                session.commit()
+        # session = get_db_session(region=self.region,
+        #                          provider=self.provider,
+        #                          data_schema=self.data_schema)
+
+        # for item in need_filleds:
+        #     df = RightsIssueDetail.query_data(region=self.region,
+        #                                       provider=self.provider,
+        #                                       entity_id=item.entity_id,
+        #                                       columns=[RightsIssueDetail.id,
+        #                                                RightsIssueDetail.timestamp,
+        #                                                RightsIssueDetail.rights_raising_fund],
+        #                                       start_timestamp=item.timestamp,
+        #                                       end_timestamp="{}-12-31".format(item.timestamp.year))
+        #     if pd_is_not_null(df):
+        #         item.rights_raising_fund = df['rights_raising_fund'].sum()
+        #         session.commit()
 
         super().on_finish()
 

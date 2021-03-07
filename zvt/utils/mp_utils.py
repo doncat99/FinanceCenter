@@ -35,19 +35,20 @@ def progress_count(total_count, desc, prog_count):
 def run_amp(mode, process_cnt, func, entities, desc, prog_count):
     entity_cnt = len(entities)
 
-    ctx = multiprocessing.get_context('fork')
-
-    progress = ctx.Process(name='ProgressBar', target=progress_count, args=(entity_cnt, desc, prog_count))
-    progress.start()
+    progress_bar = multiprocessing.Process(
+        name='ProgressBar', target=progress_count, args=(entity_cnt, desc, prog_count))
+    progress_bar.start()
 
     # spawning multiprocessing limited by the available cores
     if zvt_config['debug']:
         processes = 1
     else:
         if process_cnt != 0:
-            processes = min(zvt_config['processes'], multiprocessing.cpu_count(), entity_cnt, process_cnt)
+            # processes = min(zvt_config['processes'], multiprocessing.cpu_count(), entity_cnt, process_cnt)
+            processes = min(zvt_config['processes'], entity_cnt, process_cnt)
         else:
-            processes = min(zvt_config['processes'], multiprocessing.cpu_count(), entity_cnt)
+            # processes = min(zvt_config['processes'], multiprocessing.cpu_count(), entity_cnt)
+            processes = min(zvt_config['processes'], entity_cnt)
 
     # # Task queue is used to send the entities to processes
     # # Result queue is used to get the result from processes
@@ -56,32 +57,34 @@ def run_amp(mode, process_cnt, func, entities, desc, prog_count):
 
     multiprocesses = [AMP(tq, rq, func, mode, prog_count) for i in range(processes)]
     for process in multiprocesses:
-        logger.info(f'{process.name} process start')
+        logger.debug(f'{process.name} process start')
         process.start()
 
     random.shuffle(entities)
     [tq.put(entity) for entity in entities]
     [tq.put(None) for _ in range(processes)]
 
-    time.sleep(0.1)
-
-    logger.info('task queue join start')
-
+    logger.debug('task queue join start')
     tq.join()
-
-    time.sleep(5)
-
-    logger.info('terminate processes start')
-
-    for process in multiprocesses:
-        logger.info(f'{process.name} process terminate start')
-        process.terminate()
-        logger.info(f'{process.name} process terminate done')
 
     prog_count.value = entity_cnt
 
-    logger.info('progressbar terminated')
-    progress.terminate()
+    time.sleep(3)
+
+    logger.debug('join processes start')
+    for process in multiprocesses:
+        process.terminate()
+        time.sleep(0.1)
+        if not process.is_alive():
+            logger.debug(f'{process.name} process join start')
+            process.join(timeout=1.0)
+            logger.debug(f'{process.name} process join done')
+
+    progress_bar.terminate()
+    logger.debug('progressbar terminated')
+    time.sleep(0.1)
+    progress_bar.join(timeout=1.0)
+    logger.debug('progressbar joined')
 
 
 class AMP(multiprocessing.Process):
