@@ -23,6 +23,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
         'sh': 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',
         'sz': 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1110&TABKEY=tab1&random=0.20932135244582617',
     }
+
     category_map_header = {
         'sh': DEFAULT_SH_HEADER,
         'sz': DEFAULT_SZ_HEADER
@@ -37,21 +38,25 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
         if url is None:
             return
 
-        content = sync_get(http_session, url, headers=self.category_map_header[entity], return_type='content')
-        if content is None:
+        resp = sync_get(http_session, url, encoding='GB2312', headers=self.category_map_header[entity])
+        if resp.status_code != 200:
             return
 
-        self.download_stock_list(content=content, exchange=entity)
+        self.format(resp=resp, exchange=entity)
 
-    def download_stock_list(self, content, exchange):
+    def format(self, resp, exchange):
         df = None
         if exchange == 'sh':
-            df = pd.read_csv(io.BytesIO(content), sep='/s+', encoding='GB2312', dtype=str,
+            content = resp.content
+            # df = pd.read_excel(io.BytesIO(content), sheet_name='主板A股', dtype=str, parse_dates=['上市日期'])
+            df = pd.read_csv(io.BytesIO(content), sep='\t', encoding='GB2312', dtype=str,
                              parse_dates=['上市日期'])
             if df is not None:
+                df.columns = [column.strip() for column in df.columns]
                 df = df.loc[:, ['公司代码', '公司简称', '上市日期']]
 
         elif exchange == 'sz':
+            content = resp.content
             df = pd.read_excel(io.BytesIO(content), sheet_name='A股列表', dtype=str, parse_dates=['A股上市日期'])
             if df is not None:
                 df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
@@ -77,6 +82,9 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
             df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=StockDetail, provider=self.provider)
             # self.logger.info(df.tail())
             self.logger.info("persist stock list successs")
+
+    def on_finish(self):
+        pass
 
 
 __all__ = ['ExchangeChinaStockListRecorder']
