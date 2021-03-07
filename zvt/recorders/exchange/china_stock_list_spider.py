@@ -29,15 +29,19 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     }
 
     def init_entities(self):
-        self.entities = [(category, url) for category, url in self.category_map_url.items()]
+        # self.entities = [(category, url) for category, url in self.category_map_url.items()]
+        self.entities = ['sh', 'sz']
 
     def process_loop(self, entity, http_session):
-        category, url = entity
-        content = sync_get(http_session, url, headers=self.category_map_header[category], return_type='content')
+        url = self.category_map_url.get(entity, None)
+        if url is None:
+            return
+
+        content = sync_get(http_session, url, headers=self.category_map_header[entity], return_type='content')
         if content is None:
             return
 
-        self.download_stock_list(content=content, exchange=category)
+        self.download_stock_list(content=content, exchange=entity)
 
     def download_stock_list(self, content, exchange):
         df = None

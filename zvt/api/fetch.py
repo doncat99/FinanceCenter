@@ -261,7 +261,7 @@ class Para(enum.Enum):
 
 
 data_set_chn = [
-    [interface.get_stock_list_data,              Provider.BaoStock,  0, 1, "Stock List",               24 * 6, RunMode.Sync],
+    [interface.get_stock_list_data,              Provider.Exchange,  0, 1, "Stock List",               24 * 6, RunMode.Sync],
     [interface.get_stock_trade_day,              Provider.BaoStock,  0, 1, "Trade Day",                24,     RunMode.Sync],
     [interface.get_etf_list_data,                Provider.BaoStock,  0, 1, "Etf List",                 24 * 6, RunMode.Sync],
     [interface.get_stock_main_index,             Provider.BaoStock,  0, 1, "Main Index",               24,     RunMode.Sync],
@@ -309,7 +309,7 @@ data_set_chn = [
 ]
 
 data_set_us = [
-    [interface.get_stock_list_data,              Provider.Yahoo,     0, 1, "Stock List",               24 * 6, RunMode.Sync],
+    [interface.get_stock_list_data,              Provider.Exchange,  0, 1, "Stock List",               24 * 6, RunMode.Sync],
     [interface.get_stock_trade_day,              Provider.Yahoo,     0, 1, "Trade Day",                24,     RunMode.Sync],
 
     [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 0, "Stock Daily K-Data",       24,     RunMode.Sync],
