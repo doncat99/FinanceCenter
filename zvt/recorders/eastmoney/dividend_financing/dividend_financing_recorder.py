@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
+from tqdm.auto import tqdm
 
 from zvt.api.data_type import Region, Provider
 from zvt.domain.fundamental.dividend_financing import DividendFinancing
@@ -49,10 +50,15 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
         return df
 
     def on_finish(self):
-        try:
-            for item in self.entities:
+        desc = DividendFinancing.__name__ + "on_finish"
+        with tqdm(total=len(self.entities), ncols=80, desc=desc, position=0, leave=True) as pbar:
+            session = get_db_session(region=self.region,
+                                     provider=self.provider,
+                                     data_schema=self.data_schema)
+
+            for entity in self.entities:
                 code_security = {}
-                code_security[item.code] = item
+                code_security[entity.code] = entity
 
                 need_fill_items = DividendFinancing.query_data(region=self.region,
                                                                provider=self.provider,
@@ -62,14 +68,9 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                                                                    DividendFinancing.ipo_raising_fund.is_(None),
                                                                    DividendFinancing.ipo_issues != 0])
                 for need_fill_item in need_fill_items:
-                    if need_fill_item:
-                        need_fill_item.ipo_raising_fund = code_security[item.code].raising_fund
-                        session = get_db_session(region=self.region,
-                                                 provider=self.provider,
-                                                 data_schema=self.data_schema)
-                        session.commit()
-        except Exception as e:
-            self.logger.exception(e)
+                    need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
+                    session.commit()
+                pbar.update()
 
         super().on_finish()
 

@@ -57,34 +57,34 @@ def run_amp(mode, process_cnt, func, entities, desc, prog_count):
 
     multiprocesses = [AMP(tq, rq, func, mode, prog_count) for i in range(processes)]
     for process in multiprocesses:
-        logger.debug(f'{process.name} process start')
+        logger.info(f'{process.name} process start')
         process.start()
 
     random.shuffle(entities)
     [tq.put(entity) for entity in entities]
     [tq.put(None) for _ in range(processes)]
 
-    logger.debug('task queue join start')
     tq.join()
+    logger.info('task queue joined, processes finished')
 
-    prog_count.value = entity_cnt
+    time.sleep(1)
 
-    time.sleep(3)
-
-    logger.debug('join processes start')
+    logger.info('join processes start')
     for process in multiprocesses:
         process.terminate()
         time.sleep(0.1)
         if not process.is_alive():
-            logger.debug(f'{process.name} process join start')
+            logger.info(f'{process.name} process join start')
             process.join(timeout=1.0)
-            logger.debug(f'{process.name} process join done')
+            logger.info(f'{process.name} process join done')
+
+    prog_count.value = entity_cnt
 
     progress_bar.terminate()
-    logger.debug('progressbar terminated')
+    logger.info('progressbar terminated')
     time.sleep(0.1)
     progress_bar.join(timeout=1.0)
-    logger.debug('progressbar joined')
+    logger.info('progressbar joined')
 
 
 class AMP(multiprocessing.Process):
@@ -99,7 +99,7 @@ class AMP(multiprocessing.Process):
 
     # async def aioprocess(self, ticker: str, http_session: ClientSession) -> str:
     #     """Issue GET for the ticker and write to file."""
-    #     logger.debug(f'{self.name} processing_ticker {ticker}')
+    #     logger.info(f'{self.name} processing_ticker {ticker}')
     #     fname = f'{self.odir}/{ticker}.csv'
     #     res = await self.get(ticker=ticker, http_session=http_session)
     #     if not res:
@@ -159,7 +159,10 @@ class AMP(multiprocessing.Process):
             if entity is None:
                 logger.info(f'{self.name} Received all allocated entities')
                 break
-            self.func(entity, http_session)
+            try:
+                self.func(entity, http_session)
+            except Exception as e:
+                logger.error(f'{self.func.__name__} entity:{entity} error {e}')
             symbol = entity if isinstance(entity, str) else entity.code
             self.result_queue.put(f'{symbol} done')
             self.prog_count.value += 1

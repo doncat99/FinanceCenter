@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
+from tqdm.auto import tqdm
 
 from zvt.api.data_type import Region, Provider
 from zvt.domain import SpoDetail, DividendFinancing
@@ -55,19 +56,24 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
                                                     filters=[DividendFinancing.spo_raising_fund.is_(None)],
                                                     end_timestamp=last_year)
 
-        for item in need_filleds:
-            df = SpoDetail.query_data(region=self.region,
-                                      provider=self.provider,
-                                      entity_id=item.entity_id,
-                                      columns=[SpoDetail.id, SpoDetail.timestamp, SpoDetail.spo_raising_fund],
-                                      start_timestamp=item.timestamp,
-                                      end_timestamp="{}-12-31".format(item.timestamp.year))
-            if pd_is_not_null(df):
-                item.spo_raising_fund = df['spo_raising_fund'].sum()
-                session = get_db_session(region=self.region,
-                                         provider=self.provider,
-                                         data_schema=self.data_schema)
-                session.commit()
+        desc = SpoDetail.__name__ + "on_finish"
+        with tqdm(total=len(need_filleds), ncols=80, desc=desc, position=0, leave=True) as pbar:
+            session = get_db_session(region=self.region,
+                                     provider=self.provider,
+                                     data_schema=self.data_schema)
+
+            for item in need_filleds:
+                df = SpoDetail.query_data(region=self.region,
+                                          provider=self.provider,
+                                          entity_id=item.entity_id,
+                                          columns=[SpoDetail.id, SpoDetail.timestamp, SpoDetail.spo_raising_fund],
+                                          start_timestamp=item.timestamp,
+                                          end_timestamp="{}-12-31".format(item.timestamp.year))
+                if pd_is_not_null(df):
+                    item.spo_raising_fund = df['spo_raising_fund'].sum()
+                    session.commit()
+                pbar.update()
+
         super().on_finish()
 
 

@@ -3,6 +3,7 @@ import logging
 # import random
 from http import client
 from retrying import retry
+from functools import wraps, lru_cache
 
 # import pandas as pd
 import requests
@@ -22,6 +23,23 @@ client.HTTPConnection._http_vsn_str = 'HTTP/1.1'
 
 http_timeout = (20, 60)
 max_retries = 3
+
+
+def hash_dict(func):
+    """Transform mutable dictionnary
+    Into immutable
+    Useful to be compatible with cache
+    """
+    class HDict(dict):
+        def __hash__(self):
+            return hash(frozenset(self.items()))
+
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        args = tuple([HDict(arg) if isinstance(arg, dict) else arg for arg in args])
+        kwargs = {k: HDict(v) if isinstance(v, dict) else v for k, v in kwargs.items()}
+        return func(*args, **kwargs)
+    return wrapped
 
 
 class TimeoutRequestsSession(requests.Session):
@@ -52,6 +70,8 @@ def get_http_session(fetch_mode: RunMode = RunMode.Sync):
     return ClientSession(connector=TCPConnector(limit=64, verify_ssl=False), trust_env=True)
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8', params={}, enable_proxy=False, return_type=None):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _sync_get(http_session: requests.Session, url, enable_proxy, headers=None, encoding='utf-8', params={}):
@@ -89,6 +109,8 @@ def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8'
         return resp
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def sync_post(http_session: requests.Session, url, json=None, encoding=['utf-8', 'gbk'], enable_proxy=False):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _sync_post(http_session: requests.Session, url, enable_proxy, json=None, encoding=['utf-8', 'gbk']):
@@ -152,26 +174,32 @@ async def async_post(http_session: ClientSession, url, params) -> str:
     return tdata
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_fundamentals(table='balance', columns=None, code='000001.XSHE', date=None,
                         count=1000, parse_dates=['day', 'pubDate']):
     try:
         return jq.get_fundamentals(table=table, columns=columns, code=code, date=date, count=count,
                                    parse_dates=parse_dates)
     except Exception as e:
-        logger.error(f'jq_get_fundamentals, code: {code}, error: {e}')
+        logger.warning(f'jq_get_fundamentals, code: {code}, error: {e}')
 
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_mtss(code='000001.XSHE', date='2005-01-01', end_date=None):
     try:
         return jq.get_mtss(code=code, date=date, end_date=end_date)
     except Exception as e:
-        logger.error(f'jq_get_mtss, code: {code}, error: {e}')
+        logger.warning(f'jq_get_mtss, code: {code}, error: {e}')
 
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_run_query(table='finance.STK_EXCHANGE_TRADE_INFO', columns=None, conditions=None,
                  count=1000, dtype={'code': str, 'symbol': str}, parse_dates=['day', 'pub_date']):
     try:
@@ -183,6 +211,8 @@ def jq_run_query(table='finance.STK_EXCHANGE_TRADE_INFO', columns=None, conditio
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_all_securities(code='stock', date=None):
     try:
         return jq.get_all_securities(code=code, date=date)
@@ -192,6 +222,8 @@ def jq_get_all_securities(code='stock', date=None):
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_trade_days(date='1990-01-01', end_date=None):
     try:
         return jq.get_trade_days(date=date, end_date=end_date)
@@ -201,6 +233,8 @@ def jq_get_trade_days(date='1990-01-01', end_date=None):
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_token(mob=None, pwd=None, force=True):
     try:
         return jq.get_token(mob=mob, pwd=pwd, force=force)
@@ -210,6 +244,8 @@ def jq_get_token(mob=None, pwd=None, force=True):
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_money_flow(code, date, end_date=None):
     try:
         return jq.get_money_flow(code=code, date=date, end_date=end_date)
@@ -219,6 +255,8 @@ def jq_get_money_flow(code, date, end_date=None):
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def jq_get_bars(code="600000.XSHG", count=10, unit='1d', end_date=None, fq_ref_date=None,
                 return_type='df', parse_dates=['date']):
     try:
@@ -230,6 +268,8 @@ def jq_get_bars(code="600000.XSHG", count=10, unit='1d', end_date=None, fq_ref_d
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def bao_get_trade_days(start_date=None, end_date=None):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _bao_get_trade_days(start_date=None, end_date=None):
@@ -246,6 +286,8 @@ def bao_get_trade_days(start_date=None, end_date=None):
     return None
 
 
+@hash_dict
+@lru_cache(maxsize=None)
 def bao_get_all_securities(entity_type):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _bao_get_all_securities(entity_type):
