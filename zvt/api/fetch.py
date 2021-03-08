@@ -276,7 +276,7 @@ data_set_chn = [
     [interface.get_stock_detail_data,            Provider.EastMoney, 0, 0, "Stock Detail",             24,     RunMode.Async],
 
     # below functions call join-quant sdk interface which limit at most 3 concurrent request
-    [interface.get_finance_factor_data,          Provider.EastMoney, 0, 3, "Finance Factor",           24 * 6, RunMode.Async],
+    [interface.get_finance_factor_data,          Provider.EastMoney, 0, 0, "Finance Factor",           24 * 6, RunMode.Async],
     [interface.get_balance_sheet_data,           Provider.EastMoney, 0, 3, "Balance Sheet",            24 * 6, RunMode.Async],
     [interface.get_income_statement_data,        Provider.EastMoney, 0, 3, "Income Statement",         24 * 6, RunMode.Async],
     [interface.get_cashflow_statement_data,      Provider.EastMoney, 0, 3, "CashFlow Statement",       24,     RunMode.Async],

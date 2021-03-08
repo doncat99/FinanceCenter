@@ -103,7 +103,7 @@ class Mixin(object):
         from .api import get_data
         if provider == Provider.Default:
             provider = cls.providers[region][provider_index]
-        return get_data(data_schema=cls, region=region, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+        return get_data(region=region, data_schema=cls, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
                         code=code, level=level, provider=provider, columns=columns, col_label=col_label,
                         return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                         filters=filters, session=session, order=order, limit=limit, index=index, time_field=time_field)

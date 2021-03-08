@@ -69,8 +69,8 @@ def del_data(region: Region, data_schema: Type[Mixin], filters: List = None, pro
     session.commit()
 
 
-def get_data(data_schema,
-             region: Region,
+def get_data(region: Region,
+             data_schema,
              ids: List[str] = None,
              entity_ids: List[str] = None,
              entity_id: str = None,
@@ -371,8 +371,16 @@ def get_entities(
         else:
             filters = [entity_schema.exchange.in_(exchanges)]
 
-    return get_data(data_schema=entity_schema, region=region, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+    return get_data(region=region, data_schema=entity_schema, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
                     code=code, level=None, provider=provider, columns=columns, col_label=col_label,
                     return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                     filters=filters, session=session, order=order, limit=limit, index=index)
 
+
+def get_entity_ids(region: Region, entity_type='stock', entity_schema: EntityMixin = None, exchanges=None, codes=None, provider=None,
+                   filters=None):
+    df = get_entities(region=region, entity_type=entity_type, entity_schema=entity_schema, exchanges=exchanges, codes=codes,
+                      provider=provider, filters=filters)
+    if pd_is_not_null(df):
+        return df['entity_id'].to_list()
+    return None

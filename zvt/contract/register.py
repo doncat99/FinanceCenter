@@ -61,9 +61,6 @@ def register_schema(regions: List[Region],
     :return:
     :rtype:
     """
-    # if dbname_map_schemas.get(db_name):
-    #     return
-
     schemas = []
     for region in regions:
         for item in schema_base._decl_class_registry.items():
@@ -109,10 +106,10 @@ def register_schema(regions: List[Region],
 
         # create index for 'id', 'timestamp', 'entity_id', 'code', 'report_period', 'updated_timestamp
         for table_name, table in iter(schema_base.metadata.tables.items()):
-            # if table_name in dbname_map_index[region]:
-            #     continue
+            if table_name in dbname_map_index[region]:
+                continue
 
-            # dbname_map_index[region].append(table_name)
+            dbname_map_index[region].append(table_name)
 
             index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
 

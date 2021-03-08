@@ -106,28 +106,22 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
         param = self.generate_request_param(entity, start, end, size, timestamps, http_session)
         self.logger.info('request param:{}'.format(param))
 
-        try:
-            result = self.api_wrapper.request(http_session, url=self.url, param=param,
-                                              method=self.request_method,
-                                              path_fields=self.generate_path_fields(entity, http_session))
-            return pd.DataFrame.from_records(result)
-        except Exception as e:
-            self.logger.error("url: {}, error: {}".format(self.url, e))
-        return None
+        result = self.api_wrapper.request(http_session, url=self.url, param=param,
+                                          method=self.request_method,
+                                          path_fields=self.generate_path_fields(entity, http_session))
+        return pd.DataFrame.from_records(result)
 
     def get_original_time_field(self):
         return 'ReportDate'
 
     def fill_timestamp_with_jq(self, security_item, the_data):
         # get report published date from jq
-        try:
-            df = jq_get_fundamentals(table='indicator', code=to_jq_entity_id(security_item),
-                                     columns='pubDate', date=to_jq_report_period(the_data.report_date),
-                                     count=None, parse_dates=['pubDate'])
-            if pd_is_not_null(df):
-                the_data.timestamp = to_pd_timestamp(df['pubDate'][0])
-        except Exception as e:
-            self.logger.error("id: {}, date: {}, error: {}".format(security_item.id, the_data.report_date, e))
+        
+        df = jq_get_fundamentals(table='indicator', code=to_jq_entity_id(security_item),
+                                 columns='pubDate', date=to_jq_report_period(the_data.report_date),
+                                 count=None, parse_dates=['pubDate'])
+        if pd_is_not_null(df):
+            the_data.timestamp = to_pd_timestamp(df['pubDate'][0])
 
         self.logger.info('jq fill {} {} timestamp:{} for report_date:{}'.format(
             self.data_schema.__name__, security_item.id, the_data.timestamp, the_data.report_date))

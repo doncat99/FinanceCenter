@@ -90,6 +90,7 @@ class ChinaIndexListSpider(Recorder):
             url = query_url.format(index_code)
             content = sync_get(http_session, url, return_type='content')
             if content is None:
+                self.logger.error(f'{index["name"]} - {index_code} 成分股抓取错误')
                 continue
 
             response_df = pd.read_excel(io.BytesIO(content))
