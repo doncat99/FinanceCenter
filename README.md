@@ -63,16 +63,6 @@ python3.8在多进程处理上有较大改动与提升，建议使用python 3.8�
 
 
 # 使用Docker
-## Docker镜像制作
-
-```bash
-docker build -t financenter:0.1 . 
-```
-
-## 容器化执行
-```bash
-docker run -ti --rm -v $PWD:/work doncat:0.1 python run.py
-```
 
 ## 容器化编排执行
 ```
