@@ -32,7 +32,12 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
             return
 
         json = resp.json()['data']['rows']
-        self.format(content=json, exchange=entity)
+
+        if len(json) > 0:
+            df = self.format(content=json, exchange=entity)
+            self.persist(df)
+
+        return None
 
     def format(self, content, exchange):
         df = pd.DataFrame(content)
@@ -49,14 +54,16 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
             df['code'] = df['code'].str.strip()
             df['id'] = self.generate_domain_id(exchange, df)
             df['entity_id'] = df['id']
-
             df.drop_duplicates(subset=('id'), keep='last', inplace=True)
 
-            # persist to Stock
-            df_to_db(df=df, ref_df=None, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=True)
+        return df
 
-            # persist to StockDetail
-            df_to_db(df=df, ref_df=None, region=Region.US, data_schema=StockDetail, provider=self.provider, force_update=True)
+    def persist(self, df):
+        # persist to Stock
+        df_to_db(df=df, ref_df=None, region=Region.US, data_schema=self.data_schema, provider=self.provider, force_update=True)
+
+        # persist to StockDetail
+        df_to_db(df=df, ref_df=None, region=Region.US, data_schema=StockDetail, provider=self.provider, force_update=True)
 
     def on_finish(self):
         self.logger.info("persist stock list successs")

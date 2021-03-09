@@ -6,6 +6,7 @@ import pandas as pd
 from zvt.api.data_type import Region, Provider
 from zvt.domain import StockTradeDay, Stock
 from zvt.contract.recorder import RecorderForEntities
+from zvt.contract.api import df_to_db
 from zvt.networking.request import jq_get_trade_days
 from zvt.utils.time_utils import to_time_str, PD_TIME_FORMAT_DAY
 
@@ -36,7 +37,8 @@ class StockTradeDayRecorder(RecorderForEntities):
 
         if len(dates) > 0:
             df = pd.DataFrame(dates, columns=['timestamp'])
-            return self.format(df)
+            df = self.format(df)
+            self.persist(df)
 
         return None
 
@@ -51,6 +53,9 @@ class StockTradeDayRecorder(RecorderForEntities):
 
         df['id'] = self.generate_domain_id(entity, df)
         return df
+
+    def persist(self, df):
+        df_to_db(df=df, ref_df=None, region=self.region, data_schema=self.data_schema, provider=self.provider)
 
     def on_finish(self):
         pass

@@ -6,7 +6,7 @@ from zvt.contract.api import get_entities
 from zvt.recorders.exchange.us_stock_list_spider import ExchangeUsStockListRecorder
 
 
-class YahooUsStockListRecorder(ExchangeUsStockListRecorder):    
+class YahooUsStockListRecorder(ExchangeUsStockListRecorder):
     region = Region.US
     provider = Provider.Yahoo
     data_schema = Stock

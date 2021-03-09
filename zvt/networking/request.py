@@ -55,6 +55,7 @@ def get_http_session(fetch_mode: RunMode = RunMode.Sync):
 
 @hashable_lru
 def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8', params={}, enable_proxy=False, return_type=None):
+
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _sync_get(http_session: requests.Session, url, enable_proxy, headers=None, encoding='utf-8', params={}):
         proxies = get_proxy() if enable_proxy else None
@@ -65,7 +66,8 @@ def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8'
         try:
             return http_session.get(url, headers=headers, params=params, verify=False)
         except:
-            return None
+            pass
+        return None
 
     logger.debug(f'HTTP GET: {url}')
 

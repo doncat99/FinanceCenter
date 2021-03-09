@@ -11,6 +11,7 @@ from zvt.contract.api import df_to_db
 from zvt.recorders.consts import DEFAULT_SH_HEADER, DEFAULT_SZ_HEADER
 from zvt.networking.request import sync_get
 from zvt.utils.time_utils import to_pd_timestamp
+from zvt.utils.pd_utils import pd_is_not_null
 
 
 class ExchangeChinaStockListRecorder(RecorderForEntities):
@@ -42,7 +43,12 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
         if resp.status_code != 200:
             return
 
-        self.format(resp=resp, exchange=entity)
+        df = self.format(resp=resp, exchange=entity)
+
+        if pd_is_not_null(df):
+            self.persist(df)
+
+        return None
 
     def format(self, resp, exchange):
         df = None
@@ -75,13 +81,16 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
             df['timestamp'] = df['list_date']
             df = df.dropna(axis=0, how='any')
             df = df.drop_duplicates(subset=('id'), keep='last')
-            df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
-            # persist StockDetail too
-            df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=StockDetail, provider=self.provider)
-            # self.logger.info(df.tail())
-            self.logger.info("persist stock list successs")
+
+        return df
+
+    def persist(self, df):
+        df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
+        # persist StockDetail too
+        df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=StockDetail, provider=self.provider)
 
     def on_finish(self):
+        self.logger.info("persist stock list successs")
         pass
 
 

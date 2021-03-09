@@ -198,8 +198,8 @@ def init_plugins():
 
 # else:
 #     init_env(zvt_home=ZVT_HOME)
-
 init_env(zvt_home=ZVT_HOME)
+
 
 # register to meta
 import zvt.contract as zvt_contract
