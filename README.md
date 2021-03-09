@@ -69,3 +69,8 @@ python3.8在多进程处理上有较大改动与提升，建议使用python 3.8�
 docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
 docker-compose up -d
 ```
+
+查看日志
+```
+docker-compose logs -f 
+```
