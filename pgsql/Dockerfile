@@ -1,4 +1,6 @@
 FROM postgres:13.2
-apt install libdbd-pg-perl libdbi-perl perl-modules
-ADD ./postgresqltuner/postgresqltuner.pl /work
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list; \
+    apt update; \
+    apt install -y libdbd-pg-perl libdbi-perl perl-modules
+ADD ./postgresqltuner/postgresqltuner.pl /work/
 

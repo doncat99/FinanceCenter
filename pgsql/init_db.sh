@@ -8,3 +8,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE "${POSTGRES_DB}_us";
     GRANT ALL PRIVILEGES ON DATABASE "${POSTGRES_DB}_us" TO "$POSTGRES_USER";
 EOSQL
+
+
+/work/postgresqltuner.pl --host=/var/run/postgresql --user "$POSTGRES_USER" 
