@@ -88,7 +88,8 @@ def get_data(region: Region,
              order=None,
              limit: int = None,
              index: Union[str, list] = None,
-             time_field: str = 'timestamp'):
+             time_field: str = 'timestamp',
+             fun=None):
     assert data_schema is not None
     assert provider.value is not None
     assert provider in zvt_context.providers[region]
@@ -101,7 +102,9 @@ def get_data(region: Region,
 
     time_col = eval('data_schema.{}'.format(time_field))
 
-    if columns:
+    if fun is not None:
+        query = session.query(fun)
+    elif columns:
         # support str
         if type(columns[0]) == str:
             columns_ = []
@@ -161,7 +164,11 @@ def get_data(region: Region,
         cost = precision_str.format(time.time() - step1)
         logger.debug("get_data query common: {}".format(cost))
 
-    if return_type == 'df':
+    if return_type == 'func':
+        result = query.scalar()
+        return result
+
+    elif return_type == 'df':
         df = pd.read_sql(query.statement, query.session.bind, index_col=['id'])
         if pd_is_not_null(df):
             if index:
@@ -213,21 +220,15 @@ def get_data(region: Region,
         return result
 
 
-# def window_query(query, window_size, timestamp):
-#     start = 0
-#     precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
+def get_data_count(data_schema, session, filters=None):
+    query = session.query(data_schema)
+    if filters:
+        for filter in filters:
+            query = query.filter(filter)
 
-#     while True:
-#         stop = start + window_size
-#         things = query.slice(start, stop).all()
-#         if len(things) == 0:
-#             break
-#         for thing in things:
-#             yield thing
-#         start += window_size
-#         if zvt_config['debug']:
-#             cost = precision_str.format(time.time()-timestamp)
-#             logger.info("get_data do slice: {}".format(cost))
+    count_q = query.statement.with_only_columns([func.count()]).order_by(None)
+    count = session.execute(count_q).scalar()
+    return count
 
 
 def get_group(region: Region, provider: Provider, data_schema, column, group_func=func.count, session=None):
