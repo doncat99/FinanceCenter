@@ -12,7 +12,8 @@ services:
     image: postgres
     restart: always
     volumes:
-      - ./pgsql/postgresqltuner_init.sh:/docker-entrypoint-initdb.d/postgresqltuner_init.sh
+      # - ./pgsql/postgresqltuner_init.sh:/docker-entrypoint-initdb.d/00_postgresqltuner_init.sh
+      - ./pgsql/init_db.sh:/docker-entrypoint-initdb.d/10_init_db.sh
     environment:
       - POSTGRES_PASSWORD=iG8ohh0ec6uh
       - POSTGRES_USER=finance_zvt
