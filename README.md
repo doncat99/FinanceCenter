@@ -73,3 +73,9 @@ docker build -t financenter:0.1 .
 ```bash
 docker run -ti --rm -v $PWD:/work doncat:0.1 python run.py
 ```
+
+## 容器化编排执行
+```
+docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
+docker-compose up -d
+```
