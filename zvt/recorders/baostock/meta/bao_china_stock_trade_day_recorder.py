@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import pandas as pd
 
 from zvt.api.data_type import Region, Provider
@@ -37,7 +39,12 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
         return None
 
     def format(self, entity, df):
-        df['timestamp'] = pd.to_datetime(df[df['is_trading_day'] == '1']['calendar_date'])
+        dates = df[df['is_trading_day'] == '1']['calendar_date'].values
+        df = pd.DataFrame(dates, columns=['timestamp'])
+
+        if not isinstance(df['timestamp'].dtypes, datetime):
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
+
         df['entity_id'] = 'stock_sz_000001'
         df['provider'] = self.provider.value
         df['id'] = self.generate_domain_id(entity, df)
