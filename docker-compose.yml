@@ -1,0 +1,21 @@
+version: '3'
+services:
+  financenter:
+    build: ./  
+    restart: always
+    volumes:
+      - $PWD/:/work
+    depends_on:
+      - db
+    entrypoint: ['python','run.py']
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./pgsql/postgresqltuner_init.sh:/docker-entrypoint-initdb.d/postgresqltuner_init.sh
+    environment:
+      - POSTGRES_PASSWORD=iG8ohh0ec6uh
+      - POSTGRES_USER=finance_zvt
+      - POSTGRES_DB=finance_zvt
+
+
