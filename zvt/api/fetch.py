@@ -272,11 +272,11 @@ data_set_chn = [
     [interface.get_dividend_detail_data,         Provider.EastMoney, 0, 0, "Divdend Detail",           24 * 6, RunMode.Async],
     [interface.get_spo_detail_data,              Provider.EastMoney, 0, 0, "SPO Detail",               24 * 6, RunMode.Async],
     [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, 0, "Rights Issue Detail",      24,     RunMode.Async],
-    [interface.get_holder_trading_data,          Provider.EastMoney, 0, 0, "Holder Trading",           24,     RunMode.Async],
-    [interface.get_stock_detail_data,            Provider.EastMoney, 0, 0, "Stock Detail",             24,     RunMode.Async],
+    [interface.get_holder_trading_data,          Provider.EastMoney, 0, 0, "Holder Trading",           24 * 6, RunMode.Async],
+    [interface.get_stock_detail_data,            Provider.EastMoney, 0, 0, "Stock Detail",             24 * 6, RunMode.Async],
 
     # below functions call join-quant sdk interface which limit at most 3 concurrent request
-    [interface.get_finance_factor_data,          Provider.EastMoney, 0, 3, "Finance Factor",           24 * 6, RunMode.Async],
+    [interface.get_finance_factor_data,          Provider.EastMoney, 0, 0, "Finance Factor",           24 * 6, RunMode.Async],
     [interface.get_balance_sheet_data,           Provider.EastMoney, 0, 3, "Balance Sheet",            24 * 6, RunMode.Async],
     [interface.get_income_statement_data,        Provider.EastMoney, 0, 3, "Income Statement",         24 * 6, RunMode.Async],
     [interface.get_cashflow_statement_data,      Provider.EastMoney, 0, 3, "CashFlow Statement",       24,     RunMode.Async],
@@ -362,7 +362,7 @@ def fetch_data(region: Region):
     cache = get_cache()
     data_set = [item for item in data_set if not valid(region, item[0].__name__, item[Para.Cache.value], cache)]
 
-    with tqdm(total=len(data_set), ncols=80, desc="total", position=0, leave=True) as pbar:
+    with tqdm(total=len(data_set), ncols=120, desc="total", position=0, leave=True) as pbar:
         for item in data_set:
             result = loop_data_set([region, item])
             if result is not None:

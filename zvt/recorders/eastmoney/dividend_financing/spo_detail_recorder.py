@@ -9,7 +9,6 @@ from zvt.api.data_type import Region, Provider
 from zvt.domain import SpoDetail, DividendFinancing
 from zvt.recorders.eastmoney.common import EastmoneyPageabeDataRecorder
 from zvt.database.api import get_db_session
-from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import now_pd_timestamp
 from zvt.utils.utils import to_float
 
@@ -56,21 +55,26 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
                                                     filters=[DividendFinancing.spo_raising_fund.is_(None)],
                                                     end_timestamp=last_year)
 
-        desc = SpoDetail.__name__ + "on_finish"
-        with tqdm(total=len(need_filleds), ncols=80, desc=desc, position=0, leave=True) as pbar:
+        desc = SpoDetail.__name__ + ": update relevant table"
+        with tqdm(total=len(need_filleds), ncols=120, desc=desc, position=2, leave=True) as pbar:
+            from sqlalchemy import func
+
             session = get_db_session(region=self.region,
                                      provider=self.provider,
                                      data_schema=self.data_schema)
 
             for item in need_filleds:
-                df = SpoDetail.query_data(region=self.region,
-                                          provider=self.provider,
-                                          entity_id=item.entity_id,
-                                          columns=[SpoDetail.id, SpoDetail.timestamp, SpoDetail.spo_raising_fund],
-                                          start_timestamp=item.timestamp,
-                                          end_timestamp="{}-12-31".format(item.timestamp.year))
-                if pd_is_not_null(df):
-                    item.spo_raising_fund = df['spo_raising_fund'].sum()
+                result = SpoDetail.query_data(
+                                        region=self.region,
+                                        provider=self.provider,
+                                        entity_id=item.entity_id,
+                                        start_timestamp=item.timestamp,
+                                        end_timestamp="{}-12-31".format(item.timestamp.year),
+                                        return_type='func',
+                                        func=func.sum(SpoDetail.spo_raising_fund))
+
+                if isinstance(result, (int, float)):
+                    item.spo_raising_fund = result
                     session.commit()
                 pbar.update()
 

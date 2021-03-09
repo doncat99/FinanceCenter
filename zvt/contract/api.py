@@ -69,8 +69,8 @@ def del_data(region: Region, data_schema: Type[Mixin], filters: List = None, pro
     session.commit()
 
 
-def get_data(data_schema,
-             region: Region,
+def get_data(region: Region,
+             data_schema,
              ids: List[str] = None,
              entity_ids: List[str] = None,
              entity_id: str = None,
@@ -88,7 +88,8 @@ def get_data(data_schema,
              order=None,
              limit: int = None,
              index: Union[str, list] = None,
-             time_field: str = 'timestamp'):
+             time_field: str = 'timestamp',
+             fun=None):
     assert data_schema is not None
     assert provider.value is not None
     assert provider in zvt_context.providers[region]
@@ -101,7 +102,9 @@ def get_data(data_schema,
 
     time_col = eval('data_schema.{}'.format(time_field))
 
-    if columns:
+    if fun is not None:
+        query = session.query(fun)
+    elif columns:
         # support str
         if type(columns[0]) == str:
             columns_ = []
@@ -161,7 +164,11 @@ def get_data(data_schema,
         cost = precision_str.format(time.time() - step1)
         logger.debug("get_data query common: {}".format(cost))
 
-    if return_type == 'df':
+    if return_type == 'func':
+        result = query.scalar()
+        return result
+
+    elif return_type == 'df':
         df = pd.read_sql(query.statement, query.session.bind, index_col=['id'])
         if pd_is_not_null(df):
             if index:
@@ -213,21 +220,15 @@ def get_data(data_schema,
         return result
 
 
-# def window_query(query, window_size, timestamp):
-#     start = 0
-#     precision_str = '{' + ':>{},.{}f'.format(8, 4) + '}'
+def get_data_count(data_schema, session, filters=None):
+    query = session.query(data_schema)
+    if filters:
+        for filter in filters:
+            query = query.filter(filter)
 
-#     while True:
-#         stop = start + window_size
-#         things = query.slice(start, stop).all()
-#         if len(things) == 0:
-#             break
-#         for thing in things:
-#             yield thing
-#         start += window_size
-#         if zvt_config['debug']:
-#             cost = precision_str.format(time.time()-timestamp)
-#             logger.info("get_data do slice: {}".format(cost))
+    count_q = query.statement.with_only_columns([func.count()]).order_by(None)
+    count = session.execute(count_q).scalar()
+    return count
 
 
 def get_group(region: Region, provider: Provider, data_schema, column, group_func=func.count, session=None):
@@ -371,8 +372,16 @@ def get_entities(
         else:
             filters = [entity_schema.exchange.in_(exchanges)]
 
-    return get_data(data_schema=entity_schema, region=region, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+    return get_data(region=region, data_schema=entity_schema, ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
                     code=code, level=None, provider=provider, columns=columns, col_label=col_label,
                     return_type=return_type, start_timestamp=start_timestamp, end_timestamp=end_timestamp,
                     filters=filters, session=session, order=order, limit=limit, index=index)
 
+
+def get_entity_ids(region: Region, entity_type='stock', entity_schema: EntityMixin = None, exchanges=None, codes=None, provider=None,
+                   filters=None):
+    df = get_entities(region=region, entity_type=entity_type, entity_schema=entity_schema, exchanges=exchanges, codes=codes,
+                      provider=provider, filters=filters)
+    if pd_is_not_null(df):
+        return df['entity_id'].to_list()
+    return None

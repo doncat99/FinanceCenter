@@ -37,7 +37,7 @@ def is_datetime(the_time):
 
 
 # ms(int) or second(float) or str
-def to_pd_timestamp(the_time):
+def to_pd_timestamp(the_time) -> pd.Timestamp:
     if the_time is None or the_time in none_values:
         return None
 
@@ -185,6 +185,25 @@ def is_in_same_interval(t1: pd.Timestamp, t2: pd.Timestamp, level: IntervalLevel
     if level == IntervalLevel.LEVEL_1MON:
         return t1.month == t2.month
     return level.floor_timestamp(t1) == level.floor_timestamp(t2)
+
+
+def split_time_interval(start, end, method=None, interval=30, freq='D'):
+    start = to_pd_timestamp(start)
+    end = to_pd_timestamp(end)
+    if not method:
+        while start < end:
+            interval_end = min(next_date(start, interval), end)
+            yield pd.date_range(start=start, end=interval_end, freq=freq)
+            start = next_date(interval_end, 1)
+
+    if method == 'month':
+        while start <= end:
+            import calendar
+            _, day = calendar.monthrange(start.year, start.month)
+
+            interval_end = min(to_pd_timestamp(f'{start.year}-{start.month}-{day}'), end)
+            yield pd.date_range(start=start, end=interval_end, freq=freq)
+            start = next_date(interval_end, 1)
 
 
 if __name__ == '__main__':

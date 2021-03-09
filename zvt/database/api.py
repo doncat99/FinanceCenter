@@ -34,38 +34,38 @@ sessions = {}
 dbname_map_base = {}
 
 
-# @event.listens_for(Engine, "connect")
-# def connect(dbapi_connection, connection_record):
-#     connection_record.info['pid'] = os.getpid()
+@event.listens_for(Engine, "connect")
+def connect(dbapi_connection, connection_record):
+    connection_record.info['pid'] = os.getpid()
 
 
-# @event.listens_for(Engine, "checkout")
-# def checkout(dbapi_connection, connection_record, connection_proxy):
-#     pid = os.getpid()
-#     if connection_record.info['pid'] != pid:
-#         connection_record.connection = connection_proxy.connection = None
-#         raise exc.DisconnectionError(
-#                 "Connection record belongs to pid %s, "
-#                 "attempting to check out in pid %s" %
-#                 (connection_record.info['pid'], pid)
-#         )
+@event.listens_for(Engine, "checkout")
+def checkout(dbapi_connection, connection_record, connection_proxy):
+    pid = os.getpid()
+    if connection_record.info['pid'] != pid:
+        connection_record.connection = connection_proxy.connection = None
+        raise exc.DisconnectionError(
+                "Connection record belongs to pid %s, "
+                "attempting to check out in pid %s" %
+                (connection_record.info['pid'], pid)
+        )
 
 
-# @event.listens_for(Engine, "before_cursor_execute")
-# def before_cursor_execute(conn, cursor, statement,
-#                           parameters, context, executemany):
-#     if zvt_config['debug'] == 2:
-#         conn.info.setdefault('query_start_time', []).append(time.time())
-#         logger_time.debug("Start Query: %s", statement[:50])
+@event.listens_for(Engine, "before_cursor_execute")
+def before_cursor_execute(conn, cursor, statement,
+                          parameters, context, executemany):
+    if zvt_config['debug'] == 2:
+        conn.info.setdefault('query_start_time', []).append(time.time())
+        logger_time.debug("Start Query: %s", statement[:50])
 
 
-# @event.listens_for(Engine, "after_cursor_execute")
-# def after_cursor_execute(conn, cursor, statement,
-#                          parameters, context, executemany):
-#     if zvt_config['debug'] == 2:
-#         total = time.time() - conn.info['query_start_time'].pop(-1)
-#         logger_time.debug("Query Complete!")
-#         logger_time.debug("Total Time: %f", total)
+@event.listens_for(Engine, "after_cursor_execute")
+def after_cursor_execute(conn, cursor, statement,
+                         parameters, context, executemany):
+    if zvt_config['debug'] == 2:
+        total = time.time() - conn.info['query_start_time'].pop(-1)
+        logger_time.debug("Query Complete!")
+        logger_time.debug("Total Time: %f", total)
 
 
 @contextlib.contextmanager
@@ -101,9 +101,10 @@ def build_engine(region: Region) -> Engine:
                            echo=False,
                            poolclass=QueuePool,
                            pool_size=0,
-                           pool_recycle=7200,
+                           pool_recycle=300,
                            max_overflow=-1,
                            pool_pre_ping=True,
+                           pool_use_lifo=True,
                            executemany_mode='values',
                            executemany_values_page_size=10000,
                            executemany_batch_page_size=500)

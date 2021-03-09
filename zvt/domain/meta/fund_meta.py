@@ -18,26 +18,26 @@ class Fund(FundMetaBase, Portfolio):
     # 基金托管人
     trustee = Column(String(length=100))
 
-    # 编码    基金运作方式
-    # 401001    开放式基金
-    # 401002    封闭式基金
-    # 401003    QDII
-    # 401004    FOF
-    # 401005    ETF
-    # 401006    LOF
+    # 编码	基金运作方式
+    # 401001	开放式基金
+    # 401002	封闭式基金
+    # 401003	QDII
+    # 401004	FOF
+    # 401005	ETF
+    # 401006	LOF
     # 基金运作方式编码
     operate_mode_id = Column(Integer)
     # 基金运作方式
     operate_mode = Column(String(length=32))
 
-    # 编码    基金类别
-    # 402001    股票型
-    # 402002    货币型
-    # 402003    债券型
-    # 402004    混合型
-    # 402005    基金型
-    # 402006    贵金属
-    # 402007    封闭式
+    # 编码	基金类别
+    # 402001	股票型
+    # 402002	货币型
+    # 402003	债券型
+    # 402004	混合型
+    # 402005	基金型
+    # 402006	贵金属
+    # 402007	封闭式
     # 投资标的类型编码
     underlying_asset_type_id = Column(Integer)
     # 投资标的类型
