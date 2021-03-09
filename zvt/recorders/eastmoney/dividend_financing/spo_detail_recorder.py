@@ -9,7 +9,6 @@ from zvt.api.data_type import Region, Provider
 from zvt.domain import SpoDetail, DividendFinancing
 from zvt.recorders.eastmoney.common import EastmoneyPageabeDataRecorder
 from zvt.database.api import get_db_session
-from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import now_pd_timestamp
 from zvt.utils.utils import to_float
 
@@ -59,7 +58,7 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
         desc = SpoDetail.__name__ + ": update relevant table"
         with tqdm(total=len(need_filleds), ncols=120, desc=desc, position=2, leave=True) as pbar:
             from sqlalchemy import func
-            
+
             session = get_db_session(region=self.region,
                                      provider=self.provider,
                                      data_schema=self.data_schema)

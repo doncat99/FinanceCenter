@@ -48,7 +48,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
         df = None
         if exchange == 'sh':
             # df = pd.read_excel(io.BytesIO(resp.content), sheet_name='主板A股', dtype=str, parse_dates=['上市日期'])
-            df = pd.read_csv(io.BytesIO(content), sep='\t', encoding='GB2312', dtype=str,
+            df = pd.read_csv(io.BytesIO(resp.content), sep='\t', encoding='GB2312', dtype=str,
                              parse_dates=['上市日期'])
             if df is not None:
                 df.columns = [column.strip() for column in df.columns]

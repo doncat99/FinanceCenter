@@ -116,7 +116,6 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
 
     def fill_timestamp_with_jq(self, security_item, the_data):
         # get report published date from jq
-        
         df = jq_get_fundamentals(table='indicator', code=to_jq_entity_id(security_item),
                                  columns='pubDate', date=to_jq_report_period(the_data.report_date),
                                  count=None, parse_dates=['pubDate'])
