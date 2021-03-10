@@ -32,7 +32,7 @@ def create_mp_share_value():
 
 
 def progress_count(total_count, desc, prog_count):
-    pbar = tqdm(total=total_count, desc=desc, ncols=90, leave=True)
+    pbar = tqdm(total=total_count, desc=desc, ncols=90, position=1, leave=True)
     while True:
         if pbar.n >= total_count:
             break
