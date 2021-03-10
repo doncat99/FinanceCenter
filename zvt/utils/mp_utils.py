@@ -103,7 +103,6 @@ def run_amp(mode, cpu_cnt, func, entities, desc, prog_count):
     tq = multiprocessing.JoinableQueue()   # task queue
     # rq = multiprocessing.Queue()           # result queue
 
-    entities = entities[:100]
     entity_cnt = len(entities)
 
     # spawning multiprocessing limited by the available cores
