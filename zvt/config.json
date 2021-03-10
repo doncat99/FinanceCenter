@@ -4,10 +4,10 @@
   "batch_size": 10000,
   
   "db_name": "finance_zvt",
-  "db_host": "127.0.0.1",
+  "db_host": "db",
   "db_port": "5432",
-  "db_user": "",
-  "db_pass": "",
+  "db_user": "finance_zvt",
+  "db_pass": "iG8ohh0ec6uh",
 
   "jq_username": "",
   "jq_password": "",

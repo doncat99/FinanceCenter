@@ -60,3 +60,17 @@ It's suggest to run the project upon python 3.8
 为加速数据下载体验，需要对yfinance项目进行部分修改，详见：[yfinance](https://github.com/doncat99/yfinance)
 
 python3.8在多进程处理上有较大改动与提升，建议使用python 3.8版本运行本项目。
+
+
+# 使用Docker
+
+## 容器化编排执行
+```
+docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
+docker-compose up -d
+```
+
+查看日志
+```
+docker-compose logs -f 
+```

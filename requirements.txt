@@ -12,3 +12,8 @@ tqdm
 jqdatapy
 baostock
 yfinance
+numba
+psycopg2
+sqlalchemy_batch_inserts
+uvloop
+aiohttp
