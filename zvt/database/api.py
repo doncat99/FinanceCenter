@@ -153,6 +153,7 @@ def to_postgresql(region: Region, df, tablename):
 
 
 def get_db_engine(region: Region,
+                  schema_base: DeclarativeMeta,
                   db_name: str = None) -> Engine:
     db_engine = db_engine_map.get(region)
     if db_engine:
@@ -161,6 +162,7 @@ def get_db_engine(region: Region,
 
     logger.debug("create engine key: {}_{}".format(region.value, db_name))
     db_engine_map[region] = build_engine(region)
+    schema_base.metadata.create_all(db_engine_map[region])
     return db_engine_map[region]
 
 

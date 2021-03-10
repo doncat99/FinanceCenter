@@ -78,7 +78,7 @@ def register_schema(regions: List[Region],
                 schemas.append(cls)
 
         # create the db & table
-        engine = get_db_engine(region, db_name=db_name)
+        engine = get_db_engine(region, schema_base, db_name=db_name)
         if engine is None:
             continue
 
@@ -98,7 +98,6 @@ def register_schema(regions: List[Region],
             session_fac.configure(bind=engine)
 
         set_db_name(db_name, schema_base)
-        schema_base.metadata.create_all(engine)
         inspector = Inspector.from_engine(engine)
 
         if not dbname_map_index.get(region):
