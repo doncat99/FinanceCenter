@@ -265,7 +265,7 @@ def bao_get_all_securities(entity_type):
 def bao_get_bars(code, start, end, frequency="d", adjustflag="3",
                  fields="date, code, open, high, low, close, preclose, volume, amount, adjustflag, turn, tradestatus, pctChg, isST"):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
-    def _bao_get_bars(code, start, end, fields, frequency="d", adjustflag="3"):
+    def _bao_get_bars(code, start, end, frequency, adjustflag, fields):
         k_rs = bs.query_history_k_data_plus(code, start_date=start, end_date=end, frequency=frequency,
                                             adjustflag=adjustflag, fields=fields)
         return k_rs.get_data()
