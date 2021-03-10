@@ -83,7 +83,7 @@ def profiled():
 
 
 def build_engine(region: Region) -> Engine:
-    logger.info(f"start building {region} database engine...")
+    logger.debug(f"start building {region} database engine...")
 
     # engine = await asyncpg.create_pool(
     #     host=zvt_config['db_host'],
@@ -125,7 +125,7 @@ def build_engine(region: Region) -> Engine:
     except:
         pass
 
-    logger.info(f"{region} engine connect successed")
+    logger.debug(f"{region} engine connect successed")
 
     return engine
 

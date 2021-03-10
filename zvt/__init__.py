@@ -54,7 +54,7 @@ def init_log(file_name='zvt.log', log_dir=None, simple_formatter=True):
     # create formatter and add it to the handlers
     if simple_formatter:
         formatter = logging.Formatter(
-            "%(asctime)s  %(levelname)-7s  %(processName)-11s  %(message)s")
+            "%(asctime)s  %(levelname)-7s  %(process)d  %(processName)-11s  %(message)s")
     else:
         formatter = logging.Formatter(
             "%(asctime)s  %(levelname)s  %(threadName)s  %(name)s:%(filename)s:%(lineno)s  %(funcName)s  %(message)s")
