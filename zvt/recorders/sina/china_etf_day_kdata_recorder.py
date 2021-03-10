@@ -49,10 +49,13 @@ class ChinaETFDayKdataRecorder(FixedCycleDataRecorder):
             url = query_url.format(security_item.code, page, to_time_str(start), to_time_str(end))
             text = sync_get(http_session, url, headers=EASTMONEY_ETF_NET_VALUE_HEADER, return_type='text')
             if text is None:
-                continue
+                break
 
-            response_json = demjson.decode(text)
-            response_df = pd.DataFrame(response_json['Data']['LSJZList'])
+            try:
+                response_json = demjson.decode(text)
+                response_df = pd.DataFrame(response_json['Data']['LSJZList'])
+            except:
+                break
 
             # 最后一页
             if not pd_is_not_null(response_df):

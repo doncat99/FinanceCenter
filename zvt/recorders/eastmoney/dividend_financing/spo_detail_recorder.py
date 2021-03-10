@@ -56,7 +56,7 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
                                                     end_timestamp=last_year)
 
         desc = SpoDetail.__name__ + ": update relevant table"
-        with tqdm(total=len(need_filleds), ncols=120, desc=desc, position=2, leave=True) as pbar:
+        with tqdm(total=len(need_filleds), ncols=90, desc=desc, position=2, leave=True) as pbar:
             from sqlalchemy import func
 
             session = get_db_session(region=self.region,

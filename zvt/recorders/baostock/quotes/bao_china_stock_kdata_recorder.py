@@ -53,9 +53,6 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
         self.adjust_type = adjust_type
 
-        def on_finish(self):
-            super().on_finish()
-
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         format = PD_TIME_FORMAT_DAY if self.level >= IntervalLevel.LEVEL_1DAY else PD_TIME_FORMAT_ISO8601
         return df['entity_id'] + '_' + df[self.get_evaluated_time_field()].dt.strftime(format)
@@ -68,24 +65,12 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
         else:
             start = start if start > "1999-07-26" else "1999-07-26"
 
-        if end is None:
-            df = bao_get_bars(to_bao_entity_id(entity),
-                              start=start,
-                              end=end,
-                              frequency=self.bao_trading_level,
-                              fields=to_bao_trading_field(self.bao_trading_level),
-                              adjustflag=to_bao_adjust_flag(self.adjust_type))
-        else:
-            df = bao_get_bars(to_bao_entity_id(entity),
-                              start=start,
-                              end=to_time_str(end),
-                              frequency=self.bao_trading_level,
-                              fields=to_bao_trading_field(self.bao_trading_level),
-                              adjustflag=to_bao_adjust_flag(self.adjust_type))
-
-        if pd_is_not_null(df):
-            return df
-        return None
+        return bao_get_bars(to_bao_entity_id(entity),
+                            start=start,
+                            end=end if end is None else to_time_str(end),
+                            frequency=self.bao_trading_level,
+                            fields=to_bao_trading_field(self.bao_trading_level),
+                            adjustflag=to_bao_adjust_flag(self.adjust_type))
 
     def format(self, entity, df):
         if self.bao_trading_level == 'd':
@@ -116,6 +101,9 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
 
         df['id'] = self.generate_domain_id(entity, df)
         return df
+
+    def on_finish(self):
+        pass
 
 
 __all__ = ['BaoChinaStockKdataRecorder']

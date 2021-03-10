@@ -51,7 +51,7 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
 
     def on_finish(self):
         desc = DividendFinancing.__name__ + ": update relevant table"
-        with tqdm(total=len(self.entities), ncols=120, desc=desc, position=2, leave=True) as pbar:
+        with tqdm(total=len(self.entities), ncols=90, desc=desc, position=2, leave=True) as pbar:
             session = get_db_session(region=self.region,
                                      provider=self.provider,
                                      data_schema=self.data_schema)

@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-# import random
 from http import client
 from retrying import retry
 
-# import pandas as pd
 import requests
 from aiohttp import ClientSession, TCPConnector
 import baostock as bs
@@ -12,7 +10,6 @@ import jqdatapy.api as jq
 
 from zvt.api.data_type import RunMode
 from zvt.utils.cache_utils import hashable_lru
-
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +35,6 @@ def get_proxy():
 def retry_if_connection_error(exception):
     """ Specify an exception you need. or just True"""
     logger.debug(f'request exception: {exception}')
-
     return True
     # return isinstance(exception, ConnectionError)
 
@@ -165,7 +161,6 @@ def jq_get_fundamentals(table='balance', columns=None, code='000001.XSHE', date=
                                    parse_dates=parse_dates)
     except Exception as e:
         logger.warning(f'jq_get_fundamentals, code: {code}, error: {e}')
-
     return None
 
 
@@ -175,7 +170,6 @@ def jq_get_mtss(code='000001.XSHE', date='2005-01-01', end_date=None):
         return jq.get_mtss(code=code, date=date, end_date=end_date)
     except Exception as e:
         logger.warning(f'jq_get_mtss, code: {code}, error: {e}')
-
     return None
 
 
@@ -187,7 +181,6 @@ def jq_run_query(table='finance.STK_EXCHANGE_TRADE_INFO', columns=None, conditio
                             dtype=dtype, parse_dates=parse_dates)
     except Exception as e:
         logger.error(f'jq_run_query, code: {dtype["code"]}, error: {e}')
-
     return None
 
 
@@ -197,7 +190,6 @@ def jq_get_all_securities(code='stock', date=None):
         return jq.get_all_securities(code=code, date=date)
     except Exception as e:
         logger.error(f'jq_get_all_securities, code: {code}, error: {e}')
-
     return None
 
 
@@ -207,7 +199,6 @@ def jq_get_trade_days(date='1990-01-01', end_date=None):
         return jq.get_trade_days(date=date, end_date=end_date)
     except Exception as e:
         logger.error(f'jq_get_trade_days, date: {date}, error: {e}')
-
     return None
 
 
@@ -217,7 +208,6 @@ def jq_get_token(mob=None, pwd=None, force=True):
         return jq.get_token(mob=mob, pwd=pwd, force=force)
     except Exception as e:
         logger.error(f'jq_get_token, mob: {mob}, error: {e}')
-
     return None
 
 
@@ -227,7 +217,6 @@ def jq_get_money_flow(code, date, end_date=None):
         return jq.get_money_flow(code=code, date=date, end_date=end_date)
     except Exception as e:
         logger.error(f'jq_get_money_flow, code: {code}, error: {e}')
-
     return None
 
 
@@ -239,7 +228,6 @@ def jq_get_bars(code="600000.XSHG", count=10, unit='1d', end_date=None, fq_ref_d
                            fq_ref_date=fq_ref_date, return_type=return_type, parse_dates=parse_dates)
     except Exception as e:
         logger.error(f'jq_get_bars, code: {code}, error: {e}')
-
     return None
 
 
@@ -251,17 +239,16 @@ def bao_get_trade_days(start_date=None, end_date=None):
         return k_rs.get_data()
 
     logger.info("HTTP GET: trade_days, with start_date={}, end_date={}".format(start_date, end_date))
-
     try:
         return _bao_get_trade_days(start_date=start_date, end_date=end_date)
     except Exception as e:
         logger.error(f'bao_get_trade_days, error: {e}')
-
     return None
 
 
 @hashable_lru
 def bao_get_all_securities(entity_type):
+
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _bao_get_all_securities(entity_type):
         k_rs = bs.query_stock_basic()
@@ -272,7 +259,6 @@ def bao_get_all_securities(entity_type):
         return _bao_get_all_securities(entity_type)
     except Exception as e:
         logger.error(f'bao_get_all_securities, error: {e}')
-
     return None
 
 
@@ -285,11 +271,11 @@ def bao_get_bars(code, start, end, frequency="d", adjustflag="3",
         return k_rs.get_data()
 
     logger.debug("HTTP GET: bars, with code={}, unit={}, start={}, end={}".format(code, frequency, start, end))
-
     try:
         return _bao_get_bars(code, start, end, frequency, adjustflag, fields)
     except Exception as e:
         logger.error(f'bao_get_bars, code: {code}, error: {e}')
+    return None
 
 
 def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy=False):
@@ -305,10 +291,10 @@ def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy
         try:
             return yf.Ticker(code).history(interval=interval, start=start, end=end, actions=actions, debug=False)
         except:
-            return None
+            pass
+        return None
 
     logger.debug("HTTP GET: bars, with code={}, unit={}, start={}, end={}".format(code, interval, start, end))
-
     try:
         return _yh_get_bars(code, interval=interval, enable_proxy=enable_proxy, start=start, end=end, actions=actions)
     except Exception as e:
@@ -317,17 +303,5 @@ def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy
             if result is not None:
                 return result
         logger.error(f'yh_get_bars, code: {code}, error: {e}')
-
     return None
 
-
-# def fh_get_bars(client, code, interval, start, end):
-#     logger.debug("HTTP GET: bars, with code={}, unit={}, start={}, end={}".format(code, interval, start, end))
-#     _from = to_time_int(start)
-#     _to = now_timestamp() if end is None else to_time_int(end)
-#     res = client.stock_candles(code, interval, _from, _to)
-#     df = pd.DataFrame(res)
-#     df.rename(columns={'o':'open', 'c':'close', 'h':'high', 'l':'low', 'v':'volume', 't':'timestamp'}, inplace=True)
-#     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
-#     df.set_index('timestamp', drop=True, inplace=True)
-#     return df

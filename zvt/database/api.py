@@ -44,11 +44,11 @@ def checkout(dbapi_connection, connection_record, connection_proxy):
     pid = os.getpid()
     if connection_record.info['pid'] != pid:
         connection_record.connection = connection_proxy.connection = None
-        raise exc.DisconnectionError(
-                "Connection record belongs to pid %s, "
-                "attempting to check out in pid %s" %
-                (connection_record.info['pid'], pid)
-        )
+        # raise exc.DisconnectionError(
+        #         "Connection record belongs to pid %s, "
+        #         "attempting to check out in pid %s" %
+        #         (connection_record.info['pid'], pid)
+        # )
 
 
 @event.listens_for(Engine, "before_cursor_execute")

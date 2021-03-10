@@ -143,14 +143,13 @@ class RecorderForEntities(Recorder):
         raise NotImplementedError
 
     def run(self):
-        if not hasattr(self, 'share_para') or self.share_para is None:
-            self.share_para = (1, 'Total', 0)
         run_amp(self.share_para[2],
                 self.share_para[0],
                 self.process_loop,
                 self.entities,
                 self.share_para[1],
                 create_mp_share_value())
+
         self.on_finish()
 
 
@@ -226,40 +225,12 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         return latest_timestamp, self.end_timestamp, size, None
 
     def record(self, entity, start, end, size, timestamps, http_session):
-        """
-        implement the recording logic in this method,
-        should return json or domain list
-
-        :param entity:
-        :type entity:
-        :param start:
-        :type start:
-        :param end:
-        :type end:
-        :param size:
-        :type size:
-        :param timestamps:
-        :type timestamps:
-        """
         raise NotImplementedError
 
     def format(self, entity, df):
-        """
-        implement the recording data formatting, should return dataframe
-
-        :param entity:
-        :type entity:
-        :param df:
-        :type df:
-        """
         raise NotImplementedError
 
     def get_evaluated_time_field(self):
-        """
-        the timestamp field for evaluating time range of recorder,
-        used in get_latest_saved_record
-
-        """
         return 'timestamp'
 
     def get_original_time_field(self):
@@ -355,7 +326,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         record_cnt = 0 if df_records is None else len(df_records)
         self.logger.debug(f'record entity: {entity.id}, time: {cost}, size: {record_cnt}')
 
-        if df_records is None:
+        if not pd_is_not_null(df_records):
             return True
 
         # format
@@ -376,7 +347,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         self.result = None
         while not self.process_entity(entity, http_session):
-            pass
+            self.logger.debug(f'process_loop, while, {entity}')
 
         cost = precision_str.format(time.time() - step1)
 
@@ -449,23 +420,25 @@ class FixedCycleDataRecorder(TimeSeriesDataRecorder):
         now_end = now.replace(hour=18, minute=0, second=0)
 
         trade_day_index = 0
-        if len(self.trade_day) > 0 and \
-           is_same_date(self.trade_day[trade_day_index], now) and \
-           now < now_end:
-            trade_day_index = 1
+        if len(self.trade_day) > 0:
+            if is_same_date(self.trade_day[trade_day_index], now) and now < now_end:
+                trade_day_index = 1
+            end = self.trade_day[trade_day_index]
+        else:
+            end = now
 
         start_timestamp = next_date(latest_timestamp)
         start = max(self.start_timestamp, start_timestamp) if self.start_timestamp else start_timestamp
 
-        if start >= self.trade_day[trade_day_index]:
-            return start, None, 0, None
+        if start >= end:
+            return start, end, 0, None
 
         size = eval_size_of_timestamp(start_timestamp=start,
-                                      end_timestamp=self.trade_day[trade_day_index],
+                                      end_timestamp=end,
                                       level=self.level,
                                       one_day_trading_minutes=self.one_day_trading_minutes)
 
-        return start, self.trade_day[trade_day_index], size, None
+        return start, end, size, None
 
 
 class TimestampsDataRecorder(TimeSeriesDataRecorder):
