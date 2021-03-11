@@ -14,9 +14,9 @@ from zvt.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
 
 class ChinaIndexListSpider(Recorder):
-    data_schema = IndexStock
-
     region = Region.CHN
+    provider = Provider.Exchange
+    data_schema = IndexStock
 
     def __init__(self, region: Region, batch_size=10, force_update=False, sleeping_time=2.0, provider: Provider = Provider.Exchange) -> None:
         self.region = region

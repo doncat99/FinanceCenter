@@ -21,11 +21,13 @@ class Meta(type):
         # register the recorder class to the data_schema
         if hasattr(cls, 'data_schema') and hasattr(cls, 'provider'):
             if cls.data_schema and issubclass(cls.data_schema, Mixin):
-                # print(f'{cls.__name__}:{cls.data_schema.__name__}')
+                # print(f'{cls.__name__}:{cls.data_schema.__name__}:{cls.region}:{cls.provider}')
                 assert cls.region in Region
                 cls.data_schema.register_recorder_cls(cls.region,
                                                       cls.provider,
                                                       cls)
+        # else:
+        #     print(cls)
         return cls
 
 

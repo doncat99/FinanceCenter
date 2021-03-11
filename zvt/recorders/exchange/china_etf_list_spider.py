@@ -16,9 +16,9 @@ from zvt.utils.time_utils import now_pd_timestamp
 
 
 class ChinaETFListSpider(Recorder):
-    data_schema = EtfStock
-
     region = Region.CHN
+    provider = Provider.Exchange
+    data_schema = EtfStock
 
     def __init__(self, batch_size=10, force_update=False, sleeping_time=10.0, provider: Provider = Provider.Exchange) -> None:
         self.provider = provider

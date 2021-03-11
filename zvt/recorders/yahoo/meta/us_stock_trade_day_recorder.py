@@ -12,8 +12,8 @@ from zvt.utils.time_utils import to_time_str, now_pd_timestamp, PD_TIME_FORMAT_D
 
 
 class UsStockTradeDayRecorder(RecorderForEntities):
-    provider = Provider.Yahoo
     region = Region.US
+    provider = Provider.Yahoo
     entity_schema = Stock
     data_schema = StockTradeDay
 

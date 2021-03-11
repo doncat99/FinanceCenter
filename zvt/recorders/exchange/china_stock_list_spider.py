@@ -15,10 +15,9 @@ from zvt.utils.pd_utils import pd_is_not_null
 
 
 class ExchangeChinaStockListRecorder(RecorderForEntities):
-    data_schema = Stock
-
     region = Region.CHN
     provider = Provider.Exchange
+    data_schema = Stock
 
     category_map_url = {
         'sh': 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',

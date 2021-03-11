@@ -11,7 +11,7 @@ from zvt.utils.time_utils import to_pd_timestamp
 
 
 class ExchangeUsStockListRecorder(RecorderForEntities):
-    region = Region.CHN
+    region = Region.US
     provider = Provider.Exchange
     data_schema = Stock
 
