@@ -27,12 +27,10 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
     }
 
     def init_entities(self):
-        self.entities = [(category, url) for category, url in self.category_map_url.items()]
+        self.entities = [BlockCategory.industry, BlockCategory.concept]
 
     def process_loop(self, entity, http_session):
-        category, url = entity
-
-        text = sync_get(http_session, url, return_type='text')
+        text = sync_get(http_session, self.category_map_url[entity], return_type='text')
         if text is None:
             return
 
@@ -53,7 +51,7 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
                     'exchange': 'cn',
                     'code': code,
                     'name': name,
-                    'category': category.value
+                    'category': entity.value
                 })
             return the_list
 
@@ -61,7 +59,7 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
         if the_list:
             df = pd.DataFrame.from_records(the_list)
             df_to_db(df=df, ref_df=None, region=Region.CHN, data_schema=self.data_schema, provider=self.provider)
-        self.logger.info(f"finish record sina blocks:{category.value}")
+        self.logger.info(f"finish record sina blocks:{entity.value}")
 
 
 class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):

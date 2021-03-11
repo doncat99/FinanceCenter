@@ -41,7 +41,6 @@ class UsStockTradeDayRecorder(RecorderForEntities):
             df = pd.DataFrame(dates, columns=['timestamp'])
             df = self.format(entity, df)
             self.persist(df)
-
         return None
 
     def format(self, entity, df):
