@@ -261,10 +261,11 @@ class Para(enum.Enum):
 
 
 data_set_chn = [
-    [interface.get_stock_list_data,              Provider.Exchange,  0, 1, "Stock List",               24 * 6, RunMode.Sync],
+    [interface.get_stock_list_data,              Provider.Exchange,  0, 0, "Stock List",               24 * 6, RunMode.Sync],
     [interface.get_stock_trade_day,              Provider.BaoStock,  0, 1, "Trade Day",                24,     RunMode.Sync],
-    [interface.get_etf_list_data,                Provider.BaoStock,  0, 1, "Etf List",                 24 * 6, RunMode.Sync],
+    [interface.get_etf_list_data,                Provider.BaoStock,  0, 0, "Etf List",                 24 * 6, RunMode.Sync],
     [interface.get_stock_main_index,             Provider.BaoStock,  0, 1, "Main Index",               24,     RunMode.Sync],
+    [interface.get_stock_detail_data,            Provider.EastMoney, 0, 0, "Stock Detail",             24 * 6, RunMode.Sync],
 
     # [interface.get_dividend_financing_data,      Provider.EastMoney, 0, 0, "Divdend Financing",        24 * 6, RunMode.Async],
     # [interface.get_top_ten_holder_data,          Provider.EastMoney, 0, 0, "Top Ten Holder",           24 * 6, RunMode.Async],
@@ -288,14 +289,14 @@ data_set_chn = [
     # [interface.get_etf_valuation_data,           Provider.JoinQuant, 0, 3, "ETF Valuation",            24,     RunMode.Sync],
     # [interface.get_moneyflow_data,               Provider.Sina,      1, 3, "MoneyFlow Statement",      24,     RunMode.Sync],
 
-    [interface.get_etf_1d_k_data,                Provider.Sina,      0, 0, "ETF Daily K-Data",         24,     RunMode.Async],
-    [interface.get_stock_1d_k_data,              Provider.BaoStock,  0, 0, "Stock Daily K-Data",       24,     RunMode.Sync],
-    [interface.get_stock_1w_k_data,              Provider.BaoStock,  0, 0, "Stock Weekly K-Data",      24,     RunMode.Sync],
-    [interface.get_stock_1mon_k_data,            Provider.BaoStock,  0, 0, "Stock Monthly K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_1h_k_data,              Provider.BaoStock,  0, 0, "Stock 1 hours K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_30m_k_data,             Provider.BaoStock,  0, 0, "Stock 30 mins K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_15m_k_data,             Provider.BaoStock,  0, 3, "Stock 15 mins K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_5m_k_data,              Provider.BaoStock,  0, 3, "Stock 5 mins K-Data",      24,     RunMode.Sync],
+    # [interface.get_etf_1d_k_data,                Provider.Sina,      0, 0, "ETF Daily K-Data",         24,     RunMode.Async],
+    # [interface.get_stock_1d_k_data,              Provider.BaoStock,  0, 0, "Stock Daily K-Data",       24,     RunMode.Sync],
+    # [interface.get_stock_1w_k_data,              Provider.BaoStock,  0, 0, "Stock Weekly K-Data",      24,     RunMode.Sync],
+    # [interface.get_stock_1mon_k_data,            Provider.BaoStock,  0, 0, "Stock Monthly K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_1h_k_data,              Provider.BaoStock,  0, 0, "Stock 1 hours K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_30m_k_data,             Provider.BaoStock,  0, 0, "Stock 30 mins K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_15m_k_data,             Provider.BaoStock,  0, 0, "Stock 15 mins K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_5m_k_data,              Provider.BaoStock,  0, 0, "Stock 5 mins K-Data",      24,     RunMode.Sync],
     # [interface.get_stock_1m_k_data,              Provider.BaoStock,  0, 0, "Stock 1 mins K-Data",      24,     RunMode.Sync],
 
     # [interface.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 0, "Stock Daily HFQ K-Data",   24,     RunMode.Sync],
@@ -309,17 +310,18 @@ data_set_chn = [
 ]
 
 data_set_us = [
-    [interface.get_stock_list_data,              Provider.Exchange,  0, 1, "Stock List",               24 * 6, RunMode.Sync],
+    [interface.get_stock_list_data,              Provider.Exchange,  0, 0, "Stock List",               24,     RunMode.Sync],
     [interface.get_stock_trade_day,              Provider.Yahoo,     0, 1, "Trade Day",                24,     RunMode.Sync],
+    [interface.get_stock_detail_data,            Provider.Yahoo,     0, 0, "Stock Detail",             24 * 6, RunMode.Sync],
 
-    [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 0, "Stock Daily K-Data",       24,     RunMode.Sync],
-    [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 0, "Stock Weekly K-Data",      24,     RunMode.Sync],
-    [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 0, "Stock Monthly K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 0, "Stock 1 hours K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 0, "Stock Daily K-Data",       24,     RunMode.Sync],
+    # [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 0, "Stock Weekly K-Data",      24,     RunMode.Sync],
+    # [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 0, "Stock Monthly K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 0, "Stock 1 hours K-Data",     24,     RunMode.Sync],
     # [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 0, "Stock 30 mins K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 0, "Stock 15 mins K-Data",     24,     RunMode.Sync],
-    [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 0, "Stock 5 mins K-Data",      24,     RunMode.Sync],
-    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 0, "Stock 1 mins K-Data",      24,     RunMode.Sync],
+    # [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 0, "Stock 15 mins K-Data",     24,     RunMode.Sync],
+    # [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 0, "Stock 5 mins K-Data",      24,     RunMode.Sync],
+    # [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 0, "Stock 1 mins K-Data",      24,     RunMode.Sync],
 ]
 
 

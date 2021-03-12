@@ -35,7 +35,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                                          return_type='domain',
                                          provider=self.provider)
 
-        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
+        super().__init__(entity_type=EntityType.StockDetail, batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
 
     def process_loop(self, entity, http_session):
         assert isinstance(entity, StockDetail)
@@ -71,7 +71,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
         entity.sector = resp_json['Block']
 
         # 关联地区
-        entity.area = resp_json['Provice']
+        entity.state = resp_json['Provice']
 
         self.sleep()
 

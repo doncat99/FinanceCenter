@@ -70,7 +70,12 @@ class StockDetail(StockMetaBase, EntityMixin):
     industry = Column(String)
     sector = Column(String)
     country = Column(String)
-    area = Column(String)
+    state = Column(String)
+    city = Column(String)
+
+    zip_code = Column(String)
+    phone = Column(String)
+
     market_cap = Column(Float)
     last_sale = Column(Float)
     volume = Column(Float)
@@ -94,6 +99,11 @@ class StockDetail(StockMetaBase, EntityMixin):
     issue_pe = Column(Float)
     # 网上中签率
     net_winning_rate = Column(Float)
+
+    # 员工数
+    fulltime_employees = Column(BigInteger)
+    # 网站
+    website = Column(String)
 
 
 register_schema(regions=[Region.CHN, Region.US],

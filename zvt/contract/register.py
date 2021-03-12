@@ -112,6 +112,13 @@ def register_schema(regions: List[Region],
 
             index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
 
+            # try:
+            #     index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
+            # except Exception as e:
+            #     logger.error(f'get table error: {e}')
+            #     schema_base.metadata.create_all(engine)
+            #     index_column_names = [index['name'] for index in inspector.get_indexes(table_name)]
+
             if zvt_config['debug'] == 2:
                 logger.debug(f'create index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
 

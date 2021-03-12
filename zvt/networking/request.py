@@ -7,19 +7,20 @@ import requests
 from aiohttp import ClientSession, TCPConnector
 import baostock as bs
 import jqdatapy.api as jq
+import yfinance as yf
 
 from zvt.api.data_type import RunMode
 from zvt.utils.cache_utils import hashable_lru
 
 logger = logging.getLogger(__name__)
 
-bs.login()
-
 client.HTTPConnection._http_vsn = 11
 client.HTTPConnection._http_vsn_str = 'HTTP/1.1'
 
 http_timeout = (20, 60)
 max_retries = 3
+
+bs.login()
 
 
 class TimeoutRequestsSession(requests.Session):
@@ -279,7 +280,6 @@ def bao_get_bars(code, start, end, frequency="d", adjustflag="3",
 
 
 def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy=False):
-    import yfinance as yf
 
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _yh_get_bars(code, interval, enable_proxy, start=None, end=None, actions=True):
@@ -305,3 +305,10 @@ def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy
         logger.error(f'yh_get_bars, code: {code}, error: {e}')
     return None
 
+
+def yh_get_info(code):
+    try:
+        return yf.Ticker(code).info
+    except Exception as e:
+        logger.error(f'yh_get_bars, code: {code}, error: {e}')
+    return None
