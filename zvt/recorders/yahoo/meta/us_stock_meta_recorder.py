@@ -30,6 +30,7 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
                                          entity_type=EntityType.StockDetail,
                                          exchanges=exchanges,
                                          codes=codes,
+                                         filters=[StockDetail.profile.is_(None)],
                                          return_type='domain',
                                          provider=self.provider)
 
