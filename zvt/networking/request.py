@@ -7,7 +7,6 @@ import requests
 from aiohttp import ClientSession, TCPConnector
 import baostock as bs
 import jqdatapy.api as jq
-import yfinance as yf
 
 from zvt.api.data_type import RunMode
 from zvt.utils.cache_utils import hashable_lru
@@ -280,6 +279,7 @@ def bao_get_bars(code, start, end, frequency="d", adjustflag="3",
 
 
 def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy=False):
+    import yfinance as yf
 
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _yh_get_bars(code, interval, enable_proxy, start=None, end=None, actions=True):
@@ -307,6 +307,8 @@ def yh_get_bars(code, interval, start=None, end=None, actions=True, enable_proxy
 
 
 def yh_get_info(code):
+    import yfinance as yf
+
     try:
         return yf.Ticker(code).info
     except Exception as e:
@@ -315,6 +317,8 @@ def yh_get_info(code):
 
 
 def yh_get_balance_sheet(code):
+    import yfinance as yf
+
     try:
         return yf.Ticker(code).balance_sheet
     except Exception as e:
