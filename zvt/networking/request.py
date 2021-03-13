@@ -310,5 +310,13 @@ def yh_get_info(code):
     try:
         return yf.Ticker(code).info
     except Exception as e:
-        logger.error(f'yh_get_bars, code: {code}, error: {e}')
+        logger.error(f'yh_get_info, code: {code}, error: {e}')
+    return None
+
+
+def yh_get_balance_sheet(code):
+    try:
+        return yf.Ticker(code).balance_sheet
+    except Exception as e:
+        logger.error(f'yh_get_info, code: {code}, error: {e}')
     return None

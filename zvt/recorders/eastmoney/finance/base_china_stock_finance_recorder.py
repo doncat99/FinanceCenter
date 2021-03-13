@@ -3,11 +3,12 @@ import pandas as pd
 
 from zvt import zvt_config
 from zvt.api.data_type import EntityType
-from zvt.api.quote import to_jq_report_period
 from zvt.domain import FinanceFactor
 from zvt.contract.api import get_data
-from zvt.recorders.eastmoney.common import company_type_flag, get_fc, EastmoneyTimestampsDataRecorder, \
-                                           call_eastmoney_api, get_from_path_fields
+from zvt.recorders.eastmoney.common import company_type_flag, get_fc, \
+                                           EastmoneyTimestampsDataRecorder, \
+                                           call_eastmoney_api, get_from_path_fields, \
+                                           to_jq_report_period
 from zvt.recorders.joinquant.common import to_jq_entity_id
 from zvt.database.api import get_db_session
 from zvt.networking.request import jq_get_fundamentals
@@ -163,7 +164,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                     if pd_is_not_null(df) and the_data.report_date in df.index:
                         the_data.timestamp = df.at[the_data.report_date, 'timestamp']
                         self.logger.info(
-                            'db fill {} {} timestamp:{} for report_date:{}'.format(self.data_schema,
+                            'db fill {} {} timestamp:{} for report_date:{}'.format(self.data_schema.__name__,
                                                                                    entity.id,
                                                                                    the_data.timestamp,
                                                                                    the_data.report_date))
@@ -173,7 +174,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                         session.commit()
                     else:
                         # self.logger.info(
-                        #     'waiting jq fill {} {} timestamp:{} for report_date:{}'.format(self.data_schema,
+                        #     'waiting jq fill {} {} timestamp:{} for report_date:{}'.format(self.data_schema.__name__,
                         #                                                                    security_item.id,
                         #                                                                    the_data.timestamp,
                         #                                                                    the_data.report_date))

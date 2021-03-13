@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from zvt.domain import ReportPeriod
 from zvt.contract import IntervalLevel
 
 
@@ -14,3 +15,15 @@ def to_yahoo_trading_level(trading_level: IntervalLevel):
         return '1wk'
     if trading_level == IntervalLevel.LEVEL_1MON:
         return '1mo'
+
+
+def to_report_period_type(report_date):
+    if report_date == 0:
+        return ReportPeriod.season1.value
+    if report_date == 1:
+        return ReportPeriod.half_year.value
+    if report_date == 2:
+        return ReportPeriod.season3.value
+    if report_date == 3:
+        return ReportPeriod.year.value
+    return None

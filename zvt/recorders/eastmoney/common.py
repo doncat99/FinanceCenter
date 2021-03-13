@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 
 from zvt.api.data_type import Region, Provider
-from zvt.domain import CompanyType, StockDetail
+from zvt.domain import ReportPeriod, CompanyType, StockDetail
 from zvt.contract.recorder import TimestampsDataRecorder, TimeSeriesDataRecorder
 from zvt.networking.request import sync_post
 from zvt.utils.time_utils import to_pd_timestamp, PD_TIME_FORMAT_DAY
@@ -17,6 +17,34 @@ logger = logging.getLogger(__name__)
 class ApiWrapper(object):
     def request(self, url=None, method='post', param=None, path_fields=None):
         raise NotImplementedError
+
+
+def to_report_period_type(report_date):
+    the_date = to_pd_timestamp(report_date)
+    if the_date.month == 3 and the_date.day == 31:
+        return ReportPeriod.season1.value
+    if the_date.month == 6 and the_date.day == 30:
+        return ReportPeriod.half_year.value
+    if the_date.month == 9 and the_date.day == 30:
+        return ReportPeriod.season3.value
+    if the_date.month == 12 and the_date.day == 31:
+        return ReportPeriod.year.value
+    return None
+
+
+def to_jq_report_period(timestamp):
+    the_date = to_pd_timestamp(timestamp)
+    report_period = to_report_period_type(timestamp)
+    if report_period == ReportPeriod.year.value:
+        return '{}'.format(the_date.year)
+    if report_period == ReportPeriod.season1.value:
+        return '{}q1'.format(the_date.year)
+    if report_period == ReportPeriod.half_year.value:
+        return '{}q2'.format(the_date.year)
+    if report_period == ReportPeriod.season3.value:
+        return '{}q3'.format(the_date.year)
+
+    assert False
 
 
 def get_fc(security_item):

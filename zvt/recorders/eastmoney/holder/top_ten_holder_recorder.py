@@ -5,9 +5,9 @@ import pandas as pd
 import numpy as np
 
 from zvt.api.data_type import Region, Provider
-from zvt.api.quote import to_report_period_type
+
 from zvt.domain.misc.holder import TopTenHolder
-from zvt.recorders.eastmoney.common import EastmoneyTimestampsDataRecorder, get_fc
+from zvt.recorders.eastmoney.common import EastmoneyTimestampsDataRecorder, get_fc, to_report_period_type
 from zvt.utils.time_utils import to_time_str, PD_TIME_FORMAT_DAY
 from zvt.utils.utils import to_float
 

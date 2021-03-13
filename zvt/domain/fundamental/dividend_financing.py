@@ -25,6 +25,7 @@ class DividendFinancing(DividendFinancingBase, Mixin):
     # 增发
     spo_issues = Column(Float)
     spo_raising_fund = Column(Float)
+
     # 配股
     rights_issues = Column(Float)
     rights_raising_fund = Column(Float)

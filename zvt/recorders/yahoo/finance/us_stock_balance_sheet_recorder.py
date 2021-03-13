@@ -4,10 +4,12 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
+from zvt.api.data_type import Region, Provider, EntityType
 from zvt.domain import BalanceSheet
-from zvt.recorders.eastmoney.common import to_report_period_type
-from zvt.recorders.eastmoney.finance.base_china_stock_finance_recorder import BaseChinaStockFinanceRecorder
-from zvt.utils.utils import to_float
+from zvt.contract.recorder import TimestampsDataRecorder
+from zvt.contract.api import get_entities
+from zvt.recorders.yahoo.common import to_report_period_type
+from zvt.networking.request import yh_get_balance_sheet
 
 balance_sheet_map = {
     # 流动资产
@@ -430,24 +432,41 @@ balance_sheet_map = {
     # 股东权益合计
     #
     # 负债和股东权益总计
-
 }
 
 
-class ChinaStockBalanceSheetRecorder(BaseChinaStockFinanceRecorder):
+class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
+    region = Region.US
+    provider = Provider.Yahoo
     data_schema = BalanceSheet
 
-    url = 'https://emh5.eastmoney.com/api/CaiWuFenXi/GetZiChanFuZhaiBiaoList'
-    finance_report_type = 'ZiChanFuZhaiBiaoList'
-    data_type = 3
+    def __init__(self, batch_size=10, force_update=False, sleeping_time=5, codes=None, share_para=None) -> None:
+        exchanges = ['nyse', 'nasdaq', 'amex']
+
+        if not force_update:
+            assert self.region is not None
+            self.entities = get_entities(region=self.region,
+                                         entity_type=EntityType.Stock,
+                                         exchanges=exchanges,
+                                         codes=codes,
+                                         return_type='domain',
+                                         provider=self.provider)
+        super().__init__(entity_type=EntityType.Stock, exchanges=exchanges, batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
+
+    def record(self, entity, start, end, size, timestamps, http_session):
+        # get stock info
+        balance_sheet = yh_get_balance_sheet(entity.code)
+
+        if balance_sheet is None or len(balance_sheet) == 0:
+            return None
+        balance_sheet = balance_sheet.T
+
+        balance_sheet['timestamp'] = balance_sheet.index
+
+        return balance_sheet
 
     def format(self, entity, df):
-        cols = list(df.columns)
-        str_cols = ['Title']
-        date_cols = [self.get_original_time_field()]
-        float_cols = list(set(cols) - set(str_cols) - set(date_cols))
-        for column in float_cols:
-            df[column] = df[column].apply(lambda x: to_float(x[0]))
+        df.rename(colunms={}, inplace=True)
 
         df.rename(columns=balance_sheet_map, inplace=True)
 
@@ -470,9 +489,9 @@ class ChinaStockBalanceSheetRecorder(BaseChinaStockFinanceRecorder):
         return df
 
 
-__all__ = ['ChinaStockBalanceSheetRecorder']
+__all__ = ['UsStockBalanceSheetRecorder']
 
 if __name__ == '__main__':
     # init_log('blance_sheet.log')
-    recorder = ChinaStockBalanceSheetRecorder(codes=['002572'])
+    recorder = UsStockBalanceSheetRecorder(codes=['AMD'])
     recorder.run()

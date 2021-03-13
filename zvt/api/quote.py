@@ -30,20 +30,6 @@ def get_kdata_schema(entity_type: EntityType,
     return get_schema_by_name(schema_str)
 
 
-def to_report_period_type(report_date):
-    the_date = to_pd_timestamp(report_date)
-    if the_date.month == 3 and the_date.day == 31:
-        return ReportPeriod.season1.value
-    if the_date.month == 6 and the_date.day == 30:
-        return ReportPeriod.half_year.value
-    if the_date.month == 9 and the_date.day == 30:
-        return ReportPeriod.season3.value
-    if the_date.month == 12 and the_date.day == 31:
-        return ReportPeriod.year.value
-
-    return None
-
-
 def get_recent_report_date(the_date, step=0):
     the_date = to_pd_timestamp(the_date)
     assert step >= 0
@@ -63,8 +49,8 @@ def get_recent_report_date(the_date, step=0):
         return get_recent_report_date(recent, step)
 
 
-def get_recent_report_period(the_date, step=0):
-    return to_report_period_type(get_recent_report_date(the_date, step=step))
+# def get_recent_report_period(the_date, step=0):
+#     return to_report_period_type(get_recent_report_date(the_date, step=step))
 
 
 def get_exchange(code):
@@ -78,19 +64,7 @@ def china_stock_code_to_id(code):
     return "{}_{}_{}".format('stock', get_exchange(code), code)
 
 
-def to_jq_report_period(timestamp):
-    the_date = to_pd_timestamp(timestamp)
-    report_period = to_report_period_type(timestamp)
-    if report_period == ReportPeriod.year.value:
-        return '{}'.format(the_date.year)
-    if report_period == ReportPeriod.season1.value:
-        return '{}q1'.format(the_date.year)
-    if report_period == ReportPeriod.half_year.value:
-        return '{}q2'.format(the_date.year)
-    if report_period == ReportPeriod.season3.value:
-        return '{}q3'.format(the_date.year)
 
-    assert False
 
 
 def to_high_level_kdata(kdata_df: pd.DataFrame, to_level: IntervalLevel):
@@ -237,6 +211,5 @@ if __name__ == '__main__':
 
 
 # the __all__ is generated
-__all__ = ['get_kdata_schema', 'to_report_period_type', 'get_recent_report_date', 'get_recent_report_period',
-           'get_exchange', 'china_stock_code_to_id', 'to_jq_report_period', 'to_high_level_kdata',
+__all__ = ['get_kdata_schema', 'get_recent_report_date', 'get_exchange', 'china_stock_code_to_id', 'to_high_level_kdata',
            'portfolio_relate_stock', 'get_etf_stocks', 'get_kdata', 'get_portfolio_stocks']

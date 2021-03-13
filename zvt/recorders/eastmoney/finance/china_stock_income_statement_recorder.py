@@ -4,8 +4,8 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from zvt.api.quote import to_report_period_type
 from zvt.domain import IncomeStatement
+from zvt.recorders.eastmoney.common import to_report_period_type
 from zvt.recorders.eastmoney.finance.base_china_stock_finance_recorder import BaseChinaStockFinanceRecorder
 from zvt.utils.utils import to_float
 
