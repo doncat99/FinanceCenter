@@ -12,7 +12,6 @@ from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.recorders.baostock.common import to_bao_trading_level, to_bao_entity_id, \
                                           to_bao_trading_field, to_bao_adjust_flag
 from zvt.networking.request import bao_get_bars
-from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import to_time_str, PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601
 
 

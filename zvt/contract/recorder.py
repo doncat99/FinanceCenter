@@ -290,6 +290,9 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                         self.logger.info(f'{entity_item.id} now is the close time: {now}')
                         entity_finished = True
 
+        if isinstance(self, FixedCycleDataRecorder):
+            entity_finished = True
+
         start_timestamp = to_time_str(df_record['timestamp'].min(axis=0))
         end_timestamp = to_time_str(df_record['timestamp'].max(axis=0))
 
