@@ -63,9 +63,10 @@ def register_schema(regions: List[Region],
     """
     schemas = []
     for region in regions:
-        for item in schema_base._decl_class_registry.items():
-            cls = item[1]
-            if type(cls) == DeclarativeMeta:
+        # for item in schema_base._decl_class_registry.items():
+        for item in schema_base.registry.mappers:
+            cls = item.class_
+            if type(item.class_) == DeclarativeMeta:
                 # register provider to the schema
                 [cls.register_provider(region, provider) for provider in providers[region] if issubclass(cls, Mixin)]
 
