@@ -112,7 +112,7 @@ def init_env(zvt_home: str, **kwargs) -> dict:
     # path for storing cache
     zvt_env['cache_path'] = os.path.join(zvt_home, 'cache')
     if not os.path.exists(zvt_env['cache_path']):
-        os.makedirs(zvt_env['cache_path'])  
+        os.makedirs(zvt_env['cache_path'])
 
     # pprint.pprint(zvt_env)
 
