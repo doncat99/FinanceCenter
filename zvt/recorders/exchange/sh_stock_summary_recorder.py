@@ -24,7 +24,7 @@ class StockSummaryRecorder(TimestampsDataRecorder):
 
     def __init__(self, exchanges=['cn'], entity_ids=None, codes=['000001'], batch_size=10,
                  force_update=False, sleeping_time=5, default_size=zvt_config['batch_size'],
-                 real_time=False, fix_duplicate_way='add') -> None:
+                 real_time=False, fix_duplicate_way='add', share_para=None) -> None:
         super().__init__(EntityType.Index, exchanges, entity_ids, codes, batch_size,
                          force_update, sleeping_time, default_size, real_time,
                          fix_duplicate_way)

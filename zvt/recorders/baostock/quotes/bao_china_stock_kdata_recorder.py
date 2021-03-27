@@ -60,9 +60,9 @@ class BaoChinaStockKdataRecorder(FixedCycleDataRecorder):
         start = to_time_str(start)
 
         if self.bao_trading_level in ['d', 'w', 'm']:
-            start = start if start > "1990-12-19" else "1990-12-19"
+            start = max(start, "1990-12-19")
         else:
-            start = start if start > "1999-07-26" else "1999-07-26"
+            start = max(start, "1999-07-26")
 
         return bao_get_bars(to_bao_entity_id(entity),
                             start=start,
