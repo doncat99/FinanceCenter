@@ -27,7 +27,7 @@ class StockSummaryRecorder(TimestampsDataRecorder):
                  real_time=False, fix_duplicate_way='add', share_para=None) -> None:
         super().__init__(EntityType.Index, exchanges, entity_ids, codes, batch_size,
                          force_update, sleeping_time, default_size, real_time,
-                         fix_duplicate_way)
+                         fix_duplicate_way, share_para=share_para)
 
     def init_timestamps(self, entity, http_session):
         return pd.date_range(start=entity.timestamp,
