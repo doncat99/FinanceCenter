@@ -1,19 +1,29 @@
-requests
-sqlalchemy
-numpy
-pandas
-pandas_market_calendars
-arrow
-tzlocal
-pytz
-demjson
-retrying
-tqdm
-jqdatapy
-baostock
-yfinance
-numba
-psycopg2
-sqlalchemy_batch_inserts
+# multiprocessing utils
+numba>=0.53.1
 uvloop
-aiohttp
+
+# database utils
+psycopg2>=2.8.6
+SQLAlchemy>=1.4.1
+sqlalchemy_batch_inserts>=0.0.4
+
+# data utils
+pandas>=1.2.3
+numpy>=1.20.1
+demjson>=2.2.4
+
+# date utils
+pytz>=2021.1
+tzlocal>=2.1
+
+# http utils
+requests>=2.24.0
+aiohttp>=3.7.4
+aiohttp_client_cache>=0.3.0
+retrying>=1.3.3
+
+# market data
+pandas_market_calendars>=3.0.2
+
+# monitoring utils
+tqdm

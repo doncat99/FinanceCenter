@@ -1,0 +1,36 @@
+{
+  "version": "0.3.1",
+
+  "debug": 0,
+  "processes": 1,
+  "batch_size": 10000,
+  
+  "db_name": "findy",
+  "db_host": "192.168.1.133",
+  "db_port": "15432",
+  "db_user": "postgres",
+  "db_pass": "123",
+
+  "redis_pass": "",
+  "kafka": "localhost:9092",
+
+  "jq_username": "",
+  "jq_password": "",
+
+  "tushare_token": "",
+
+  "trade_host": "127.0.0.1",
+  "trade_port": "11111",
+  "trade_socket_port": "33333",
+  "trade_socket_key": "",
+
+  "http_proxy": "127.0.0.1:1087",
+  "https_proxy": "127.0.0.1:1087",
+  "smtp_host": "smtpdm.aliyun.com",
+  "smtp_port": "80",
+  "email_username": "",
+  "email_password": "",
+  "wechat_app_id": "",
+  "wechat_app_secrect": "",
+  "wechat_agent_id": ""
+}

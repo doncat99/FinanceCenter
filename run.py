@@ -1,13 +1,11 @@
 import warnings
 warnings.filterwarnings("ignore")
 
-# import multiprocessing
 # from datetime import datetime
 # from apscheduler.schedulers.background import BackgroundScheduler
 
-from zvt.api.data_type import Region
-from zvt.api.fetch import fetch_data
-# from zvt.utils.time_utils import next_date
+from findy.interface import Region
+from findy.interface.fetch import fetching
 
 # sched = BackgroundScheduler()
 
@@ -16,8 +14,7 @@ from zvt.api.fetch import fetch_data
 def main():
     # multiprocessing.set_start_method('fork')
 
-    fetch_data(Region.CHN)
-    # fetch_data(Region.US)
+    fetching(Region.CHN)
 
 
 if __name__ == '__main__':
