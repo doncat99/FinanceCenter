@@ -45,7 +45,7 @@ class Etf(StockMetaBase, Portfolio):
 
     @classmethod
     async def get_stocks(cls, region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
-        from findy.interface.quote import get_etf_stocks
+        from findy.database.quote import get_etf_stocks
         return await get_etf_stocks(region=region, code=code, codes=codes, ids=ids, timestamp=timestamp, provider=provider)
 
 

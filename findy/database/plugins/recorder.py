@@ -10,13 +10,13 @@ from tqdm.auto import tqdm
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
 from findy.interface.writer import df_to_db
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin
 from findy.database.schema.quotes.trade_day import StockTradeDay
 from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
+from findy.database.quote import get_entities
 from findy.utils.request import get_http_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,

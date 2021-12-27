@@ -6,11 +6,10 @@ import pandas as pd
 from numba import njit
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.quote import get_kdata_schema
-from findy.interface.tool import get_entities
 from findy.database.schema import IntervalLevel, BlockCategory
 from findy.database.schema.meta.stock_meta import Index, Block
 from findy.database.plugins.recorder import KDataRecorder
+from findy.database.quote import get_entities, get_kdata_schema
 from findy.utils.time import now_time_str, TIME_FORMAT_DAY1, PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601
 from findy.utils.convert import json_callback_param, to_float
 

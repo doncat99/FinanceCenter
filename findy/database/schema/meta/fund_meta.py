@@ -45,7 +45,7 @@ class Fund(FundMetaBase, Portfolio):
 
     @classmethod
     async def get_stocks(cls, region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
-        from findy.interface.quote import get_fund_stocks
+        from findy.database.quote import get_fund_stocks
         return await get_fund_stocks(region=region, provider=provider, timestamp=timestamp, code=code, codes=codes, ids=ids)
 
 

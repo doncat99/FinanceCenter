@@ -6,12 +6,12 @@ import demjson
 import pandas as pd
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.quote import china_stock_code_to_id
 from findy.interface.writer import df_to_db
 from findy.database.schema import BlockCategory
 from findy.database.schema.meta.stock_meta import EtfStock, Etf
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
+from findy.database.quote import china_stock_code_to_id
 from findy.utils.request import get_http_session, sync_get, chrome_copy_header_to_dict
 from findy.utils.time import now_pd_timestamp
 

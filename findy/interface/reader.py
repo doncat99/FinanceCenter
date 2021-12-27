@@ -7,7 +7,6 @@ from typing import List, Union, Type
 import pandas as pd
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
 from findy.database.schema import IntervalLevel
 from findy.database.schema.datatype import Mixin, EntityMixin
 from findy.database.schema.meta.stock_meta import Index, Stock
@@ -15,6 +14,7 @@ from findy.database.schema.quotes.index.index_1d_kdata import Index1dKdata
 from findy.database.schema.quotes.stock.stock_1d_kdata import Stock1dKdata
 from findy.database.schema.register import get_entity_schema_by_type
 from findy.database.context import get_db_session
+from findy.database.quote import get_entities
 from findy.utils.pd import fill_missing_timestamp
 from findy.utils.time import to_pd_timestamp, now_pd_timestamp
 
