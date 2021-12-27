@@ -16,7 +16,7 @@ services:
       - ./pgsql/init_db.sh:/docker-entrypoint-initdb.d/10_init_db.sh
     environment:
       - POSTGRES_PASSWORD=iG8ohh0ec6uh
-      - POSTGRES_USER=finance_zvt
-      - POSTGRES_DB=finance_zvt
+      - POSTGRES_USER=findy
+      - POSTGRES_DB=findy
 
 

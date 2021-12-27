@@ -42,7 +42,7 @@ class BaoChinaStockListRecorder(RecorderForEntities):
             self.logger.error(f'bao_get_all_securities, error: {e}')
         return None
 
-    def to_zvt_entity(self, df, entity_type: EntityType, category=None):
+    def to_entity(self, df, entity_type: EntityType, category=None):
         # 上市日期
         df.rename(columns={'ipoDate': 'list_date', 'outDate': 'end_date', 'code_name': 'name'}, inplace=True)
         df['end_date'].replace(r'^\s*$', '2200-01-01', regex=True, inplace=True)
@@ -66,7 +66,7 @@ class BaoChinaStockListRecorder(RecorderForEntities):
         df_entity = self.bao_get_all_securities(to_bao_entity_type(EntityType.Stock))
 
         if pd_valid(df_entity):
-            df_stock = self.to_zvt_entity(df_entity, entity_type=EntityType.Stock)
+            df_stock = self.to_entity(df_entity, entity_type=EntityType.Stock)
 
             # persist to Stock
             await df_to_db(region=self.region,
