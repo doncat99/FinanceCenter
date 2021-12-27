@@ -71,17 +71,28 @@ class YahooUsStockKdataRecorder(KDataRecorder):
         return entity.id + '_' + df[self.get_evaluated_time_field()].dt.strftime(format)
 
     async def yh_get_bars(self, http_session, entity, start=None, end=None, enable_proxy=False):
-        try:
-            code = entity.code
-            if self.level < IntervalLevel.LEVEL_1DAY:
-                df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), period="3mon")
-            else:
-                df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
-            if isinstance(msg, str) and "symbol may be delisted" in msg:
-                entity.is_active = False
-            return df
-        except Exception as e:
-            self.logger.error(f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {e}')
+        retry = 3
+        error_msg = None
+
+        for i in range(0, retry):
+            try:
+                code = entity.code
+                if self.level < IntervalLevel.LEVEL_1DAY:
+                    df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), period="3mon")
+                else:
+                    df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
+                if isinstance(msg, str) and "symbol may be delisted" in msg:
+                    entity.is_active = False
+                return df
+            except Exception as e:
+                msg = e.message
+                error_msg = f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {msg}'
+                if isinstance(msg, str) and "Server disconnected" in msg:
+                    self.sleep(60 * 10)
+                if isinstance(msg, str) and "Cannot connect to host" in msg:
+                    self.sleep(60 * 10)
+
+        self.logger.error(error_msg)
         return None
 
     async def record(self, entity, http_session, db_session, para):
