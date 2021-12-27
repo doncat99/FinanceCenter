@@ -74,7 +74,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
         retry = 3
         error_msg = None
 
-        for i in range(0, retry):
+        for _ in range(retry):
             try:
                 code = entity.code
                 if self.level < IntervalLevel.LEVEL_1DAY:
@@ -85,12 +85,12 @@ class YahooUsStockKdataRecorder(KDataRecorder):
                     entity.is_active = False
                 return df
             except Exception as e:
-                msg = e.message
+                msg = str(e)
                 error_msg = f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {msg}'
-                if isinstance(msg, str) and "Server disconnected" in msg:
+                if isinstance(msg, str) and ("Server disconnected" in msg or "Cannot connect to host" in msg):
                     self.sleep(60 * 10)
-                if isinstance(msg, str) and "Cannot connect to host" in msg:
-                    self.sleep(60 * 10)
+                else:
+                    break
 
         self.logger.error(error_msg)
         return None
