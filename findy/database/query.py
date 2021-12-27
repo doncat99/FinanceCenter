@@ -4,7 +4,7 @@ from typing import List, Union
 # import time
 import pandas as pd
 
-from sqlalchemy.orm import Query
+from sqlalchemy.future import select
 
 # from findy import findy_config
 from findy.interface import Region, Provider
@@ -18,7 +18,7 @@ from findy.utils.time import PRECISION_STR, to_pd_timestamp
 logger = logging.getLogger(__name__)
 
 
-def common_filter(query: Query,
+def common_filter(query: select,
                   data_schema,
                   ids: List[str] = None,
                   entity_ids: List[str] = None,
@@ -62,7 +62,7 @@ def common_filter(query: Query,
     return query
 
 
-def column_query(data_schema, db_session, columns, time_field, col_label):
+def column_query(data_schema, columns, time_field, col_label):
     # support str
     if type(columns[0]) == str:
         columns_ = []
@@ -85,30 +85,29 @@ def column_query(data_schema, db_session, columns, time_field, col_label):
                 columns_.append(col)
         columns = columns_
 
-    return db_session.query(*columns)
+    return select(*columns)
 
 
-def get_data(
-        region: Region,
-        provider: Provider,
-        data_schema,
-        db_session,
-        ids: List[str] = None,
-        entity_ids: List[str] = None,
-        entity_id: str = None,
-        codes: List[str] = None,
-        code: str = None,
-        level: Union[IntervalLevel, str] = None,
-        columns: List = None,
-        col_label: dict = None,
-        start_timestamp: Union[pd.Timestamp, str] = None,
-        end_timestamp: Union[pd.Timestamp, str] = None,
-        filters: List = None,
-        order=None,
-        limit: int = None,
-        index: Union[str, list] = None,
-        time_field: str = 'timestamp',
-        fun=None):
+async def get_data(region: Region,
+                   provider: Provider,
+                   data_schema,
+                   db_session,
+                   ids: List[str] = None,
+                   entity_ids: List[str] = None,
+                   entity_id: str = None,
+                   codes: List[str] = None,
+                   code: str = None,
+                   level: Union[IntervalLevel, str] = None,
+                   columns: List = None,
+                   col_label: dict = None,
+                   start_timestamp: Union[pd.Timestamp, str] = None,
+                   end_timestamp: Union[pd.Timestamp, str] = None,
+                   filters: List = None,
+                   order=None,
+                   limit: int = None,
+                   index: Union[str, list] = None,
+                   time_field: str = 'timestamp',
+                   fun=None):
     assert data_schema is not None
     assert db_session is not None
     assert provider is not None
@@ -117,11 +116,11 @@ def get_data(
     # now = time.time()
 
     if columns:
-        query = column_query(data_schema, db_session, columns, time_field, col_label)
+        query = column_query(data_schema, columns, time_field, col_label)
     elif fun is not None:
-        query = db_session.query(fun)
+        query = select(fun)
     else:
-        query = db_session.query(data_schema)
+        query = select(data_schema)
 
     # if findy_config['debug'] == 2:
     #     cost = PRECISION_STR.format(time.time() - now)
@@ -141,21 +140,21 @@ def get_data(
                           limit=limit,
                           time_field=time_field)
     # if not db_session:
-    #     db_session = get_db_session(region, provider, data_schema)
+    #     db_session = await get_db_session(region, provider, data_schema)
 
     try:
-        result = db_session.execute(query)
-        result_columns = query.statement.columns.keys()
+        result = await db_session.execute(query)
+        result_columns = result._metadata.keys._keys
     except Exception as e:
         logger.error(f"query {data_schema.__tablename__} failed with error: {e}")
         return None, []
 
     if columns:
-        result = result.all()
+        result = result.fetchall()
     elif fun is not None:
         result = result.scalar()
     else:
-        result = result.scalars().all()
+        result = result.scalars().fetchall()
 
     # if findy_config['debug'] == 2:
     #     cost = PRECISION_STR.format(time.time() - now)

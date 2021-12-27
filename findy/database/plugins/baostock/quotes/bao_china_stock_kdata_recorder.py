@@ -6,6 +6,7 @@ import pandas as pd
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
 from findy.interface.tool import get_entities
+from findy.database.context import get_db_session
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
@@ -61,7 +62,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
 
     async def init_entities(self, db_session):
         # init the entity list
-        self.entities, column_names = get_entities(
+        self.entities, column_names = await get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -147,7 +148,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         now = time.time()
         if result == 2 and not entity.is_active:
-            db_session.commit()
+            await db_session.commit()
         return time.time() - now
 
     async def on_finish(self):

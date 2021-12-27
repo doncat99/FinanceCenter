@@ -133,9 +133,9 @@ async def get_portfolio_stocks(region: Region, provider: Provider, timestamp, po
                                code=None, codes=None, ids=None):
     portfolio_stock = f'{portfolio_entity.__name__}Stock'
     data_schema: PortfolioStockHistory = get_schema_by_name(portfolio_stock)
-    db_session = get_db_session(region, provider, data_schema)
+    db_session = await get_db_session(region, provider, data_schema)
 
-    latests, column_names = data_schema.query_data(
+    latests, column_names = await data_schema.query_data(
         region=region,
         provider=provider,
         db_session=db_session,
@@ -147,7 +147,7 @@ async def get_portfolio_stocks(region: Region, provider: Provider, timestamp, po
     if latests and len(latests) > 0:
         latest_record = latests[0]
         # 获取最新的报表
-        data, column_names = data_schema.query_data(
+        data, column_names = await data_schema.query_data(
             region=region,
             provider=provider,
             db_session=db_session,
@@ -169,7 +169,7 @@ async def get_portfolio_stocks(region: Region, provider: Provider, timestamp, po
                 while step <= 20:
                     report_date = get_recent_report_date(latest_record.report_date, step=step)
 
-                    data, column_names = data_schema.query_data(
+                    data, column_names = await data_schema.query_data(
                         region=region,
                         provider=provider,
                         db_session=db_session,
@@ -217,7 +217,7 @@ async def get_kdata(region: Region, entity_id=None, entity_ids=None,
     entity_type, exchange, code = decode_entity_id(entity_id)
     data_schema: Mixin = get_kdata_schema(entity_type, level=level, adjust_type=adjust_type)
 
-    data, column_names = data_schema.query_data(
+    data, column_names = await data_schema.query_data(
         region=region,
         provider=provider,
         db_session=db_session,

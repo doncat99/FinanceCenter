@@ -143,11 +143,11 @@ class DataReader(object):
     async def load_window_df(self, data_schema, window):
         window_df = None
 
-        db_session = get_db_session(self.region, self.provider, data_schema)
+        db_session = await get_db_session(self.region, self.provider, data_schema)
 
         dfs = []
         for entity_id in self.entity_ids:
-            data, column_names = data_schema.query_data(
+            data, column_names = await data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
@@ -164,11 +164,11 @@ class DataReader(object):
             window_df = window_df.sort_index(level=[0, 1])
         return window_df
 
-    def load_data(self):
+    async def load_data(self):
         self.logger.info('load_data start')
         start_time = time.time()
 
-        db_session = get_db_session(self.region, self.provider, self.data_schema)
+        db_session = await get_db_session(self.region, self.provider, self.data_schema)
 
         # params = dict(entity_ids=self.entity_ids, provider=self.provider,
         #               columns=self.columns, start_timestamp=self.start_timestamp,
@@ -180,7 +180,7 @@ class DataReader(object):
 
         # 转换成标准entity_id
         if self.entity_schema and not self.entity_ids:
-            entities, column_names = get_entities(
+            entities, column_names = await get_entities(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
@@ -194,7 +194,7 @@ class DataReader(object):
             else:
                 return
 
-        data, column_names = self.data_schema.query_data(
+        data, column_names = await self.data_schema.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -286,10 +286,10 @@ def load_ticker(tickers, start, end, return_type='mix'):
     return None
 
 
-def load_company_info(tickers=None):
+async def load_company_info(tickers=None):
     entity_schema = get_entity_schema_by_type(EntityType.StockDetail)
-    db_session = get_db_session(Region.US, Provider.Yahoo, entity_schema)
-    entities, column_names = get_entities(
+    db_session = await get_db_session(Region.US, Provider.Yahoo, entity_schema)
+    entities, column_names = await get_entities(
         region=Region.US,
         provider=Provider.Yahoo,
         entity_schema=entity_schema,

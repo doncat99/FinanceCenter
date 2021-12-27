@@ -72,14 +72,14 @@ class BaoChinaStockListRecorder(RecorderForEntities):
             await df_to_db(region=self.region,
                            provider=self.provider,
                            data_schema=Stock,
-                           db_session=get_db_session(self.region, self.provider, Stock),
+                           db_session=await get_db_session(self.region, self.provider, Stock),
                            df=df_stock)
 
             # persist StockDetail too
             await df_to_db(region=self.region,
                            provider=self.provider,
                            data_schema=StockDetail,
-                           db_session=get_db_session(self.region, self.provider, StockDetail),
+                           db_session=await get_db_session(self.region, self.provider, StockDetail),
                            df=df_stock)
 
             self.logger.info("persist stock list success")

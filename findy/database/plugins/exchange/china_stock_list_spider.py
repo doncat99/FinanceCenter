@@ -129,7 +129,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
         await df_to_db(region=self.region,
                        provider=self.provider,
                        data_schema=StockDetail,
-                       db_session=get_db_session(self.region, self.provider, StockDetail),
+                       db_session=await get_db_session(self.region, self.provider, StockDetail),
                        df=df,
                        force_update=True)
 

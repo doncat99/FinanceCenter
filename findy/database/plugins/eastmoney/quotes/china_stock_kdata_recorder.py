@@ -46,7 +46,7 @@ class ChinaStockKdataRecorder(KDataRecorder):
                          one_day_trading_minutes)
 
     async def init_entities(self, db_session):
-        self.entities, column_names = get_entities(
+        self.entities, column_names = await get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,

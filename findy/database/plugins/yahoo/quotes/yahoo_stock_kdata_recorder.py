@@ -55,7 +55,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
 
     async def init_entities(self, db_session):
         # init the entity list
-        self.entities, column_names = get_entities(
+        self.entities, column_names = await get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -130,7 +130,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         now = time.time()
         if result == 2 and not entity.is_active:
-            db_session.commit()
+            await db_session.commit()
         return time.time() - now
 
     async def on_finish(self):

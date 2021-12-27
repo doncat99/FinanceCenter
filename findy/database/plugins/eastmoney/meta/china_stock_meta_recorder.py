@@ -20,7 +20,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
     async def init_entities(self, db_session):
         if not self.force_update:
             # init the entity list
-            self.entities, column_names = get_entities(
+            self.entities, column_names = await get_entities(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
@@ -86,7 +86,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 entity.raising_fund = to_float((resp_json['NetCollection']))
                 entity.net_winning_rate = pct_to_float(resp_json['LotRateOn'])
 
-                db_session.commit()
+                await db_session.commit()
 
                 cost = PRECISION_STR.format(time.time() - now)
 

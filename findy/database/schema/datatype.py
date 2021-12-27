@@ -67,35 +67,33 @@ class Mixin(object):
             cls.providers.update({region: [provider]})
 
     @classmethod
-    def query_data(
-            cls,
-            region: Region,
-            provider: Provider,
-            db_session,
-            ids: List[str] = None,
-            entity_ids: List[str] = None,
-            entity_id: str = None,
-            codes: List[str] = None,
-            code: str = None,
-            level: Union[IntervalLevel, str] = None,
-            columns: List = None,
-            col_label: dict = None,
-            start_timestamp: Union[pd.Timestamp, str] = None,
-            end_timestamp: Union[pd.Timestamp, str] = None,
-            filters: List = None,
-            order=None,
-            limit: int = None,
-            index: Union[str, list] = None,
-            time_field: str = 'timestamp',
-            func=None):
+    async def query_data(cls,
+                         region: Region,
+                         provider: Provider,
+                         db_session,
+                         ids: List[str] = None,
+                         entity_ids: List[str] = None,
+                         entity_id: str = None,
+                         codes: List[str] = None,
+                         code: str = None,
+                         level: Union[IntervalLevel, str] = None,
+                         columns: List = None,
+                         col_label: dict = None,
+                         start_timestamp: Union[pd.Timestamp, str] = None,
+                         end_timestamp: Union[pd.Timestamp, str] = None,
+                         filters: List = None,
+                         order=None,
+                         limit: int = None,
+                         index: Union[str, list] = None,
+                         time_field: str = 'timestamp',
+                         func=None):
         from findy.database.query import get_data
-        return get_data(
-            region=region, provider=provider, data_schema=cls, db_session=db_session,
-            ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
-            code=code, level=level, columns=columns, col_label=col_label,
-            start_timestamp=start_timestamp, end_timestamp=end_timestamp,
-            filters=filters, order=order, limit=limit, index=index,
-            time_field=time_field, fun=func)
+        return await get_data(region=region, provider=provider, data_schema=cls, db_session=db_session,
+                              ids=ids, entity_ids=entity_ids, entity_id=entity_id, codes=codes,
+                              code=code, level=level, columns=columns, col_label=col_label,
+                              start_timestamp=start_timestamp, end_timestamp=end_timestamp,
+                              filters=filters, order=order, limit=limit, index=index,
+                              time_field=time_field, fun=func)
 
     @classmethod
     async def record_data(cls,
@@ -304,8 +302,8 @@ class Portfolio(EntityMixin):
 
         schema_str = f'{cls.__name__}Stock'
         portfolio_stock = get_schema_by_name(schema_str)
-        db_session = get_db_session(region, provider, data_schema=portfolio_stock)
-        data, column_names = portfolio_stock.query_data(
+        db_session = await get_db_session(region, provider, data_schema=portfolio_stock)
+        data, column_names = await portfolio_stock.query_data(
             region=region,
             provider=provider,
             db_session=db_session,

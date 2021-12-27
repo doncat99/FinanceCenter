@@ -105,7 +105,7 @@ class RecorderForEntities(Recorder):
 
     async def init_entities(self, db_session):
         # init the entity list
-        self.entities, column_names = get_entities(
+        self.entities, column_names = await get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -196,7 +196,7 @@ class RecorderForEntities(Recorder):
                 prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time, postfix))
 
     async def run(self):
-        db_session = get_db_session(self.region, self.provider, self.data_schema)
+        db_session = await get_db_session(self.region, self.provider, self.data_schema)
 
         if not hasattr(self, 'entities'):
             self.entities: List = None
@@ -264,7 +264,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         return entity.id + '_' + df[time_field].dt.strftime(time_fmt)
 
     async def get_referenced_saved_record(self, entity, db_session):
-        data, column_names = self.data_schema.query_data(
+        data, column_names = await self.data_schema.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -367,8 +367,8 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         return is_finished, time.time() - start_point, saved_counts
 
     async def run(self):
-        db_session = get_db_session(self.region, self.provider, self.data_schema)
-        trade_days, column_names = StockTradeDay.query_data(
+        db_session = await get_db_session(self.region, self.provider, self.data_schema)
+        trade_days, column_names = await StockTradeDay.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,

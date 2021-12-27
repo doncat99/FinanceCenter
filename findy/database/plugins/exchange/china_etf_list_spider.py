@@ -34,8 +34,8 @@ class ChinaETFListSpider(RecorderForEntities):
 
     async def run(self):
         http_session = get_http_session()
-        db_session = get_db_session(self.region, self.provider, self.data_schema)
-        db_session_etf = get_db_session(self.region, self.provider, Etf)
+        db_session = await get_db_session(self.region, self.provider, self.data_schema)
+        db_session_etf = await get_db_session(self.region, self.provider, Etf)
 
         # 抓取沪市 ETF 列表
         url = 'http://query.sse.com.cn/commonQuery.do?sqlId=COMMON_SSE_ZQPZ_ETFLB_L_NEW'

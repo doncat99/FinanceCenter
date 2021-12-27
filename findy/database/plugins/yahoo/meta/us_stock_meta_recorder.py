@@ -19,7 +19,7 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
     async def init_entities(self, db_session):
         # init the entity list
         if not self.force_update:
-            self.entities, column_names = get_entities(
+            self.entities, column_names = await get_entities(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
@@ -66,7 +66,7 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
     async def persist(self, entity, http_session, db_session, para):
         start_point = time.time()
-        db_session.commit()
+        await db_session.commit()
         return True, time.time() - start_point, 1
 
     async def on_finish(self):

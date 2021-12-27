@@ -34,7 +34,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
 
         calendar = mcal.get_calendar(entity)
 
-        trade_day, column_names = StockTradeDay.query_data(
+        trade_day, column_names = await StockTradeDay.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,

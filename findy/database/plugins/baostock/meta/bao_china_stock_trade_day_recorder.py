@@ -52,7 +52,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        trade_day, column_names = StockTradeDay.query_data(
+        trade_day, column_names = await StockTradeDay.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,

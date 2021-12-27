@@ -3,7 +3,7 @@ import time
 from typing import List, Type
 
 import pandas as pd
-
+from sqlalchemy.future import select
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from findy.interface import Region, Provider
@@ -51,8 +51,8 @@ async def df_to_db(region: Region,
             sql = f"delete from {data_schema.__tablename__} where id in {tuple(ids)}"
 
         try:
-            db_session.execute(sql)
-            db_session.commit()
+            await db_session.execute(sql)
+            await db_session.commit()
         except Exception as e:
             logger.error(f"query {data_schema.__tablename__} failed with error: {e}")
 
@@ -60,7 +60,7 @@ async def df_to_db(region: Region,
 
     else:
         if ref_df is None:
-            data, column_names = data_schema.query_data(
+            data, column_names = await data_schema.query_data(
                 region=region,
                 provider=provider,
                 db_session=db_session,
@@ -94,15 +94,15 @@ async def df_to_db(region: Region,
     return saved
 
 
-def del_data(db_session, data_schema: Type[Mixin], filters: List = None):
-    query = db_session.query(data_schema)
+async def del_data(db_session, data_schema: Type[Mixin], filters: List = None):
+    query = select(data_schema)
     if filters:
         for f in filters:
             query = query.filter(f)
     query.delete()
 
     try:
-        db_session.execute(query)
-        db_session.commit()
+        await db_session.execute(query)
+        await db_session.commit()
     except Exception as e:
         logger.error(f"query {data_schema.__tablename__} failed with error: {e}")

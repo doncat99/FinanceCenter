@@ -6,6 +6,7 @@ from typing import List, Union
 import pandas as pd
 
 from sqlalchemy import func
+from sqlalchemy.future import select
 
 from findy.interface import Region, Provider, EntityType
 from findy.database.schema.datatype import EntityMixin
@@ -14,8 +15,8 @@ from findy.database.schema.register import get_entity_schema_by_type
 logger = logging.getLogger(__name__)
 
 
-def get_data_count(data_schema, db_session, filters=None):
-    query = db_session.query(data_schema)
+async def get_data_count(data_schema, db_session, filters=None):
+    query = select(data_schema)
     if filters:
         for filter in filters:
             query = query.filter(filter)
@@ -23,7 +24,7 @@ def get_data_count(data_schema, db_session, filters=None):
     count_q = query.statement.with_only_columns([func.count()]).order_by(None)
 
     try:
-        count = db_session.execute(count_q).scalar()
+        count = await db_session.execute(count_q).scalar()
         return count
     except Exception as e:
         logger.error(f"query {data_schema.__tablename__} failed with error: {e}")
@@ -54,7 +55,7 @@ def get_entity_code(entity_id: str):
     return code
 
 
-def get_entities(
+async def get_entities(
         region: Region,
         provider: Provider,
         db_session,
@@ -86,10 +87,9 @@ def get_entities(
         else:
             filters = [entity_schema.exchange.in_(exchanges)]
 
-    return entity_schema.query_data(
-        region=region, provider=provider, db_session=db_session,
-        ids=ids, entity_ids=entity_ids, entity_id=entity_id,
-        codes=codes, code=code, level=None, columns=columns,
-        col_label=col_label, start_timestamp=start_timestamp,
-        end_timestamp=end_timestamp, filters=filters,
-        order=order, limit=limit, index=index)
+    return await entity_schema.query_data(region=region, provider=provider, db_session=db_session,
+                                          ids=ids, entity_ids=entity_ids, entity_id=entity_id,
+                                          codes=codes, code=code, level=None, columns=columns,
+                                          col_label=col_label, start_timestamp=start_timestamp,
+                                          end_timestamp=end_timestamp, filters=filters,
+                                          order=order, limit=limit, index=index)

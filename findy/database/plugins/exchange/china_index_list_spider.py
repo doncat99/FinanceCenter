@@ -21,7 +21,7 @@ class ChinaIndexListSpider(RecorderForEntities):
 
     async def run(self):
         http_session = get_http_session()
-        db_session = get_db_session(self.region, self.provider, self.data_schema)
+        db_session = await get_db_session(self.region, self.provider, self.data_schema)
 
         # 上证、中证
         await self.fetch_csi_index(http_session, db_session)

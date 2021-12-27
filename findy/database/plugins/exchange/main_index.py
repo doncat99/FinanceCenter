@@ -156,5 +156,5 @@ async def init_main_index(region: Region, provider=Provider.Exchange):
         await df_to_db(region=region,
                        provider=provider,
                        data_schema=Index,
-                       db_session=get_db_session(region, provider, Index),
+                       db_session=await get_db_session(region, provider, Index),
                        df=df)

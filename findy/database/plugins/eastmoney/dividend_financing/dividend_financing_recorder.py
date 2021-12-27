@@ -51,13 +51,13 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
     async def on_finish(self):
         desc = DividendFinancing.__name__ + ": update relevant table"
         with tqdm(total=len(self.entities), ncols=90, desc=desc, position=2, leave=True) as pbar:
-            db_session = get_db_session(self.region, self.provider, DividendFinancing)
+            db_session = await get_db_session(self.region, self.provider, DividendFinancing)
 
             for entity in self.entities:
                 code_security = {}
                 code_security[entity.code] = entity
 
-                need_fill_items, column_names = DividendFinancing.query_data(
+                need_fill_items, column_names = await DividendFinancing.query_data(
                     region=self.region,
                     provider=self.provider,
                     db_session=db_session,
@@ -71,6 +71,6 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                         need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
                 pbar.update()
 
-            db_session.commit()
+            await db_session.commit()
 
         await super().on_finish()

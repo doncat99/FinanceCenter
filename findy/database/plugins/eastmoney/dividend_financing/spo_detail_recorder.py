@@ -49,9 +49,9 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
         last_year = str(now_pd_timestamp(Region.CHN).year)
         codes = [item.code for item in self.entities]
 
-        db_session = get_db_session(self.region, self.provider, DividendFinancing)
+        db_session = await get_db_session(self.region, self.provider, DividendFinancing)
 
-        need_filleds, column_names = DividendFinancing.query_data(
+        need_filleds, column_names = await DividendFinancing.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -62,9 +62,9 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
         if need_filleds:
             desc = self.data_schema.__name__ + ": update relevant table"
             with tqdm(total=len(need_filleds), ncols=90, desc=desc, position=2, leave=True) as pbar:
-                db_session_1 = get_db_session(self.region, self.provider, self.data_schema)
+                db_session_1 = await get_db_session(self.region, self.provider, self.data_schema)
                 for item in need_filleds:
-                    result, column_names = self.data_schema.query_data(
+                    result, column_names = await self.data_schema.query_data(
                         region=self.region,
                         provider=self.provider,
                         db_session=db_session_1,

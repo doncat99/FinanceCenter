@@ -124,7 +124,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
         now = time.time()
 
         # fill the timestamp for report published date
-        the_data_list, column_names = self.data_schema.query_data(
+        the_data_list, column_names = await self.data_schema.query_data(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -133,10 +133,10 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
             filters=[self.data_schema.timestamp == self.data_schema.report_date])
 
         if the_data_list and len(the_data_list) > 0:
-            data, column_names = FinanceFactor.query_data(
+            data, column_names = await FinanceFactor.query_data(
                 region=self.region,
                 provider=self.provider,
-                db_session=get_db_session(self.region, self.provider, FinanceFactor),
+                db_session=await get_db_session(self.region, self.provider, FinanceFactor),
                 entity_id=entity.id,
                 columns=[
                     FinanceFactor.timestamp,
@@ -159,6 +159,6 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                                 'db fill {} {} timestamp:{} for report_date:{}'.format(
                                     self.data_schema.__name__, entity.id,
                                     the_data.timestamp, the_data.report_date))
-                    db_session.commit()
+                    await db_session.commit()
 
         return total_time + time.time() - now
