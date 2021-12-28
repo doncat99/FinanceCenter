@@ -197,9 +197,58 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 * global timezone support.
 * tiny bug fix.
 
+## How to use
 
-## Todo
+### Fetch data
+```
+from findy.interface import Region
+from findy.interface.fetch import fetching
 
+fetching(Region.CHN)  # Region.US
+```
+
+### Read data
+```
+from datetime import datetime, timedelta
+
+from findy.interface import Region, Provider, EntityType, SP_500_TICKER
+from findy.interface.reader import DataReader
+from findy.database.schema.meta.stock_meta import Stock, StockDetail
+from findy.database.schema.quotes.stock.stock_1d_kdata import Stock1dKdata
+from findy.database.schema.register import get_entity_schema_by_type
+from findy.database.context import get_db_session
+from findy.database.quote import get_entities
+
+
+end = datetime.now()
+start = end - timedelta(days=365)
+
+entity_schema = get_entity_schema_by_type(EntityType.StockDetail)
+db_session = get_db_session(Region.US, Provider.Yahoo, entity_schema)
+entities, column_names = get_entities(
+        region=Region.US,
+        provider=Provider.Yahoo,
+        entity_schema=entity_schema,
+        db_session=db_session,
+        codes=SP_500_TICKER,
+        columns=[StockDetail.code],
+        filters=[StockDetail.market_cap > 10 * 1000 * 1000 * 1000])
+
+codes_cap = [entity.code for entity in entities]
+
+stock_reader = DataReader(region=Region.US,
+                          provider=Provider.Yahoo,
+                          data_schema=Stock1dKdata,
+                          entity_schema=Stock,
+                          codes=codes_cap,
+                          start_timestamp=start.strftime('%Y-%m-%d'),
+                          end_timestamp=end.strftime('%Y-%m-%d'))
+
+stock_reader.load_data()
+df = stock_reader.data_df.reset_index(drop=True)
+gb = df.groupby('code', sort=False)
+stocks = [(code, gb.get_group(code)) for code in gb.groups]
+```
 
 ## Docker Usage
 
