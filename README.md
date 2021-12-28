@@ -28,7 +28,6 @@ Financial Center: open financial data framework
 - [Docker Usage](#docker-usage)
     - [Docker Execute](#docker-execute)
     - [View Log](#view-log)
-
 <br>
 
 # Overview
@@ -78,7 +77,7 @@ Below shows all data sources that project already supported.
 </table>
 
 To add more third party data sources, please reference (`findy/database/plugins/***`) modules for modification.
-<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p>
+<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p><br>
 
 
 # Installation guide
@@ -171,6 +170,7 @@ Start Redis
 ```
 launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 ```
+<br>
 
 # Configure FinDy Settings
 Default (`config.json`) setting
@@ -228,7 +228,7 @@ set database user and password to your custom settings:
 chinese stock market user are required to obtain joinquant and tushare authentication. <br>
 >   [JoinQuant](https://www.joinquant.com/) <br>
 >   [TuShare](https://tushare.pro/register) <br>
-
+<br>
 
 # Updates:
 ### (25 Dec 2021)
@@ -258,6 +258,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 * global timezone support.
 * tiny bug fix.
 
+<br>
 
 # How to use
 ### Fetch data
@@ -310,6 +311,7 @@ df = stock_reader.data_df.reset_index(drop=True)
 gb = df.groupby('code', sort=False)
 stocks = [(code, gb.get_group(code)) for code in gb.groups]
 ```
+<br>
 
 # Docker Usage
 ### Docker Execute
