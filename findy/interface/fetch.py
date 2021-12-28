@@ -277,7 +277,7 @@ data_set_chn = [
     [interface.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
     # [interface.get_etf_list_data,                Provider.BaoStock,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
     [interface.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
-    [interface.get_stock_detail_data,            Provider.TuShare, 0, 4, "Stock Detail",             24 * 6, RunMode.Parallel],
+    [interface.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
 
     # [interface.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
     # [interface.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
@@ -301,13 +301,13 @@ data_set_chn = [
     # [interface.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
 
     # [interface.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
-    [interface.get_stock_1d_k_data,              Provider.BaoStock,  0, 10, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1w_k_data,              Provider.BaoStock,  0, 10, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1mon_k_data,            Provider.BaoStock,  0, 10, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1h_k_data,              Provider.BaoStock,  0, 10, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_30m_k_data,             Provider.BaoStock,  0, 10, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_15m_k_data,             Provider.BaoStock,  0, 10, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_5m_k_data,              Provider.BaoStock,  0, 10, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
     # [interface.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 
     # [interface.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
@@ -334,7 +334,7 @@ data_set_us = [
     [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
     [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
     [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 ]
 
 
