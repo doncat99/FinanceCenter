@@ -168,9 +168,9 @@ set database user and password to your custom settings:
   "db_pass": "xxx",
 ```
 
-chinese stock market user are required to obtain joinquant and tushare authentication.
-[JoinQuant](https://www.joinquant.com/)
-[TuShare](https://tushare.pro/register)
+chinese stock market user are required to obtain joinquant and tushare authentication. <br>
+[JoinQuant](https://www.joinquant.com/) <br>
+[TuShare](https://tushare.pro/register) <br>
 
 ## Improvement:
 ### (25 Dec 2021)
