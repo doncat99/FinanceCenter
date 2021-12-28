@@ -1,6 +1,115 @@
-# Project goal：Fetching open financing data and store in Relational Database
+# Financial Center：Gathering open financial data and store in Relational Database
 
-## ZVT Original Project link: https://github.com/zvtvz/zvt
+## Installation guide
+
+The FinDy installation consists of setting up the following components:
+
+1.  Packages / Dependencies
+2.  Database
+3.  Redis
+
+## 1. Packages / Dependencies
+
+Command line tools
+
+```
+xcode-select --install #xcode command line tools
+```
+
+Homebrew
+
+```
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install git cmake pkg-config openssl
+brew link openssl --force
+```
+
+
+## 2. Database
+
+FinDy recommends using a PostgreSQL database. But you can use MySQL too, see [MySQL setup guide](database_mysql.md).
+
+```
+brew install postgresql
+ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
+launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
+```
+
+Login to PostgreSQL
+
+```
+psql -d postgres
+```
+
+Create a user for FinDy.
+
+```
+CREATE USER xxx;
+```
+
+Create the FinDy production database & grant all privileges on database
+
+```
+CREATE DATABASE findy OWNER xxx;
+```
+
+Quit the database session
+
+```
+\q
+```
+
+Try connecting to the new database with the new user
+
+```
+sudo -u git -H psql -d findy
+```
+
+## 3. Redis
+
+```
+brew install redis
+ln -sfv /usr/local/opt/redis/*.plist ~/Library/LaunchAgents
+```
+
+Redis config is located in `/usr/local/etc/redis.conf`. Make a copy:
+
+```
+cp /usr/local/etc/redis.conf /usr/local/etc/redis.conf.orig
+```
+
+Disable Redis listening on TCP by setting 'port' to 0
+
+```
+sed 's/^port .*/port 0/' /usr/local/etc/redis.conf.orig | sudo tee /usr/local/etc/redis.conf
+```
+
+Edit file (`nano /usr/local/etc/redis.conf`) and uncomment:
+
+```
+unixsocket /tmp/redis.sock
+unixsocketperm 777
+```
+
+Start Redis
+
+```
+launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
+```
+
+
+### Configure FinDy DB Settings
+
+
+
+
+### More
+
+You can find more tips in [official documentation](https://github.com/gitlabhq/gitlabhq/blob/8-0-stable/doc/install/installation.md#advanced-setup-tips).
+
+## Todo
+
+
 
 
 ## Improvement (01 Mar 2021):
