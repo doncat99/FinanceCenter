@@ -158,7 +158,7 @@ def build_engine(region: Region) -> Engine:
                            echo=False,
                            poolclass=QueuePool,
                            pool_size=10,
-                           pool_recycle=300,
+                           pool_recycle=3600,
                            max_overflow=2,
                            pool_pre_ping=True,
                            pool_use_lifo=True,
