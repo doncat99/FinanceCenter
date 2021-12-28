@@ -294,7 +294,7 @@ entities, column_names = get_entities(
         db_session=db_session,
         codes=SP_500_TICKER,
         columns=[StockDetail.code],
-        filters=[StockDetail.market_cap > 10 * 1000 * 1000 * 1000])
+        filters=[StockDetail.market_cap > 10_000_000_000])
 
 codes_cap = [entity.code for entity in entities]
 
