@@ -16,7 +16,7 @@ except FileNotFoundError:
 
 setup(
     name="findy",
-    version="0.0.1",
+    version="0.0.2",
     include_package_data=True,
     author="Don Wong, Bin Wong",
     author_email="doncat99@gmail.com",
