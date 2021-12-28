@@ -78,7 +78,7 @@ Below shows all data sources that project already supported.
 </table>
 
 To add more third party data sources, please reference (`findy/database/plugins/***`) modules for modification.
-<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p><br>
+<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p>
 
 
 # Installation guide
@@ -226,8 +226,9 @@ set database user and password to your custom settings:
 ```
 
 chinese stock market user are required to obtain joinquant and tushare authentication. <br>
-[JoinQuant](https://www.joinquant.com/) <br>
-[TuShare](https://tushare.pro/register) <br>
+>   [JoinQuant](https://www.joinquant.com/) <br>
+>   [TuShare](https://tushare.pro/register) <br>
+
 
 # Updates:
 ### (25 Dec 2021)
