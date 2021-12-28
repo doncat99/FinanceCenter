@@ -174,7 +174,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 
 ## Improvement:
 ### (25 Dec 2021)
-* asyncDB branch add async sqlalchemy ORM  support
+* asyncDB branch add async sqlalchemy ORM support
 * many bugfix
 
 ### (01 Mar 2021)
@@ -209,7 +209,7 @@ docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
 docker-compose up -d
 ```
 
-查看日志
+### View Log
 ```
 docker-compose logs -f 
 ```
