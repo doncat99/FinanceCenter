@@ -49,6 +49,6 @@ if [ ! -f "$BASEDIR/ve/updated" -o $BASEDIR/requirements.txt -nt $BASEDIR/ve/upd
     echo "Requirements installed."
 fi
 
-pip install ipython jupyterlab $pip_opt
+# pip install ipython jupyterlab $pip_opt
 
 echo "env ok"

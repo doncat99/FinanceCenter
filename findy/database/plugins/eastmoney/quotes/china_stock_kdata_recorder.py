@@ -3,7 +3,7 @@ from datetime import datetime
 import time
 
 import pandas as pd
-from numba import njit
+# from numba import njit
 
 from findy.interface import Region, Provider, EntityType
 from findy.database.schema import IntervalLevel, BlockCategory
@@ -77,7 +77,7 @@ class ChinaStockKdataRecorder(KDataRecorder):
             if results:
                 klines = results['data']['klines']
 
-                @njit(nopython=True)
+                # @njit(nopython=True)
                 def numba_boost_up(klines):
                     kdatas = []
                     # TODO: ignore the last unfinished kdata now,could control it better if need

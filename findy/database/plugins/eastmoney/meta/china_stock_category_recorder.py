@@ -2,7 +2,7 @@
 import time
 
 import pandas as pd
-from numba import njit
+# from numba import njit
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
@@ -39,7 +39,7 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
 
                 results = json_callback_param(text)
 
-                @njit(nopython=True)
+                # @njit(nopython=True)
                 def numba_boost_up(results):
                     the_list = []
                     for result in results:
