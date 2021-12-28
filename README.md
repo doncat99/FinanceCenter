@@ -1,4 +1,21 @@
 # Financial Center：Gathering open financial data and store in Relational Database
+[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-385/)
+[![Platform](https://img.shields.io/powershellgallery/p/DNS.1.1.1.1?color=B)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)]()
+[![Maintenance](https://img.shields.io/badge/Maintained-yes-green.svg)]() 
+![Contributions welcome](https://img.shields.io/badge/Contributions-welcome-brightgreen.svg)
+<br>
+
+## Overview
+
+### Running Shot
+<p align="left"><img alt="logo" width="70%" src="document/image/run.gif"></p>
+
+### Logging Shot
+<p align="left"><img alt="logo" width="70%" src="document/image/logger.png"></p>
+
+### Database Shot
+<p align="left"><img alt="logo" width="70%" src="document/image/database.png"></p>
 
 ## Installation guide
 
@@ -8,7 +25,7 @@ The FinDy installation consists of setting up the following components:
 2.  Database
 3.  Redis
 
-## 1. Packages / Dependencies
+### 1. Packages / Dependencies
 
 Command line tools
 
@@ -25,7 +42,7 @@ brew link openssl --force
 ```
 
 
-## 2. Database
+### 2. Database
 
 FinDy recommends using a PostgreSQL database. But you can use MySQL too, see [MySQL setup guide](database_mysql.md).
 
@@ -65,7 +82,7 @@ Try connecting to the new database with the new user
 sudo -u git -H psql -d findy
 ```
 
-## 3. Redis
+### 3. Redis
 
 ```
 brew install redis
@@ -98,21 +115,65 @@ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 ```
 
 
-### Configure FinDy DB Settings
+## Configure FinDy Settings
+> Default (`config.json`) setting
+```
+{
+  "version": "0.0.2",
 
+  "debug": 0,
+  "processes": 1,
+  "batch_size": 10000,
+  
+  "db_name": "findy",
+  "db_host": "192.168.1.133",
+  "db_port": "15432",
+  "db_user": "postgres",
+  "db_pass": "123",
 
+  "redis_pass": "",
+  "kafka": "localhost:9092",
 
+  "jq_username": "",
+  "jq_password": "",
 
-### More
+  "tushare_token": "",
 
-You can find more tips in [official documentation](https://github.com/gitlabhq/gitlabhq/blob/8-0-stable/doc/install/installation.md#advanced-setup-tips).
+  "trade_host": "127.0.0.1",
+  "trade_port": "11111",
+  "trade_socket_port": "33333",
+  "trade_socket_key": "",
 
-## Todo
+  "http_proxy": "127.0.0.1:1087",
+  "https_proxy": "127.0.0.1:1087",
+  "smtp_host": "smtpdm.aliyun.com",
+  "smtp_port": "80",
+  "email_username": "",
+  "email_password": "",
+  "wechat_app_id": "",
+  "wechat_app_secrect": "",
+  "wechat_agent_id": ""
+}
+```
 
+change database host address to following setting if you install your database locally:
+```
+  "db_host": "127.0.0.1",
+  "db_port": "5432",
+```
 
+set database user and password to your custom settings:
+```
+  "db_user": "xxx",
+  "db_pass": "xxx",
+```
 
+chinese stock market user are required to obtain joinquant and tushare authentication.
+[JoinQuant](https://www.joinquant.com/)
+[TuShare](https://tushare.pro/register)
 
-## Improvement (01 Mar 2021):
+## Improvement:
+### (01 Mar 2021)
 * database session decoupling
 * entity provider removed
 * database querying speed boost up
@@ -121,8 +182,7 @@ You can find more tips in [official documentation](https://github.com/gitlabhq/g
 * add proxy pool support
 * add baostock thrid party source support
 
-
-## Improvement (16 Sep 2020):
+### (16 Sep 2020):
 * Switch Sql to Postgresql, which allow remote database access support, separate fetching and analysis models to two individal project(see [FinanceAnalysis](https://github.com/doncat99/FinanceAnalysis) project for more detail).
 * Centralized http request interface，add Session and retry logic (Rxpy may be involved to rewrite request model pretty soon).
 * multiprocessing is involved to boost up request speed.
@@ -134,15 +194,12 @@ You can find more tips in [official documentation](https://github.com/gitlabhq/g
 * tiny bug fix.
 
 
-For proxy use, required proxy_pool support. see: [proxy_pool](https://github.com/doncat99/proxy_pool)  
-For better performance, required customized jqdatasdk. see: [jqdatasdk](https://github.com/doncat99/jqdatasdk)  
-For better performance, required customized yfinance. see: [yfinance](https://github.com/doncat99/yfinance)
+## Todo
 
-It's suggest to run the project upon python 3.8
 
-# 使用Docker
+## Docker Usage
 
-## 容器化编排执行
+### Docker Execute
 ```
 docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
 docker-compose up -d
