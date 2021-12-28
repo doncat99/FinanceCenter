@@ -139,6 +139,7 @@ class RecorderForEntities(Recorder):
         # eval
         is_finish, eval_time, para = await self.eval(entity, http_session, db_session)
         if is_finish:
+            # await self.sleep(0.1)
             return 1, eval_time, download_time, persist_time, time.time() - start_point
 
         async with throttler:
@@ -147,12 +148,13 @@ class RecorderForEntities(Recorder):
             # fetch
             is_finish, download_time, para = await self.record(entity, http_session, db_session, para)
             if is_finish:
+                # await self.sleep(0.1)
                 return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
             # save
             is_finish, persist_time, count = await self.persist(entity, http_session, db_session, para)
             if is_finish:
-                await self.sleep()
+                # await self.sleep(0.1)
                 return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
         return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time
