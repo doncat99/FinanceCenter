@@ -88,7 +88,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
                 msg = str(e)
                 error_msg = f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {msg}'
                 if isinstance(msg, str) and ("Server disconnected" in msg or "Cannot connect to host" in msg):
-                    self.sleep(60 * 10)
+                    await self.sleep(60 * 10)
                 else:
                     break
 

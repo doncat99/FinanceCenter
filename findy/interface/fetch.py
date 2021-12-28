@@ -406,23 +406,23 @@ async def fetch_data(region: Region):
         async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
             for call in calls_list:
                 if call[1][Para.Mode.value] == RunMode.Serial:
-                    result = await pool.apply(loop_data_set, args=[call])
+                    result = await loop_data_set(call)
                     # cache.update({f"{region.value}_{result}": datetime.now()})
                     # dump_cache('cache', cache)
                 else:
                     pool_tasks.append(pool.apply(loop_data_set, args=[call]))
 
-            pbar = tqdm(total=len(pool_tasks), ncols=90, desc="Parallel Jobs", position=0, leave=False)
-            for result in asyncio.as_completed(pool_tasks):
+            # pbar = tqdm(total=len(pool_tasks), ncols=90, desc="Parallel Jobs", position=0, leave=False)
+            # for result in asyncio.as_completed(pool_tasks):
+            #     await result
+            #     # cache.update({f"{region.value}_{result}": datetime.now()})
+            #     # dump_cache('cache', cache)
+            #     pbar.update()
+
+            for result in tqdm.as_completed(pool_tasks, ncols=90, desc="Parallel Jobs", position=0, leave=False):
                 await result
                 # cache.update({f"{region.value}_{result}": datetime.now()})
                 # dump_cache('cache', cache)
-                pbar.update()
-
-            # for result in tqdm.as_completed(pool_tasks, ncols=90, desc="Parallel Jobs", position=0, leave=True):
-            #     await result
-            #     cache.update({f"{region.value}_{result}": datetime.now()})
-            #     # dump_cache('cache', cache)
 
     else:
         for call in calls_list:

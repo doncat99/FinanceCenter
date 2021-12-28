@@ -233,7 +233,7 @@ def bind_engine(region: Region,
     schema_base.metadata.create_all(engine, checkfirst=True)
 
     # create index
-    create_index(region, engine, schema_base)
+    # create_index(region, engine, schema_base)
 
     db_session = sessionmaker(bind=engine)()
     enable_batch_inserting(db_session)

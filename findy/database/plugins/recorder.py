@@ -68,9 +68,8 @@ class Recorder(metaclass=Meta):
 
     async def sleep(self, sleeping_time=0.0):
         sleep_time = max(sleeping_time, self.sleeping_time)
-        if sleep_time > 0:
-            self.logger.debug(f'sleeping {sleep_time} seconds')
-            return await asyncio.sleep(sleep_time)
+        self.logger.debug(f'sleeping {sleep_time} seconds')
+        return await asyncio.sleep(sleep_time)
 
 
 class RecorderForEntities(Recorder):

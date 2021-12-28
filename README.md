@@ -46,7 +46,7 @@ Financial Center: open financial data framework
 Based on registry framework, project can easily compat various of thrid-party data sources. <br>
 Below shows all data sources that project already supported.
 
-<table width="30%">
+<table width="40%">
   <tr >
     <td colspan="3" align="center">Third Party Data Sources Support Table</td>
   </tr>
