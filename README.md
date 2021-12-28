@@ -1,12 +1,37 @@
-# Financial Center：Gathering open financial data and store in Relational Database
+Financial Center: open financial data framework
+===============================================
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-385/)
 [![Platform](https://img.shields.io/powershellgallery/p/DNS.1.1.1.1?color=B)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)]()
 [![Maintenance](https://img.shields.io/badge/Maintained-yes-green.svg)]() 
 ![Contributions welcome](https://img.shields.io/badge/Contributions-welcome-brightgreen.svg)
+<br><br>
+
+- [Financial Center: open financial data framework](#financial-center-open-financial-data-framework)
+- [Overview](#overview)
+    - [Running Shot](#running-shot)
+    - [Logging Shot](#logging-shot)
+    - [Database Shot](#database-shot)
+- [Description](#description)
+- [Installation guide](#installation-guide)
+    - [1. Packages / Dependencies](#1-packages--dependencies)
+    - [2. Database](#2-database)
+    - [3. Redis](#3-redis)
+- [Configure FinDy Settings](#configure-findy-settings)
+- [Updates:](#updates)
+    - [(25 Dec 2021)](#25-dec-2021)
+    - [(01 Mar 2021)](#01-mar-2021)
+    - [(16 Sep 2020):](#16-sep-2020)
+- [How to use](#how-to-use)
+    - [Fetch data](#fetch-data)
+    - [Read data](#read-data)
+- [Docker Usage](#docker-usage)
+    - [Docker Execute](#docker-execute)
+    - [View Log](#view-log)
+
 <br>
 
-## Overview
+# Overview
 
 ### Running Shot
 <p align="left"><img alt="logo" width="70%" src="document/image/run.gif"></p>
@@ -17,7 +42,7 @@
 ### Database Shot
 <p align="left"><img alt="logo" width="70%" src="document/image/database.png"></p>
 
-## Description
+# Description
 
 Based on registry framework, project can easily compat various of thrid-party data sources. <br>
 Below shows all data sources that project already supported.
@@ -53,15 +78,11 @@ Below shows all data sources that project already supported.
 </table>
 
 To add more third party data sources, please reference (`findy/database/plugins/***`) modules for modification.
-<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p>
+<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p><br>
 
-## Installation guide
 
+# Installation guide
 The FinDy installation consists of setting up the following components:
-
-1.  Packages / Dependencies
-2.  Database
-3.  Redis
 
 ### 1. Packages / Dependencies
 
@@ -78,7 +99,6 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 brew install git cmake pkg-config openssl
 brew link openssl --force
 ```
-
 
 ### 2. Database
 
@@ -152,8 +172,7 @@ Start Redis
 launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 ```
 
-
-## Configure FinDy Settings
+# Configure FinDy Settings
 Default (`config.json`) setting
 ```json
 {
@@ -210,7 +229,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 [JoinQuant](https://www.joinquant.com/) <br>
 [TuShare](https://tushare.pro/register) <br>
 
-## Updates:
+# Updates:
 ### (25 Dec 2021)
 * rewrite yahoo finance lib (yfinance) to support aiohttp requests
 * remove proxy pool
@@ -238,8 +257,8 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 * global timezone support.
 * tiny bug fix.
 
-## How to use
 
+# How to use
 ### Fetch data
 ```python
 from findy.interface import Region
@@ -291,8 +310,7 @@ gb = df.groupby('code', sort=False)
 stocks = [(code, gb.get_group(code)) for code in gb.groups]
 ```
 
-## Docker Usage
-
+# Docker Usage
 ### Docker Execute
 ```
 docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
