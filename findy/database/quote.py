@@ -12,7 +12,8 @@ from findy.database.schema import ReportPeriod, IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin, PortfolioStockHistory
 from findy.database.schema.meta.fund_meta import Fund
 from findy.database.schema.meta.stock_meta import Etf
-from findy.database.plugins.register import get_schema_by_name, get_entity_schema_by_type
+from findy.database.schema.register import get_entity_schema_by_type
+from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import to_pd_timestamp
