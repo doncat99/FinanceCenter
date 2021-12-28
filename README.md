@@ -154,7 +154,7 @@ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 
 
 ## Configure FinDy Settings
-> Default (`config.json`) setting
+Default (`config.json`) setting
 ```json
 {
   "version": "0.0.2",
