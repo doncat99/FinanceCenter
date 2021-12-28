@@ -172,28 +172,31 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 [JoinQuant](https://www.joinquant.com/) <br>
 [TuShare](https://tushare.pro/register) <br>
 
-## Improvement:
+## Updates:
 ### (25 Dec 2021)
-* asyncDB branch add async sqlalchemy ORM support
+* rewrite yahoo finance lib (yfinance) to support aiohttp requests
+* remove proxy pool
+* add wechat notify (see utils/notify.py for more details)
+* asyncDB-branch: add async sqlalchemy ORM
 * many bugfix
 
 ### (01 Mar 2021)
 * database session decoupling
 * entity provider removed
 * database querying speed boost up
-* asyncio logic framework support (implementations requires rewrite request logic)
+* asyncio logic framework (implementations requires rewrite request logic)
 * multiprocessing logic rewrite, use processes to replace pool
-* add proxy pool support
-* add baostock thrid party source support
+* add proxy pool (see [proxy_pool](https://github.com/doncat99/proxy_pool)
+* add baostock thrid party data source
 
 ### (16 Sep 2020):
-* Switch Sql to Postgresql, which allow remote database access support, separate fetching and analysis models to two individal project(see [FinanceAnalysis](https://github.com/doncat99/FinanceAnalysis) project for more detail).
+* Switch Sql to Postgresql, which allow remote database access, separate fetching and analysis models to two individal project(see [FinanceAnalysis](https://github.com/doncat99/FinanceAnalysis) project for more detail).
 * Centralized http request interface，add Session and retry logic (Rxpy may be involved to rewrite request model pretty soon).
 * multiprocessing is involved to boost up request speed.
-* request progress display support.
+* request progress display.
 * ~~auto joinquant account switching~~ (banned)
 * log to console -> log to file.
-* US stock market data support.
+* US stock market data.
 * global timezone support.
 * tiny bug fix.
 
