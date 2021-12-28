@@ -17,6 +17,44 @@
 ### Database Shot
 <p align="left"><img alt="logo" width="70%" src="document/image/database.png"></p>
 
+## Description
+
+Based on registry framework, project can easily compat various of thrid-party data sources. <br>
+Below shows all data sources that project already supported.
+
+<table width="30%">
+  <tr >
+    <td colspan="3" align="center">Third Party Data Sources Support Table</td>
+  </tr>
+  <tr>
+    <th>China Market</th>
+    <th>US Market</th>
+    <th>HK Market</th>
+  </tr>
+  <tr>
+    <td>BaoStock</td>
+    <td colspan="2" align="center">Yahoo</td>
+  </tr>
+  <tr>
+    <td>JoinQuant</td>
+    <td>alpaca</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Tushare</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>EastMoney</td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+To add more third party data sources, please reference (`findy/database/plugins/***`) modules for modification.
+<p align="left"><img alt="logo" width="35%" src="document/image/plugins.png"></p>
+
 ## Installation guide
 
 The FinDy installation consists of setting up the following components:
@@ -117,7 +155,7 @@ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 
 ## Configure FinDy Settings
 > Default (`config.json`) setting
-```
+```json
 {
   "version": "0.0.2",
 
@@ -157,13 +195,13 @@ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 ```
 
 change database host address to following setting if you install your database locally:
-```
+```json
   "db_host": "127.0.0.1",
   "db_port": "5432",
 ```
 
 set database user and password to your custom settings:
-```
+```json
   "db_user": "xxx",
   "db_pass": "xxx",
 ```
@@ -203,7 +241,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 ## How to use
 
 ### Fetch data
-```
+```python
 from findy.interface import Region
 from findy.interface.fetch import fetching
 
@@ -211,7 +249,7 @@ fetching(Region.CHN)  # Region.US
 ```
 
 ### Read data
-```
+```python
 from datetime import datetime, timedelta
 
 from findy.interface import Region, Provider, EntityType, SP_500_TICKER
