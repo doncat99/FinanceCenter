@@ -86,7 +86,11 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 entity.raising_fund = to_float((resp_json['NetCollection']))
                 entity.net_winning_rate = pct_to_float(resp_json['LotRateOn'])
 
-                db_session.commit()
+                try:
+                    db_session.commit()
+                except Exception as e:
+                    db_session.rollback()
+                    self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
 
                 cost = PRECISION_STR.format(time.time() - now)
 
