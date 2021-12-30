@@ -8,7 +8,7 @@ import pandas as pd
 from findy.interface import Region, Provider, EntityType
 from findy.interface.writer import df_to_db
 from findy.database.schema import BlockCategory
-from findy.database.schema.meta.stock_meta import EtfStock, Etf
+from findy.database.schema.meta.stock_meta import Etf
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
 from findy.database.quote import china_stock_code_to_id
@@ -30,12 +30,11 @@ Connection: keep-alive
 class ChinaETFListSpider(RecorderForEntities):
     region = Region.CHN
     provider = Provider.Exchange
-    data_schema = EtfStock
+    data_schema = Etf
 
     async def run(self):
         http_session = get_http_session()
         db_session = get_db_session(self.region, self.provider, self.data_schema)
-        db_session_etf = get_db_session(self.region, self.provider, Etf)
 
         # 抓取沪市 ETF 列表
         url = 'http://query.sse.com.cn/commonQuery.do?sqlId=COMMON_SSE_ZQPZ_ETFLB_L_NEW'
@@ -46,7 +45,7 @@ class ChinaETFListSpider(RecorderForEntities):
         response_dict = demjson.decode(text)
 
         df = pd.DataFrame(response_dict.get('result', []))
-        await self.persist_etf_list(df, 'sh', db_session_etf)
+        await self.persist_etf_list(df, 'sh', db_session)
         self.logger.info('沪市 ETF 列表抓取完成...')
 
         # 抓取沪市 ETF 成分股
@@ -60,7 +59,7 @@ class ChinaETFListSpider(RecorderForEntities):
             return
 
         df = pd.read_excel(io.BytesIO(content), dtype=str)
-        await self.persist_etf_list(df, 'sz', db_session_etf)
+        await self.persist_etf_list(df, 'sz', db_session)
         self.logger.info('深市 ETF 列表抓取完成...')
 
         # 抓取深市 ETF 成分股
