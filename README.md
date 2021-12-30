@@ -28,6 +28,7 @@ Financial Center: open financial data framework
 - [Docker Usage](#docker-usage)
     - [Docker Execute](#docker-execute)
     - [View Log](#view-log)
+- [To Do](#to-do)
 <br>
 
 # Overview
@@ -235,7 +236,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 * rewrite yahoo finance lib (yfinance) to support aiohttp requests
 * remove proxy pool
 * add wechat notify (see utils/notify.py for more details)
-* asyncDB-branch: add async sqlalchemy ORM
+* dev/async_db branch: add async sqlalchemy ORM
 * many bugfix
 
 ### (01 Mar 2021)
@@ -324,3 +325,8 @@ docker-compose up -d
 ```
 docker-compose logs -f 
 ```
+
+# To Do
+1. rewrite vendor/baostock package to support async logic
+2. add more 3th-party data source packages
+3. dev/async_db branch optimization
