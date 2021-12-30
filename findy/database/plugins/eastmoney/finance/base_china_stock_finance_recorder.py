@@ -159,6 +159,11 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                                 'db fill {} {} timestamp:{} for report_date:{}'.format(
                                     self.data_schema.__name__, entity.id,
                                     the_data.timestamp, the_data.report_date))
-                    await db_session.commit()
+
+                    try:
+                        await db_session.commit()
+                    except Exception as e:
+                        self.logger.error(f'{self.__class__.__name__}, error: {e}')
+                        db_session.rollback()
 
         return total_time + time.time() - now

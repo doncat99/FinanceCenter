@@ -6,11 +6,11 @@ from numba import njit
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.quote import china_stock_code_to_id
 from findy.interface.writer import df_to_db
 from findy.database.schema import BlockCategory
 from findy.database.schema.meta.stock_meta import Block, BlockStock
 from findy.database.plugins.recorder import RecorderForEntities, TimeSeriesDataRecorder
+from findy.database.quote import china_stock_code_to_id
 from findy.utils.time import now_pd_timestamp, PD_TIME_FORMAT_DAY
 from findy.utils.convert import json_callback_param
 

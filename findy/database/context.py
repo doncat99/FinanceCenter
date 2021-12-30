@@ -222,7 +222,7 @@ async def bind_engine(region: Region,
         await conn.run_sync(schema_base.metadata.create_all)
         logger.debug(f'bind_engine {engine} create_all {schema_base} successfully')
 
-        await create_index(region, engine, conn, schema_base)
+        # await create_index(region, engine, conn, schema_base)
 
     return db_session
 

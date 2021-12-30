@@ -71,6 +71,10 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                         need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
                 pbar.update()
 
-            await db_session.commit()
+            try:
+                await db_session.commit()
+            except Exception as e:
+                self.logger.error(f'{self.__class__.__name__}, error: {e}')
+                db_session.rollback()
 
         await super().on_finish()

@@ -5,11 +5,11 @@ import demjson
 import pandas as pd
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.quote import china_stock_code_to_id
 from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import IndexStock, Index
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
+from findy.database.quote import china_stock_code_to_id
 from findy.utils.request import get_http_session, sync_get
 from findy.utils.time import to_pd_timestamp, now_pd_timestamp
 
@@ -60,7 +60,7 @@ class ChinaIndexListSpider(RecorderForEntities):
 
             self.logger.info(f'上证、中证指数第 {page} 页抓取完成...')
             page += 1
-            self.sleep()
+            await self.sleep()
 
         df = pd.DataFrame(index_list)
         df = df[['base_date', 'base_point', 'index_code', 'indx_sname', 'online_date', 'class_eseries']].copy()
@@ -115,7 +115,7 @@ class ChinaIndexListSpider(RecorderForEntities):
                            df=response_df)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
-            self.sleep()
+            await self.sleep()
 
     async def fetch_szse_index(self, http_session, db_session) -> None:
         """
@@ -174,7 +174,7 @@ class ChinaIndexListSpider(RecorderForEntities):
                            df=response_df)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
-            self.sleep()
+            await self.sleep()
 
     async def fetch_cni_index(self, http_session) -> None:
         """
@@ -255,7 +255,7 @@ class ChinaIndexListSpider(RecorderForEntities):
                            df=response_df)
             self.logger.info(f'{index["name"]} - {index_code} 成分股抓取完成...')
 
-            self.sleep()
+            await self.sleep()
 
     async def persist_index(self, df) -> None:
         df['timestamp'] = df['timestamp'].apply(lambda x: to_pd_timestamp(x))

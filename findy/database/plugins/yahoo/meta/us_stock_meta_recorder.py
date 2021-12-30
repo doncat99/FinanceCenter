@@ -2,9 +2,9 @@
 import time
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.quote import get_entities
 from findy.vendor.yfinance import YH
 
 
@@ -66,7 +66,13 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
     async def persist(self, entity, http_session, db_session, para):
         start_point = time.time()
-        await db_session.commit()
+
+        try:
+            await db_session.commit()
+        except Exception as e:
+            self.logger.error(f'{self.__class__.__name__}, error: {e}')
+            db_session.rollback()
+
         return True, time.time() - start_point, 1
 
     async def on_finish(self):

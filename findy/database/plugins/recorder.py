@@ -10,13 +10,13 @@ from tqdm.auto import tqdm
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
 from findy.interface.writer import df_to_db
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin
 from findy.database.schema.quotes.trade_day import StockTradeDay
 from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
+from findy.database.quote import get_entities
 from findy.utils.request import get_http_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,
@@ -68,9 +68,8 @@ class Recorder(metaclass=Meta):
 
     async def sleep(self, sleeping_time=0.0):
         sleep_time = max(sleeping_time, self.sleeping_time)
-        if sleep_time > 0:
-            self.logger.debug(f'sleeping {sleep_time} seconds')
-            return await asyncio.sleep(sleep_time)
+        self.logger.debug(f'sleeping {sleep_time} seconds')
+        return await asyncio.sleep(sleep_time)
 
 
 class RecorderForEntities(Recorder):
@@ -140,6 +139,7 @@ class RecorderForEntities(Recorder):
         # eval
         is_finish, eval_time, para = await self.eval(entity, http_session, db_session)
         if is_finish:
+            # await self.sleep(0.1)
             return 1, eval_time, download_time, persist_time, time.time() - start_point
 
         async with throttler:
@@ -148,12 +148,13 @@ class RecorderForEntities(Recorder):
             # fetch
             is_finish, download_time, para = await self.record(entity, http_session, db_session, para)
             if is_finish:
+                # await self.sleep(0.1)
                 return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
             # save
             is_finish, persist_time, count = await self.persist(entity, http_session, db_session, para)
             if is_finish:
-                await self.sleep()
+                # await self.sleep(0.1)
                 return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
         return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time

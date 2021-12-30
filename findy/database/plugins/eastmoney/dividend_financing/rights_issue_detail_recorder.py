@@ -73,6 +73,11 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
                     if isinstance(result, (int, float)):
                         item.rights_raising_fund = result
                     pbar.update()
-            await db_session.commit()
+
+            try:
+                await db_session.commit()
+            except Exception as e:
+                self.logger.error(f'{self.__class__.__name__}, error: {e}')
+                db_session.rollback()
 
         await super().on_finish()

@@ -56,6 +56,7 @@ def get_db_engine(region: Region,
 
 
 def to_postgresql(region: Region, df, tablename):
+    saved = 0
     output = StringIO()
     df.to_csv(output, sep='\t', index=False, header=False, encoding='utf-8')
     output.seek(0)
@@ -66,14 +67,14 @@ def to_postgresql(region: Region, df, tablename):
     try:
         cursor.copy_from(output, tablename, null='', columns=list(df.columns))
         connection.commit()
-        cursor.close()
-        connection.close()
-        return len(df)
+        saved = len(df)
     except Exception as e:
         logger.error(f'copy_from failed on table: [ {tablename} ], {e}')
-    cursor.close()
-    connection.close()
-    return 0
+        connection.rollback()
+    finally:
+        cursor.close()
+        connection.close()
+    return saved
 
 
 def from_postgresql(region: Region, query):

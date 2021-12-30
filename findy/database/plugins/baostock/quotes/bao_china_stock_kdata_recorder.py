@@ -5,14 +5,13 @@ import pandas as pd
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
-from findy.database.context import get_db_session
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
 from findy.database.plugins.recorder import KDataRecorder
 from findy.database.plugins.baostock.common import to_bao_trading_level, to_bao_entity_id, \
                                                           to_bao_trading_field, to_bao_adjust_flag
+from findy.database.quote import get_entities
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
 
@@ -148,7 +147,13 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         now = time.time()
         if result == 2 and not entity.is_active:
-            await db_session.commit()
+
+            try:
+                await db_session.commit()
+            except Exception as e:
+                self.logger.error(f'{self.__class__.__name__}, error: {e}')
+                db_session.rollback()
+
         return time.time() - now
 
     async def on_finish(self):

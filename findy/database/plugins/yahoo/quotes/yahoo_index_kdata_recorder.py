@@ -73,8 +73,10 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
             except Exception as e:
                 msg = str(e)
                 error_msg = f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {msg}'
-                if isinstance(msg, str) and ("Server disconnected" in msg or "Cannot connect to host" in msg):
-                    self.sleep(60 * 10)
+                if isinstance(msg, str) and ("Server disconnected" in msg or
+                                             "Cannot connect to host" in msg or
+                                             "Internal Privoxy Error" in msg):
+                    await self.sleep(60 * 10)
                 else:
                     break
 

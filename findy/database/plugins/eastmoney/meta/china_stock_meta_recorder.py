@@ -5,9 +5,9 @@ import demjson
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.tool import get_entities
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.quote import get_entities
 from findy.utils.time import PRECISION_STR, to_pd_timestamp
 from findy.utils.convert import to_float, pct_to_float
 
@@ -86,7 +86,11 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 entity.raising_fund = to_float((resp_json['NetCollection']))
                 entity.net_winning_rate = pct_to_float(resp_json['LotRateOn'])
 
-                await db_session.commit()
+                try:
+                    await db_session.commit()
+                except Exception as e:
+                    self.logger.error(f'{self.__class__.__name__}, error: {e}')
+                    db_session.rollback()
 
                 cost = PRECISION_STR.format(time.time() - now)
 

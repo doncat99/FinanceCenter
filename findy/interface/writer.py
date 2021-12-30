@@ -52,9 +52,14 @@ async def df_to_db(region: Region,
 
         try:
             await db_session.execute(sql)
-            await db_session.commit()
         except Exception as e:
             logger.error(f"query {data_schema.__tablename__} failed with error: {e}")
+
+        try:
+            await db_session.commit()
+        except Exception as e:
+            logger.error(f'df_to_db {data_schema.__tablename__}, error: {e}')
+            db_session.rollback()
 
         df_new = df
 
@@ -103,6 +108,11 @@ async def del_data(db_session, data_schema: Type[Mixin], filters: List = None):
 
     try:
         await db_session.execute(query)
-        await db_session.commit()
     except Exception as e:
         logger.error(f"query {data_schema.__tablename__} failed with error: {e}")
+
+    try:
+        await db_session.commit()
+    except Exception as e:
+        logger.error(f'df_to_db {data_schema.__tablename__}, error: {e}')
+        db_session.rollback()
