@@ -66,11 +66,13 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
     async def persist(self, entity, http_session, db_session, para):
         start_point = time.time()
+
         try:
             db_session.commit()
         except Exception as e:
-            db_session.rollback()
             self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
+            db_session.rollback()
+
         return True, time.time() - start_point, 1
 
     async def on_finish(self):

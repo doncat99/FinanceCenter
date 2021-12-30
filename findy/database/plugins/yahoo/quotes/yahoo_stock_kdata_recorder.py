@@ -132,11 +132,13 @@ class YahooUsStockKdataRecorder(KDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         now = time.time()
         if result == 2 and not entity.is_active:
+
             try:
                 db_session.commit()
             except Exception as e:
-                db_session.rollback()
                 self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
+                db_session.rollback()
+
         return time.time() - now
 
     async def on_finish(self):
