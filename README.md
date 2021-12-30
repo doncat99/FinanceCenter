@@ -244,7 +244,7 @@ chinese stock market user are required to obtain joinquant and tushare authentic
 * database querying speed boost up
 * asyncio logic framework (implementations requires rewrite request logic)
 * multiprocessing logic rewrite, use processes to replace pool
-* add proxy pool (see [proxy_pool](https://github.com/doncat99/proxy_pool)
+* add proxy pool (see [proxy_pool](https://github.com/doncat99/proxy_pool))
 * add baostock thrid party data source
 
 ### (16 Sep 2020):
