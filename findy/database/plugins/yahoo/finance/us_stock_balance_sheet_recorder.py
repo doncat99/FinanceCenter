@@ -457,10 +457,18 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
                          share_para=share_para)
 
     def yh_get_balance_sheet(self, code):
-        try:
-            return Ticker(code).balance_sheet
-        except Exception as e:
-            self.logger.error(f'yh_get_info, code: {code}, error: {e}')
+        retry = 3
+        error_msg = None
+
+        for _ in range(retry):
+            try:
+                return Ticker(code).balance_sheet
+            except Exception as e:
+                msg = str(e)
+                error_msg = f'yh_get_balance_sheet, code: {code}, error: {msg}'
+                time.sleep(60 * 10)
+
+        self.logger.error(error_msg)
         return None
 
     def record(self, entity, http_session, db_session, para):
