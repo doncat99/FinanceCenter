@@ -5,7 +5,7 @@ from findy.interface import Region, Provider, EntityType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.quote import get_entities
-from findy.vendor.yfinance import YH
+from findy.vendor.yfinance import Ticker
 
 
 class YahooUsStockDetailRecorder(RecorderForEntities):
@@ -29,7 +29,7 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
     def yh_get_info(self, code):
         try:
-            return YH.Ticker(code).info
+            return Ticker(code).info
         except Exception as e:
             self.logger.error(f'yh_get_info, code: {code}, error: {e}')
         return None

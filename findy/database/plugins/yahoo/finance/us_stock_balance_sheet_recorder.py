@@ -10,7 +10,7 @@ from findy.database.schema.fundamental.finance import BalanceSheet
 from findy.database.plugins.recorder import TimestampsDataRecorder
 from findy.database.plugins.yahoo.common import to_report_period_type
 from findy.utils.pd import pd_valid
-from findy.vendor.yfinance import YH
+from findy.vendor.yfinance import Ticker
 
 
 balance_sheet_map = {
@@ -458,7 +458,7 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
 
     def yh_get_balance_sheet(self, code):
         try:
-            return YH.Ticker(code).balance_sheet
+            return Ticker(code).balance_sheet
         except Exception as e:
             self.logger.error(f'yh_get_info, code: {code}, error: {e}')
         return None

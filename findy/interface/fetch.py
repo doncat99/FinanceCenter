@@ -318,7 +318,7 @@ data_set_us = [
     [interface.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
     [interface.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
     [interface.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
-    # [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
+    [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
 
     [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
     [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
@@ -382,7 +382,7 @@ async def fetch_data(region: Region):
 
     # calls_list = [(region, item) for item in data_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
 
-    Multi = False
+    Multi = True
 
     if Multi:
         pool_tasks = []

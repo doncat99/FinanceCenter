@@ -32,7 +32,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        calendar = mcal.get_calendar(entity)
+        calendar = mcal.get_calendar(entity.upper())
 
         trade_day, column_names = StockTradeDay.query_data(
             region=self.region,
