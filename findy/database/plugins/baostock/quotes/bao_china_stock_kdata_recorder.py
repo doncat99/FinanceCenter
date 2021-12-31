@@ -119,7 +119,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
             df.rename(columns={'turn': 'turnover', 'date': 'timestamp', 'preclose': 'pre_close', 'pctChg': 'change_pct',
                                'peTTM': 'pe_ttm', 'psTTM': 'ps_ttm', 'pcfNcfTTM': 'pcf_ncf_ttm', 'pbMRQ': 'pb_mrq', 'isST': 'is_st'}, inplace=True)
             df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df['is_st'] = df['is_st'].astype(int)
+            df['is_st'] = df['is_st'].apply(lambda x: 1 if x == '1' else 0)
 
         elif self.bao_trading_level == 'w' or self.bao_trading_level == 'm':
             df.rename(columns={'turn': 'turnover', 'date': 'timestamp', 'pctChg': 'change_pct'}, inplace=True)
