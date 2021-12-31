@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 from findy import findy_config
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
@@ -25,7 +25,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
     data_schema = StockKdataCommon
 
     def __init__(self,
-                 exchanges=['nyse', 'nasdaq', 'amex', 'cme'],
+                 exchanges=[e.value for e in UsExchange],
                  entity_ids=None,
                  codes=None,
                  batch_size=10,

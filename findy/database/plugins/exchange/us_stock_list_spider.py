@@ -3,7 +3,7 @@ import time
 
 import pandas as pd
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
@@ -30,7 +30,7 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     data_schema = Stock
 
     async def init_entities(self, db_session):
-        self.entities = ['nyse', 'nasdaq', 'amex']
+        self.entities = [e.value for e in UsExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']

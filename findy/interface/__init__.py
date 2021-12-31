@@ -34,6 +34,13 @@ class ChnExchange(enum.Enum):
     SSE = 'sz'
 
 
+class UsExchange(enum.Enum):
+    NYSE = 'nyse'
+    NSDQ = 'nasdaq'
+    AMEX = 'amex'
+    CME = 'cme'
+
+
 class RunMode(enum.Enum):
     Serial = 2
     Parallel = 3

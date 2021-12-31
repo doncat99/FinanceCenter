@@ -6,7 +6,7 @@ from sqlalchemy import func
 import pandas as pd
 import pandas_market_calendars as mcal
 
-from findy.interface import Region, Provider
+from findy.interface import Region, Provider, UsExchange
 from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.quotes.trade_day import StockTradeDay
@@ -21,7 +21,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     data_schema = StockTradeDay
 
     async def init_entities(self, db_session):
-        self.entities = ['NYSE']
+        self.entities = [UsExchange.NYSE.value]
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         return df['timestamp'].dt.strftime(time_fmt)
@@ -58,7 +58,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
         elif not isinstance(df['timestamp'].dtypes, datetime):
             df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-        df['entity_id'] = 'nyse'
+        df['entity_id'] = UsExchange.NYSE.value
         df['provider'] = self.provider.value
 
         df['id'] = self.generate_domain_id(entity, df)

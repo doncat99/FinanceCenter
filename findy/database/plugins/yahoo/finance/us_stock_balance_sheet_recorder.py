@@ -5,7 +5,7 @@ import time
 import pandas as pd
 import numpy as np
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema.fundamental.finance import BalanceSheet
 from findy.database.plugins.recorder import TimestampsDataRecorder
 from findy.database.plugins.yahoo.common import to_report_period_type
@@ -442,9 +442,19 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
     provider = Provider.Yahoo
     data_schema = BalanceSheet
 
-    def __init__(self, batch_size=10, force_update=False, sleeping_time=5, codes=None, share_para=None) -> None:
-        super().__init__(entity_type=EntityType.Stock, exchanges=['nyse', 'nasdaq', 'amex', 'cme'], batch_size=batch_size,
-                         force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
+    def __init__(self,
+                 batch_size=10,
+                 force_update=False,
+                 sleeping_time=5,
+                 codes=None,
+                 share_para=None) -> None:
+        super().__init__(entity_type=EntityType.Stock,
+                         exchanges=[e.value for e in UsExchange],
+                         batch_size=batch_size,
+                         force_update=force_update,
+                         sleeping_time=sleeping_time,
+                         codes=codes,
+                         share_para=share_para)
 
     def yh_get_balance_sheet(self, code):
         try:
