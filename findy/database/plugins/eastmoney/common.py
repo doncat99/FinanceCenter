@@ -5,7 +5,7 @@ import time
 import demjson
 import pandas as pd
 
-from findy.interface import Region, Provider
+from findy.interface import Region, Provider, ChnExchange
 from findy.database.schema import ReportPeriod, CompanyType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import TimestampsDataRecorder, TimeSeriesDataRecorder
@@ -43,10 +43,13 @@ def to_jq_report_period(timestamp):
 
 
 def get_fc(security_item):
-    if security_item.exchange == 'sh':
+    if security_item.exchange == ChnExchange.SSE.value:
         fc = f"{security_item.code}01"
-    if security_item.exchange == 'sz':
+    elif security_item.exchange == ChnExchange.SZSE.value:
         fc = f"{security_item.code}02"
+    else:
+        print("security_item.code", security_item.exchange)
+        raise
     return fc
 
 
@@ -132,7 +135,7 @@ class ApiWrapper(object):
 
 class EastmoneyApiWrapper(ApiWrapper):
     async def request(self, http_session, url=None, method='post', param=None, path_fields=None):
-        return await call_eastmoney_api(http_session, url=url, method=method, param=param, path_fields=path_fields)
+        return await call_eastmoney_api(http_session, url=url, method=method, params=param, path_fields=path_fields)
 
 
 class BaseEastmoneyRecorder(object):
@@ -210,7 +213,7 @@ class EastmoneyTimestampsDataRecorder(BaseEastmoneyRecorder, TimestampsDataRecor
 
         timestamp_json_list = call_eastmoney_api(http_session, url=self.timestamps_fetching_url,
                                                  path_fields=self.timestamp_list_path_fields,
-                                                 param=param)
+                                                 params=param)
 
         if self.timestamp_path_fields and timestamp_json_list:
             timestamps = [get_from_path_fields(data, self.timestamp_path_fields) for data in timestamp_json_list]
@@ -232,7 +235,7 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder
             "pageNum": 1,
             "pageSize": 1
         }
-        result = call_eastmoney_api(http_session, self.page_url, param=param, path_fields=['TotalCount'])
+        result = call_eastmoney_api(http_session, self.page_url, params=param, path_fields=['TotalCount'])
         if isinstance(result, dict):
             return 0
         else:
@@ -277,7 +280,7 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
             "pageNum": 1,
             "pageSize": 1
         }
-        results = call_eastmoney_api(http_session, self.url, param=param, path_fields=self.path_fields)
+        results = call_eastmoney_api(http_session, self.url, params=param, path_fields=self.path_fields)
         if len(results) > 0:
             df = pd.DataFrame.from_records(results)
             df['timestamp'] = pd.to_datetime(df[self.get_original_time_field()])

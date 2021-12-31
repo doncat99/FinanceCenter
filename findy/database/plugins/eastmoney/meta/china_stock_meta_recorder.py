@@ -4,7 +4,7 @@ import time
 import demjson
 
 from findy import findy_config
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.quote import get_entities
@@ -25,7 +25,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 provider=self.provider,
                 db_session=db_session,
                 entity_type=EntityType.StockDetail,
-                exchanges=['sh', 'sz'],
+                exchanges=[e.value for e in ChnExchange],
                 codes=self.codes,
                 filters=[self.data_schema.profile.is_(None)])
 
@@ -37,9 +37,9 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
 
             self.result = None
 
-            if entity.exchange == 'sh':
+            if entity.exchange == ChnExchange.SSE.value:
                 fc = f"{entity.code}01"
-            if entity.exchange == 'sz':
+            if entity.exchange == ChnExchange.SZSE.value:
                 fc = f"{entity.code}02"
 
             # 基本资料

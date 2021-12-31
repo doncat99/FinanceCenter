@@ -11,7 +11,6 @@ from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.quotes.trade_day import StockTradeDay
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.utils.time import PD_TIME_FORMAT_DAY, to_time_str
-from findy.utils.cache import hashable_lru
 from findy.utils.pd import pd_valid
 
 import findy.vendor.baostock as bs
@@ -36,9 +35,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
     async def eval(self, entity, http_session, db_session):
         return not isinstance(entity, str), 0, None
 
-    @hashable_lru
     def bao_get_trade_days(self, start_date=None, end_date=None):
-
         def _bao_get_trade_days(start_date=None, end_date=None):
             k_rs = bs.query_trade_dates(start_date=start_date, end_date=end_date)
             return k_rs.get_data()

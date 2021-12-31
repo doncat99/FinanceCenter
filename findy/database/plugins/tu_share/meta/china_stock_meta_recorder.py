@@ -5,11 +5,12 @@ import pandas as pd
 import tushare as ts
 
 from findy import findy_config
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.utils.time import to_pd_timestamp
+from findy.utils.pd import pd_valid
 
 pro = ts.pro_api(findy_config['tushare_token'])
 
@@ -20,7 +21,7 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
     data_schema = StockDetail
 
     async def init_entities(self, db_session):
-        self.entities = ['SSE', 'SZSE']
+        self.entities = [e.value for e in ChnExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
@@ -48,7 +49,7 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
         # get stock info
         info = self.tushare_get_info(entity)
 
-        if len(info) > 0:
+        if pd_valid(info):
             return False, time.time() - start_point, self.format(entity, info)
 
         return True, time.time() - start_point, None

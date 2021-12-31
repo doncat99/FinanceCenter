@@ -27,8 +27,9 @@ class interface():
 
     @staticmethod
     async def get_etf_list_data(region: Region, provider: Provider, sleep, process, desc):
-        from findy.database.schema.meta.stock_meta import Etf
-        await Etf.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        # ETF股票
+        from findy.database.schema.meta.stock_meta import EtfStock
+        await EtfStock.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
 
     @staticmethod
     async def get_stock_trade_day(region: Region, provider: Provider, sleep, process, desc):
@@ -142,13 +143,7 @@ class interface():
         # 个股估值数据
         from findy.database.schema.fundamental.valuation import StockValuation
         await StockValuation.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
-
-    @staticmethod
-    async def get_etf_stock_data(region: Region, provider: Provider, sleep, process, desc):
-        # ETF股票
-        from findy.database.schema.meta.stock_meta import EtfStock
-        await EtfStock.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
-
+        
     @staticmethod
     async def get_etf_valuation_data(region: Region, provider: Provider, sleep, process, desc):
         # ETF估值数据
@@ -279,13 +274,13 @@ data_set_chn = [
     [interface.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
     [interface.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
 
-    # [interface.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
-    # [interface.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
-    # [interface.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
-    # [interface.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
-    # [interface.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
-    # [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
-    # [interface.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
+    [interface.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
+    [interface.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
+    [interface.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
+    [interface.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
+    [interface.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
+    [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
+    [interface.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
 
     # # below functions call join-quant sdk interface which limit at most 3 concurrent request
     # [interface.get_finance_factor_data,          Provider.EastMoney, 0, 10, "Finance Factor",           24 * 6,  RunMode.Parallel],
@@ -294,7 +289,6 @@ data_set_chn = [
     # [interface.get_cashflow_statement_data,      Provider.EastMoney, 0, 10, "CashFlow Statement",       24,      RunMode.Parallel],
     # [interface.get_stock_valuation_data,         Provider.JoinQuant, 0, 10, "Stock Valuation",          24,      RunMode.Parallel],
     # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, 10, "Cross Market Summary",     24,      RunMode.Parallel],
-    # [interface.get_etf_stock_data,               Provider.JoinQuant, 0, 10, "ETF Stock",                24,      RunMode.Parallel],
     # [interface.get_stock_summary_data,           Provider.Exchange,  0, 10, "Stock Summary",            24,      RunMode.Parallel],
     # [interface.get_margin_trading_summary_data,  Provider.JoinQuant, 0, 10, "Margin Trading Summary",   24,      RunMode.Parallel],
     # [interface.get_etf_valuation_data,           Provider.JoinQuant, 0, 10, "ETF Valuation",            24,      RunMode.Parallel],
@@ -388,7 +382,7 @@ async def fetch_data(region: Region):
 
     # calls_list = [(region, item) for item in data_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
 
-    Multi = True
+    Multi = False
 
     if Multi:
         pool_tasks = []
@@ -434,4 +428,4 @@ def fetching(region: Region):
 
 
 if __name__ == '__main__':
-    fetching(Region.US)
+    fetching(Region.CHN)

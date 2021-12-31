@@ -10,7 +10,7 @@ from findy.database.schema.meta.stock_meta import IndexStock, Index
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
 from findy.database.quote import china_stock_code_to_id
-from findy.utils.request import get_http_session, sync_get
+from findy.utils.request import get_sync_http_session, sync_get
 from findy.utils.time import to_pd_timestamp, now_pd_timestamp
 
 
@@ -20,7 +20,7 @@ class ChinaIndexListSpider(RecorderForEntities):
     data_schema = IndexStock
 
     async def run(self):
-        http_session = get_http_session()
+        http_session = get_sync_http_session()
         db_session = get_db_session(self.region, self.provider, self.data_schema)
 
         # 上证、中证

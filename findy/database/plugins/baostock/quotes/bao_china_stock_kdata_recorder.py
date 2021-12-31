@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 from findy import findy_config
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
@@ -31,7 +31,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
     data_schema = StockKdataCommon
 
     def __init__(self,
-                 exchanges=['sh', 'sz'],
+                 exchanges=[e.value for e in ChnExchange],
                  entity_ids=None,
                  codes=None,
                  batch_size=10,

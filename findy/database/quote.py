@@ -7,7 +7,7 @@ import pandas as pd
 
 from sqlalchemy import func
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema import ReportPeriod, IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin, PortfolioStockHistory
 from findy.database.schema.meta.fund_meta import Fund
@@ -142,12 +142,12 @@ def get_recent_report_date(the_date, step=0):
 #     return to_report_period_type(get_recent_report_date(the_date, step=step))
 
 
-def get_exchange(code):
-    return 'sh' if code >= '333333' else 'sz'
+def get_chn_exchange(code):
+    return ChnExchange.SSE.value if code >= '333333' else ChnExchange.SZSE.value
 
 
 def china_stock_code_to_id(code):
-    return f"stock_{get_exchange(code)}_{code}"
+    return f"stock_{get_chn_exchange(code)}_{code}"
 
 
 def to_high_level_kdata(kdata_df: pd.DataFrame, to_level: IntervalLevel):

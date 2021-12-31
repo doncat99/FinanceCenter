@@ -29,6 +29,11 @@ class EntityType(enum.Enum):
     StockDetail = 'stock_detail'
 
 
+class ChnExchange(enum.Enum):
+    SZSE = 'sh'
+    SSE = 'sz'
+
+
 class RunMode(enum.Enum):
     Serial = 2
     Parallel = 3

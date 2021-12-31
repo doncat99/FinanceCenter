@@ -7,7 +7,6 @@ from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.plugins.baostock.common import to_entity_id, to_bao_entity_type
 from findy.database.context import get_db_session
-from findy.utils.cache import hashable_lru
 from findy.utils.pd import pd_valid
 
 import findy.vendor.baostock as bs
@@ -28,9 +27,7 @@ class BaoChinaStockListRecorder(RecorderForEntities):
     provider = Provider.BaoStock
     data_schema = Stock
 
-    @hashable_lru
     def bao_get_all_securities(self, entity_type):
-
         def _bao_get_all_securities(entity_type):
             k_rs = bs.query_stock_basic()
             df = k_rs.get_data()

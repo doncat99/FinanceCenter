@@ -4,7 +4,7 @@ import time
 import pandas as pd
 
 from findy import findy_config
-from findy.interface import EntityType
+from findy.interface import ChnExchange, EntityType
 from findy.database.schema.fundamental.finance import FinanceFactor
 from findy.database.plugins.eastmoney.common import company_type_flag, get_fc, \
                                                            EastmoneyTimestampsDataRecorder, \
@@ -22,11 +22,22 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
     timestamp_list_path_fields = ['CompanyReportDateList']
     timestamp_path_fields = ['ReportDate']
 
-    def __init__(self, entity_type=EntityType.Stock, exchanges=['sh', 'sz'],
-                 entity_ids=None, codes=None, batch_size=10,
-                 force_update=False, sleeping_time=5, default_size=findy_config['batch_size'], real_time=False,
-                 fix_duplicate_way='add', start_timestamp=None, end_timestamp=None, close_hour=0,
-                 close_minute=0, share_para=None) -> None:
+    def __init__(self,
+                 entity_type=EntityType.Stock,
+                 exchanges=[e.value for e in ChnExchange],
+                 entity_ids=None,
+                 codes=None,
+                 batch_size=10,
+                 force_update=False,
+                 sleeping_time=5,
+                 default_size=findy_config['batch_size'],
+                 real_time=False,
+                 fix_duplicate_way='add',
+                 start_timestamp=None,
+                 end_timestamp=None,
+                 close_hour=0,
+                 close_minute=0,
+                 share_para=None) -> None:
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size, force_update,
                          sleeping_time, default_size, real_time, fix_duplicate_way, start_timestamp,
                          end_timestamp, close_hour, close_minute, share_para=share_para)
@@ -49,7 +60,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
 
         timestamp_json_list = call_eastmoney_api(http_session, url=self.timestamps_fetching_url,
                                                  path_fields=self.timestamp_list_path_fields,
-                                                 param=param)
+                                                 params=param)
 
         if timestamp_json_list is not None and self.timestamp_path_fields:
             timestamps = [get_from_path_fields(data, self.timestamp_path_fields) for data in timestamp_json_list]

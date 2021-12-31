@@ -8,7 +8,7 @@ from aiohttp import ClientSession, ClientTimeout, TCPConnector
 # from aiohttp_client_cache import CachedSession, SQLiteBackend
 
 # from findy.interface import RunMode
-from findy.utils.cache import hashable_lru
+# from findy.utils.cache import hashable_lru
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,11 @@ def retry_if_connection_error(exception):
     # return isinstance(exception, ConnectionError)
 
 
-def get_http_session():
+def get_sync_http_session():
+    return requests.Session()
+
+
+def get_async_http_session():
     # if fetch_mode == RunMode.Sync:
     #     http_session = TimeoutRequestsSession()
     #     http_session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=0))
@@ -61,7 +65,6 @@ def get_http_session():
                          )
 
 
-@hashable_lru
 def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8', params={}, enable_proxy=False, return_type=None):
 
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
@@ -101,7 +104,6 @@ def sync_get(http_session: requests.Session, url, headers=None, encoding='utf-8'
         return resp
 
 
-@hashable_lru
 def sync_post(http_session: requests.Session, url, json=None, encoding=['utf-8', 'gbk'], enable_proxy=False):
     @retry(retry_on_exception=retry_if_connection_error, stop_max_attempt_number=max_retries, wait_fixed=2000)
     def _sync_post(http_session: requests.Session, url, enable_proxy, json=None, encoding=['utf-8', 'gbk']):

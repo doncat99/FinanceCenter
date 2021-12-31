@@ -14,7 +14,7 @@ from findy.interface.fetch import fetching
 def main():
     # multiprocessing.set_start_method('fork')
 
-    fetching(Region.US)
+    fetching(Region.CHN)
 
 
 if __name__ == '__main__':

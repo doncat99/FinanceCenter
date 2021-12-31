@@ -5,14 +5,14 @@ import re
 import demjson
 import pandas as pd
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.interface.writer import df_to_db
 from findy.database.schema import BlockCategory
-from findy.database.schema.meta.stock_meta import Etf
+from findy.database.schema.meta.stock_meta import EtfStock, Etf
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
 from findy.database.quote import china_stock_code_to_id
-from findy.utils.request import get_http_session, sync_get, chrome_copy_header_to_dict
+from findy.utils.request import get_sync_http_session, sync_get, chrome_copy_header_to_dict
 from findy.utils.time import now_pd_timestamp
 
 DEFAULT_SH_ETF_LIST_HEADER = chrome_copy_header_to_dict('''
@@ -30,10 +30,10 @@ Connection: keep-alive
 class ChinaETFListSpider(RecorderForEntities):
     region = Region.CHN
     provider = Provider.Exchange
-    data_schema = Etf
+    data_schema = EtfStock
 
     async def run(self):
-        http_session = get_http_session()
+        http_session = get_sync_http_session()
         db_session = get_db_session(self.region, self.provider, self.data_schema)
 
         # 抓取沪市 ETF 列表
@@ -45,7 +45,7 @@ class ChinaETFListSpider(RecorderForEntities):
         response_dict = demjson.decode(text)
 
         df = pd.DataFrame(response_dict.get('result', []))
-        await self.persist_etf_list(df, 'sh', db_session)
+        await self.persist_etf_list(df, ChnExchange.SSE.value, db_session)
         self.logger.info('沪市 ETF 列表抓取完成...')
 
         # 抓取沪市 ETF 成分股
@@ -59,7 +59,7 @@ class ChinaETFListSpider(RecorderForEntities):
             return
 
         df = pd.read_excel(io.BytesIO(content), dtype=str)
-        await self.persist_etf_list(df, 'sz', db_session)
+        await self.persist_etf_list(df, ChnExchange.SZSE.value, db_session)
         self.logger.info('深市 ETF 列表抓取完成...')
 
         # 抓取深市 ETF 成分股
@@ -71,9 +71,9 @@ class ChinaETFListSpider(RecorderForEntities):
             return
 
         df = df.copy()
-        if exchange == 'sh':
+        if exchange == ChnExchange.SSE.value:
             df = df[['FUND_ID', 'FUND_NAME']]
-        elif exchange == 'sz':
+        elif exchange == ChnExchange.SZSE.value:
             df = df[['证券代码', '证券简称']]
 
         df.columns = ['code', 'name']
@@ -110,9 +110,13 @@ class ChinaETFListSpider(RecorderForEntities):
             text = sync_get(http_session, url, headers=DEFAULT_SH_ETF_LIST_HEADER, return_type='text')
             if text is None:
                 continue
-            response_dict = demjson.decode(text)
-            response_df = pd.DataFrame(response_dict.get('result', []))
+            try:
+                response_dict = demjson.decode(text)
+            except Exception as e:
+                self.logger.error(f'decode {url} failed with text: {text}, error as: {e}')
+                continue
 
+            response_df = pd.DataFrame(response_dict.get('result', []))
             etf_code = etf['FUND_ID']
             etf_id = f'etf_sh_{etf_code}'
             response_df = response_df[['instrumentId', 'instrumentName']].copy()
@@ -120,7 +124,7 @@ class ChinaETFListSpider(RecorderForEntities):
 
             response_df['entity_id'] = etf_id
             response_df['entity_type'] = EntityType.ETF.value
-            response_df['exchange'] = 'sh'
+            response_df['exchange'] = ChnExchange.SSE.value
             response_df['code'] = etf_code
             response_df['name'] = etf['FUND_NAME']
             response_df['timestamp'] = now_pd_timestamp(self.region)
@@ -172,7 +176,7 @@ class ChinaETFListSpider(RecorderForEntities):
 
             response_df['entity_id'] = etf_id
             response_df['entity_type'] = EntityType.ETF.value
-            response_df['exchange'] = 'sz'
+            response_df['exchange'] = ChnExchange.SZSE.value
             response_df['code'] = etf_code
             response_df['name'] = etf['证券简称']
             response_df['timestamp'] = now_pd_timestamp(self.region)

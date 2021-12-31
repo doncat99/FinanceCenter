@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from findy.interface import EntityType
+from findy.interface import ChnExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
 
 
@@ -34,10 +34,7 @@ def to_bao_trading_field(trading_level):
 
 def to_bao_entity_id(security_item):
     if security_item.entity_type == EntityType.Stock.value or security_item.entity_type == EntityType.Index.value:
-        if security_item.exchange == 'sh':
-            return f'sh.{security_item.code}'
-        if security_item.exchange == 'sz':
-            return f'sz.{security_item.code}'
+        return f'{security_item.exchange}.{security_item.code}'
 
 
 def to_bao_adjust_flag(adjustflag):

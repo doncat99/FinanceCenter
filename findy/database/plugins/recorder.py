@@ -17,7 +17,7 @@ from findy.database.schema.quotes.trade_day import StockTradeDay
 from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
 from findy.database.quote import get_entities
-from findy.utils.request import get_http_session
+from findy.utils.request import get_async_http_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,
                               to_pd_timestamp, to_time_str,
@@ -204,7 +204,7 @@ class RecorderForEntities(Recorder):
             await self.init_entities(db_session)
 
         if self.entities and len(self.entities) > 0:
-            http_session = get_http_session()
+            http_session = get_async_http_session()
             throttler = asyncio.Semaphore(self.share_para[0])
 
             # tasks = [asyncio.ensure_future(self.process_loop(entity, http_session, throttler)) for entity in self.entities]

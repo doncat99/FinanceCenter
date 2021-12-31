@@ -4,7 +4,7 @@ import time
 
 import pandas as pd
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
@@ -44,17 +44,17 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     data_schema = Stock
 
     category_map_url = {
-        'sh': 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',
-        'sz': 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1110&TABKEY=tab1&random=0.20932135244582617',
+        ChnExchange.SSE.value: 'http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',
+        ChnExchange.SZSE.value: 'http://www.szse.cn/api/report/ShowReport?SHOWTYPE=xlsx&CATALOGID=1110&TABKEY=tab1&random=0.20932135244582617',
     }
 
     category_map_header = {
-        'sh': DEFAULT_SH_HEADER,
-        'sz': DEFAULT_SZ_HEADER
+        ChnExchange.SSE.value: DEFAULT_SH_HEADER,
+        ChnExchange.SZSE.value: DEFAULT_SZ_HEADER
     }
 
     async def init_entities(self, db_session):
-        self.entities = ['sh', 'sz']
+        self.entities = [e.value for e in ChnExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
@@ -81,7 +81,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
 
     def format(self, resp, exchange):
         df = None
-        if exchange == 'sh':
+        if exchange == ChnExchange.SSE.value:
             # df = pd.read_excel(io.BytesIO(resp.content), sheet_name='主板A股', dtype=str, parse_dates=['上市日期'])
             df = pd.read_csv(io.BytesIO(resp), sep='\t', encoding='GB2312', dtype=str,
                              parse_dates=['上市日期'])
@@ -89,7 +89,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
                 df.columns = [column.strip() for column in df.columns]
                 df = df.loc[:, ['公司代码', '公司简称', '上市日期']]
 
-        elif exchange == 'sz':
+        elif exchange == ChnExchange.SZSE.value:
             df = pd.read_excel(io.BytesIO(resp), sheet_name='A股列表', dtype=str, parse_dates=['A股上市日期'])
             if df is not None:
                 df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
