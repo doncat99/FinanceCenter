@@ -105,5 +105,8 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                     self.logger.info("{}{:>14}, {:>18}, time: {}{}".format(
                         prefix, self.data_schema.__name__, entity.id, cost, postfix))
 
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        return 0
+
     async def on_finish(self):
         pass

@@ -42,6 +42,9 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        return 0
+
     async def on_finish(self):
         last_year = str(now_pd_timestamp(self.region).year)
         codes = [item.code for item in self.entities]

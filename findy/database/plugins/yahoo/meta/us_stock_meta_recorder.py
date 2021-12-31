@@ -75,5 +75,8 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
         return True, time.time() - start_point, 1
 
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        return 0
+
     async def on_finish(self):
         pass

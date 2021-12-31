@@ -47,9 +47,7 @@ def get_fc(security_item):
         fc = f"{security_item.code}01"
     elif security_item.exchange == ChnExchange.SZSE.value:
         fc = f"{security_item.code}02"
-    else:
-        print("security_item.code", security_item.exchange)
-        raise
+
     return fc
 
 
@@ -241,8 +239,12 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder
         else:
             return result
 
-    def eval_fetch_timestamps(self, entity, referenced_record, http_session):
-        remote_count = self.get_remote_count(entity, http_session)
+    async def eval_fetch_timestamps(self, entity, referenced_record, http_session):
+        remote_count = await self.get_remote_count(entity, http_session)
+
+        if remote_count is None:
+            logger.warning("get get_remote_count with None return")
+            return None, None, 0, None
 
         if remote_count == 0:
             return None, None, 0, None
@@ -288,7 +290,7 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
             return df.loc[df[self.get_evaluated_time_field()].idxmax()]
         return None
 
-    def eval_fetch_timestamps(self, entity, referenced_record, http_session):
+    async def eval_fetch_timestamps(self, entity, referenced_record, http_session):
         # get latest record
         latest_record = None
         try:

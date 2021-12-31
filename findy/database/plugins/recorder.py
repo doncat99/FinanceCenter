@@ -273,7 +273,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
             columns=['id', self.get_evaluated_time_field()])
         return pd.DataFrame(data, columns=column_names)
 
-    def eval_fetch_timestamps(self, entity, ref_record, http_session):
+    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
         latest_timestamp = None
         try:
             if pd_valid(ref_record):
@@ -314,7 +314,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         self.logger.debug(f'get latest saved record: {len(ref_record)}, cost: {cost}')
 
         start, end, size, timestamps = \
-            self.eval_fetch_timestamps(entity, ref_record, http_session)
+            await self.eval_fetch_timestamps(entity, ref_record, http_session)
 
         cost = PRECISION_STR.format(time.time() - start_point)
         self.logger.debug(f'evaluate entity: {entity.id}, time: {cost}')
@@ -459,7 +459,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
             return min(int(math.ceil(seconds / level.to_second())),
                        one_day_trading_seconds / level.to_second())
 
-    def eval_fetch_timestamps(self, entity, ref_record, http_session):
+    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
         latest_timestamp = None
         try:
             if pd_valid(ref_record):
@@ -527,7 +527,7 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
     def init_timestamps(self, entity_item, http_session) -> List[pd.Timestamp]:
         raise NotImplementedError
 
-    def eval_fetch_timestamps(self, entity, ref_record, http_session):
+    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
         timestamps = self.security_timestamps_map.get(entity.id)
         if not timestamps:
             timestamps = self.init_timestamps(entity, http_session)

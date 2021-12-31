@@ -135,5 +135,8 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
 
         return True, time.time() - start_point, saved
 
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        return 0
+
     async def on_finish(self):
         self.logger.info("persist stock list successs")

@@ -48,6 +48,9 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        return 0
+
     async def on_finish(self):
         desc = DividendFinancing.__name__ + ": update relevant table"
         with tqdm(total=len(self.entities), ncols=90, desc=desc, position=2, leave=True) as pbar:
