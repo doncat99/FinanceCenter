@@ -4,7 +4,7 @@ uvloop
 
 # database utils
 psycopg2>=2.8.6
-SQLAlchemy>=1.4.1
+SQLAlchemy>=1.4.23
 sqlalchemy_batch_inserts>=0.0.4
 
 # data utils
