@@ -6,12 +6,13 @@ Copyright (c) 2019 - present AppSeed.us
 from flask_login import UserMixin
 
 from dashboard import db, login_manager
-
 from dashboard.authentication.util import hash_pass
+
 
 class Users(db.Model, UserMixin):
 
     __tablename__ = 'Users'
+    __bind_key__ = 'flask'
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)

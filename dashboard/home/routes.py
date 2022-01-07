@@ -52,3 +52,10 @@ def get_segment(request):
 
     except:
         return None
+
+
+@blueprint.route('/data-house')
+@login_required
+def datahouse():
+
+    return render_template('home/data-house.html')

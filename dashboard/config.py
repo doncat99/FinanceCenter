@@ -17,7 +17,7 @@ class Config(object):
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')  # This will create a file in <app> FOLDER
 
     # PostgreSQL database
-    SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
+    SQLALCHEMY_FLASK_URI = '{}://{}:{}@{}:{}/{}'.format(
         config('DB_ENGINE', default='postgresql'),
         config('DB_USERNAME', default=findy_config['db_user']),
         config('DB_PASS', default=findy_config['db_pass']),
@@ -25,6 +25,27 @@ class Config(object):
         config('DB_PORT', default=findy_config['db_port']),
         config('DB_NAME', default='postgres')
     )
+    SQLALCHEMY_CHN_DATA_URI = '{}://{}:{}@{}:{}/{}'.format(
+        config('DB_ENGINE', default='postgresql'),
+        config('DB_USERNAME', default=findy_config['db_user']),
+        config('DB_PASS', default=findy_config['db_pass']),
+        config('DB_HOST', default=findy_config['db_host']),
+        config('DB_PORT', default=findy_config['db_port']),
+        config('DB_NAME', default='findy_chn')
+    )
+    SQLALCHEMY_US_DATA_URI = '{}://{}:{}@{}:{}/{}'.format(
+        config('DB_ENGINE', default='postgresql'),
+        config('DB_USERNAME', default=findy_config['db_user']),
+        config('DB_PASS', default=findy_config['db_pass']),
+        config('DB_HOST', default=findy_config['db_host']),
+        config('DB_PORT', default=findy_config['db_port']),
+        config('DB_NAME', default='findy_us')
+    )
+    SQLALCHEMY_BINDS = {
+        'flask': SQLALCHEMY_FLASK_URI,
+        'chn_data': SQLALCHEMY_CHN_DATA_URI,
+        'us_data': SQLALCHEMY_US_DATA_URI
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
