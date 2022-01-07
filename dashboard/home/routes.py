@@ -66,6 +66,11 @@ def datahouse(template, segment):
 
     chn_stock_cnt = chn_engine.execute("select count(*) from Stock").scalar()
     us_stock_cnt = us_engine.execute("select count(*) from Stock").scalar()
-    stock_cnt = {'chn_stock_cnt': chn_stock_cnt, 'us_stock_cnt': us_stock_cnt}
+
+    chn_etf_cnt = chn_engine.execute("select count(*) from Etf_Stock").scalar()
+    us_etf_cnt = us_engine.execute("select count(*) from Etf_Stock").scalar()
+
+    stock_cnt = {'chn_stock_cnt': chn_stock_cnt, 'us_stock_cnt': us_stock_cnt,
+                 'chn_etf_cnt': chn_etf_cnt, 'us_etf_cnt': us_etf_cnt}
 
     return render_template(f'home/{template}', segment=segment, stock_cnt=stock_cnt)
