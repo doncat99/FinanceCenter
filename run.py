@@ -27,6 +27,7 @@ except KeyError:
 app = create_app(app_config)
 Migrate(app, db)
 
+
 if DEBUG:
     app.logger.info('DEBUG       = ' + str(DEBUG))
     app.logger.info('Environment = ' + get_config_mode)

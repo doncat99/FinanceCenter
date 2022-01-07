@@ -34,6 +34,10 @@ def configure_database(app):
     def shutdown_session(exception=None):
         db.session.remove()
 
+    @app.shell_context_processor
+    def make_shell_context():
+        return {'db': db}
+
 
 def create_app(config):
     app = Flask(__name__)
