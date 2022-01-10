@@ -20,7 +20,7 @@
       <div class="columns is-centered is-mobile">	
         <div class="column is-dark notification is-four-fifths">
           <div class="is-size-7 has-text-warning" id="display">
-            <ul class="list-group" id="display_list">
+            <ul id="display_list">
               <li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg">
                 <h6 class="mb-1 text-dark font-weight-bold text-sm">event.data</h6>
               </li>
@@ -521,14 +521,18 @@
   <script src="/static/assets/js/plugins/jquery.min.js"></script>
   <script type="text/javascript">
     var source = new EventSource("/log");
+    var eventList = document.querySelector('ul');
+
     source.onmessage = function(event) {
-      // $('#display').prepend(event.data);
       $('#display_list').prepend(
         '<li class="list-group-item border-0 d-flex justify-content-between ps-0 mb-2 border-radius-lg"><h6 class="mb-1 text-dark font-weight-bold text-sm">' + event.data + '</h6></li>');
-      if(event.data == 100){
-        source.close()
-      }
-    }
+    };
+    // source.onopen = function(){
+    //   alert('connection is opened.'+source.readyState);  
+    // };
+    // source.onerror = function(){
+    //  alert('error: '+source.readyState);
+    // };
 
     var source_progress = new EventSource("/progress");
     source_progress.onmessage = function(event) {
@@ -537,7 +541,7 @@
       if(event.data == 100){
         source_progress.close()
       }
-    }
+    };
   </script>
 
   <script src="/static/assets/js/plugins/chartjs.min.js"></script>

@@ -2,13 +2,16 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+import os
 import time
 from pygtail import Pygtail
 from flask import render_template, current_app, Response
 
-
+from findy import findy_env
 from dashboard import db
 from dashboard.home import blueprint
+
+LOG_FILE = os.path.join(findy_env['log_path'], 'findy.log')
 
 
 def data_house(template, segment):
@@ -33,7 +36,7 @@ def progress():
     def generate():
         x = 0
         while x <= 100:
-            yield str(x) + "\n\n"
+            yield "data:" + str(x) + "\n\n"
             x = x + 10
             time.sleep(0.1)
     return Response(generate(), mimetype='text/event-stream')
@@ -41,12 +44,10 @@ def progress():
 
 @blueprint.route('/log')
 def progress_log():
-    LOG_FILE = '/Users/huangdon/findy-home/logs/findy.log'
-
     def generate():
         while True:
             for line in Pygtail(LOG_FILE, every_n=1):
-                yield str(line)
+                yield "data:" + str(line) + "\n\n"
                 time.sleep(0.1)
             time.sleep(1)
     return Response(generate(), mimetype='text/event-stream')
