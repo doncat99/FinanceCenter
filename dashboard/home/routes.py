@@ -3,12 +3,12 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import render_template, request, current_app
+from flask import render_template, request
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 
-from dashboard import db
 from dashboard.home import blueprint
+from dashboard.home.datahouse import data_house
 
 
 @blueprint.route('/index')
@@ -31,7 +31,7 @@ def route_template(template):
         segment = get_segment(request)
 
         if "data-house" in template:
-            return datahouse(template, segment)
+            return data_house(template, segment)
 
         # Serve the file (if exists) from app/templates/home/FILE.html
         return render_template('home/' + template, segment=segment)
@@ -57,20 +57,3 @@ def get_segment(request):
 
     except:
         return None
-
-
-def datahouse(template, segment):
-    app = current_app._get_current_object()
-    chn_engine = db.get_engine(app, 'chn_data')
-    us_engine = db.get_engine(app, 'us_data')
-
-    chn_stock_cnt = chn_engine.execute("select count(*) from Stock").scalar()
-    us_stock_cnt = us_engine.execute("select count(*) from Stock").scalar()
-
-    chn_etf_cnt = chn_engine.execute("select count(*) from Etf_Stock").scalar()
-    us_etf_cnt = us_engine.execute("select count(*) from Etf_Stock").scalar()
-
-    stock_cnt = {'chn_stock_cnt': chn_stock_cnt, 'us_stock_cnt': us_stock_cnt,
-                 'chn_etf_cnt': chn_etf_cnt, 'us_etf_cnt': us_etf_cnt}
-
-    return render_template(f'home/{template}', segment=segment, stock_cnt=stock_cnt)

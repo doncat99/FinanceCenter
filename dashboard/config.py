@@ -2,7 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-import os
+# import os
 from decouple import config
 
 from findy import findy_config
@@ -12,6 +12,8 @@ class Config(object):
     # Set up the App SECRET_KEY
     CSRF_ENABLED = True
     SECRET_KEY = config('SECRET_KEY', default='S#perS3crEt_007')
+
+    JSON_AS_ASCII = False
 
     # basedir = os.path.abspath(os.path.dirname(__file__))
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')  # This will create a file in <app> FOLDER
