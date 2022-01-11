@@ -37,7 +37,7 @@ def progress_log():
         while True:
             file = Pygtail(LOG_FILE, every_n=1)
             for index, line in enumerate(file):
-                yield "data: " + str(index) + " " + str(line) + "\n\n"
+                yield "data:" + str(line) + "\n\n"
                 time.sleep(0.1)
             time.sleep(1)
     return Response(generate(), mimetype='text/event-stream')
