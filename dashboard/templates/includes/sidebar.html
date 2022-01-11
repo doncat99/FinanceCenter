@@ -14,62 +14,62 @@
           <a class="nav-link text-white {% if 'index' in segment %} active bg-gradient-primary {% endif %}" 
              href="/">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">dashboard</i>
+              <i class="material-icons opacity-10">{{navdict['index.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Overall</span>
+            <span class="nav-link-text ms-1">{{navdict['index.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-white {% if 'data' in segment %} active bg-gradient-primary {% endif %}" 
+          <a class="nav-link text-white {% if 'data-house' in segment %} active bg-gradient-primary {% endif %}" 
              href="/data-house.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">dashboard</i>
+              <i class="material-icons opacity-10">{{navdict['data-house.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">DataHouse</span>
+            <span class="nav-link-text ms-1">{{navdict['data-house.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white {% if 'tables' in segment %} active bg-gradient-primary {% endif %}" 
              href="/tables.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">table_view</i>
+              <i class="material-icons opacity-10">{{navdict['tables.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Tables</span>
+            <span class="nav-link-text ms-1">{{navdict['tables.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white {% if 'billing' in segment %} active bg-gradient-primary {% endif %}" 
              href="/billing.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">receipt_long</i>
+              <i class="material-icons opacity-10">{{navdict['billing.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Billing</span>
+            <span class="nav-link-text ms-1">{{navdict['billing.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white {% if 'virtual' in segment %} active bg-gradient-primary {% endif %}" 
              href="/virtual-reality.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">view_in_ar</i>
+              <i class="material-icons opacity-10">{{navdict['virtual-reality.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Virtual Reality</span>
+            <span class="nav-link-text ms-1">{{navdict['virtual-reality.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white " href="/rtl.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">format_textdirection_r_to_l</i>
+              <i class="material-icons opacity-10">{{navdict['rtl.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">RTL</span>
+            <span class="nav-link-text ms-1">{{navdict['rtl.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white {% if 'notifications' in segment %} active bg-gradient-primary {% endif %}" 
              href="/notifications.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">notifications</i>
+              <i class="material-icons opacity-10">{{navdict['notifications.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Notifications</span>
+            <span class="nav-link-text ms-1">{{navdict['notifications.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item mt-3">
@@ -79,17 +79,17 @@
           <a class="nav-link text-white {% if 'profile' in segment %} active bg-gradient-primary {% endif %}" 
              href="/profile.html">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">person</i>
+              <i class="material-icons opacity-10">{{navdict['profile.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Profile</span>
+            <span class="nav-link-text ms-1">{{navdict['profile.html'][0]}}</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white " href="{{ url_for('authentication_blueprint.logout') }}">
             <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="material-icons opacity-10">directions_run</i>
+              <i class="material-icons opacity-10">{{navdict['logout.html'][1]}}</i>
             </div>
-            <span class="nav-link-text ms-1">Logout</span>
+            <span class="nav-link-text ms-1">{{navdict['logout.html'][0]}}</span>
           </a>
         </li>
       </ul>

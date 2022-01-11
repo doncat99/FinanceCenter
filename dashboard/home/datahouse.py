@@ -14,7 +14,7 @@ from dashboard.home import blueprint
 LOG_FILE = os.path.join(findy_env['log_path'], 'findy.log')
 
 
-def data_house(template, segment):
+def data_house(template, **kwargs):
     app = current_app._get_current_object()
     chn_engine = db.get_engine(app, 'chn_data')
     us_engine = db.get_engine(app, 'us_data')
@@ -28,26 +28,16 @@ def data_house(template, segment):
     stock_cnt = {'chn_stock_cnt': chn_stock_cnt, 'us_stock_cnt': us_stock_cnt,
                  'chn_etf_cnt': chn_etf_cnt, 'us_etf_cnt': us_etf_cnt}
 
-    return render_template(f'home/{template}', segment=segment, stock_cnt=stock_cnt)
-
-
-@blueprint.route('/progress')
-def progress():
-    def generate():
-        x = 0
-        while x <= 100:
-            yield "data:" + str(x) + "\n\n"
-            x = x + 10
-            time.sleep(0.1)
-    return Response(generate(), mimetype='text/event-stream')
+    return render_template(f'home/{template}', stock_cnt=stock_cnt, **kwargs)
 
 
 @blueprint.route('/log')
 def progress_log():
     def generate():
         while True:
-            for line in Pygtail(LOG_FILE, every_n=1):
-                yield "data:" + str(line) + "\n\n"
+            file = Pygtail(LOG_FILE, every_n=1)
+            for index, line in enumerate(file):
+                yield "data: " + str(index) + " " + str(line) + "\n\n"
                 time.sleep(0.1)
             time.sleep(1)
     return Response(generate(), mimetype='text/event-stream')
