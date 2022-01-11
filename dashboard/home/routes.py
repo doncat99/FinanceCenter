@@ -11,15 +11,15 @@ from dashboard.home import blueprint
 from dashboard.home.datahouse import data_house
 
 NavDict = {
-    'index.html': ['Overall', 'dashboard'],
-    'data-house.html': ['DataHouse', 'dashboard'],
-    'tables.html': ['Tables', 'table_view'],
-    'billing.html': ['Billing', 'receipt_long'],
+    'index.html':           ['Overall', 'dashboard'],
+    'data-house.html':      ['DataHouse', 'dashboard'],
+    'tables.html':          ['Tables', 'table_view'],
+    'billing.html':         ['Billing', 'receipt_long'],
     'virtual-reality.html': ['Virtual Reality', 'view_in_ar'],
-    'rtl.html': ['RTL', 'format_textdirection_r_to_l'],
-    'notifications.html': ['Notifications', 'notifications'],
-    'profile.html': ['Profile', 'person'],
-    'logout.html': ['Logout', 'directions_run'],
+    'rtl.html':             ['RTL', 'format_textdirection_r_to_l'],
+    'notifications.html':   ['Notifications', 'notifications'],
+    'profile.html':         ['Profile', 'person'],
+    'logout.html':          ['Logout', 'directions_run'],
 }
 
 
