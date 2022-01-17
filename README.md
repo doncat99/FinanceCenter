@@ -12,6 +12,7 @@ Financial Center: open financial data framework
     - [Running Shot](#running-shot)
     - [Logging Shot](#logging-shot)
     - [Database Shot](#database-shot)
+    - [Flask Demo Shot](#flask-demo-shot)
 - [Description](#description)
 - [Installation guide](#installation-guide)
     - [1. Packages / Dependencies](#1-packages--dependencies)
@@ -41,6 +42,9 @@ Financial Center: open financial data framework
 
 ### Database Shot
 <p align="left"><img alt="logo" width="70%" src="document/image/database.png"></p>
+
+### Flask Demo Shot
+<p align="left"><img alt="logo" width="70%" src="document/image/flask_demo.png"></p>
 
 # Description
 
