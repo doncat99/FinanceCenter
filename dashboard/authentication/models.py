@@ -33,6 +33,8 @@ class Users(db.Model, UserMixin):
 
             setattr(self, property, value)
 
+    # repr method represents how one object of this datatable
+    # will look like
     def __repr__(self):
         return str(self.username)
 

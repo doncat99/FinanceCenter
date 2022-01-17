@@ -8,7 +8,7 @@ from flask_login import login_required
 from jinja2 import TemplateNotFound
 
 from dashboard.home import blueprint
-from dashboard.home.datahouse import data_house
+from dashboard.datahouse.routes import data_house
 
 NavDict = {
     'index.html':           ['Overall', 'dashboard'],
