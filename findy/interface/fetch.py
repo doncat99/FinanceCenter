@@ -322,15 +322,15 @@ data_set_us = [
     # [interface.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
     # [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
 
-    # [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 ]
 
 
@@ -380,9 +380,9 @@ async def fetch_data(region: Region):
     for index, item in enumerate(data_set):
         if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache):
             if item[Para.Mode.value] == RunMode.Serial:
-                item[Para.Desc.value] = (index + 1, item[Para.Desc.value])
+                item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
             else:
-                item[Para.Desc.value] = (index + 1, item[Para.Desc.value])
+                item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
 
             calls_list.append((region, item))
 
@@ -432,7 +432,7 @@ def fetching(region: Region):
     pbar.start()
 
     print("waiting for kafka connection.....")
-    time.sleep(2)
+    time.sleep(5)
 
     asyncio.run(fetch_data(region))
 
