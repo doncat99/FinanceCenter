@@ -28,12 +28,18 @@ class ProgressBarProcess():
         while True:
             for msg in consumer:
                 data = json.loads(msg.value)
-                pbar = pbars.get(data['task'], None)
+                task = data['task']
+
+                if task == '@':
+                    return
+
+                pbar = pbars.get(task, None)
                 if pbar is None:
                     position = data.get('position', None)
-                    pbars[data['task']] = tqdm(total=data['total'], ncols=90, desc=data['desc'], position=position, leave=data['leave'])
-                    pbar = pbars[data['task']]
+                    pbars[task] = tqdm(total=data['total'], ncols=90, desc=data['desc'], position=position, leave=data['leave'])
+                    pbar = pbars[task]
                 pbar.update(data['update'])
+
             time.sleep(sleep)
 
     def start(self):
@@ -42,3 +48,7 @@ class ProgressBarProcess():
     def kill(self):
         if self.process.is_alive():
             self.process.terminate()
+
+    def join(self):
+        if self.process.is_alive():
+            self.process.join()
