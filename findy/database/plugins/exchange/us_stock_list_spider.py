@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import json
 
 import pandas as pd
 
@@ -8,6 +9,8 @@ from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
+from findy.utils.kafka import publish_message
+from findy.utils.progress import progress_topic, progress_key
 from findy.utils.time import to_pd_timestamp
 
 YAHOO_STOCK_LIST_HEADER = {
@@ -38,19 +41,23 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     def get_original_time_field(self):
         return 'list_date'
 
-    async def process_loop(self, entity, http_session, db_session, throttler):
+    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
         url = 'https://api.nasdaq.com/api/screener/stocks'
         params = {'download': 'true', 'exchange': entity}
 
         try:
             async with http_session.get(url, headers=YAHOO_STOCK_LIST_HEADER, params=params) as response:
-                json = await response.json()
-                json = json['data']['rows']
-                if len(json) > 0:
-                    df = self.format(content=json, exchange=entity)
+                _json = await response.json()
+                _json = _json['data']['rows']
+                if _json is not None and len(_json) > 0:
+                    df = self.format(content=_json, exchange=entity)
                     await self.persist(df, db_session)
         except Exception as e:
             self.logger.info(f"persist {entity} stock list failed with error: {e}")
+
+        (index, desc) = self.share_para[1]
+        data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     def format(self, content, exchange):
         df = pd.DataFrame(content)

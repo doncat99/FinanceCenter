@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import json
 
 import pandas as pd
 # from numba import njit
@@ -11,6 +12,8 @@ from findy.database.schema import BlockCategory
 from findy.database.schema.meta.stock_meta import Block, BlockStock
 from findy.database.plugins.recorder import RecorderForEntities, TimeSeriesDataRecorder
 from findy.database.quote import china_stock_code_to_id
+from findy.utils.kafka import publish_message
+from findy.utils.progress import progress_topic, progress_key
 from findy.utils.time import now_pd_timestamp, PD_TIME_FORMAT_DAY
 from findy.utils.convert import json_callback_param
 
@@ -30,7 +33,7 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
     async def init_entities(self, db_session):
         self.entities = [BlockCategory.industry, BlockCategory.concept]
 
-    async def process_loop(self, entity, http_session, db_session, throttler):
+    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
         async with throttler:
             async with http_session.get(self.category_map_url[entity]) as response:
                 text = await response.text()
@@ -67,6 +70,10 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
                                    db_session=db_session,
                                    df=df)
                 self.logger.info(f"finish record sina blocks:{entity.value}")
+
+            (index, desc) = self.share_para[1]
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
 
 class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):

@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+import json
 from datetime import datetime
 
 import pandas as pd
 import numpy as np
-from tqdm.auto import tqdm
 
+from findy import findy_config
 from findy.interface import Region, Provider
 from findy.database.schema.fundamental.dividend_financing import DividendFinancing
 from findy.database.plugins.eastmoney.common import EastmoneyPageabeDataRecorder
 from findy.database.context import get_db_session
 from findy.utils.convert import to_float
-
+from findy.utils.kafka import connect_kafka_producer, publish_message
+from findy.utils.progress import progress_topic, progress_key
 
 class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
     region = Region.CHN
@@ -53,31 +55,33 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
 
     async def on_finish(self):
         desc = DividendFinancing.__name__ + ": update relevant table"
-        with tqdm(total=len(self.entities), ncols=90, desc=desc, position=2, leave=True) as pbar:
-            db_session = get_db_session(self.region, self.provider, DividendFinancing)
+        db_session = get_db_session(self.region, self.provider, DividendFinancing)
+        kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
-            for entity in self.entities:
-                code_security = {}
-                code_security[entity.code] = entity
+        for entity in self.entities:
+            code_security = {}
+            code_security[entity.code] = entity
 
-                need_fill_items, column_names = DividendFinancing.query_data(
-                    region=self.region,
-                    provider=self.provider,
-                    db_session=db_session,
-                    codes=list(code_security.keys()),
-                    filters=[
-                        DividendFinancing.ipo_raising_fund.is_(None),
-                        DividendFinancing.ipo_issues != 0])
+            need_fill_items, column_names = DividendFinancing.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                codes=list(code_security.keys()),
+                filters=[
+                    DividendFinancing.ipo_raising_fund.is_(None),
+                    DividendFinancing.ipo_issues != 0])
 
-                if need_fill_items and len(need_fill_items) > 0:
-                    for need_fill_item in need_fill_items:
-                        need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
-                pbar.update()
+            if need_fill_items and len(need_fill_items) > 0:
+                for need_fill_item in need_fill_items:
+                    need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
 
-            try:
-                db_session.commit()
-            except Exception as e:
-                self.logger.error(f'{self.__class__.__name__}, error: {e}')
-                db_session.rollback()
+            data = {"task": 'div', "total": len(self.entities), "desc": desc, "leave": True}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+
+        try:
+            db_session.commit()
+        except Exception as e:
+            self.logger.error(f'{self.__class__.__name__}, error: {e}')
+            db_session.rollback()
 
         await super().on_finish()

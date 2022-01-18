@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 import time
+import json
 
 import pandas as pd
 
@@ -9,6 +10,8 @@ from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.context import get_db_session
+from findy.utils.kafka import publish_message
+from findy.utils.progress import progress_topic, progress_key
 from findy.utils.request import chrome_copy_header_to_dict
 from findy.utils.pd import pd_valid
 from findy.utils.time import to_pd_timestamp
@@ -62,7 +65,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     def get_original_time_field(self):
         return 'list_date'
 
-    async def process_loop(self, entity, http_session, db_session, throttler):
+    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
         url = self.category_map_url.get(entity, None)
         if url is None:
             return
@@ -78,6 +81,10 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
 
                 if pd_valid(df):
                     await self.persist(df, db_session)
+
+            (index, desc) = self.share_para[1]
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     def format(self, resp, exchange):
         df = None

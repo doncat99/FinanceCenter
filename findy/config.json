@@ -12,7 +12,7 @@
   "db_pass": "123",
 
   "redis_pass": "",
-  "kafka": "localhost:9092",
+  "kafka": "127.0.0.1:9092",
 
   "jq_username": "",
   "jq_password": "",

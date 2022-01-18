@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import time
+import json
 import math
 from typing import List, Union
 import asyncio
 
 import pandas as pd
-from tqdm.auto import tqdm
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
@@ -18,6 +18,8 @@ from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
 from findy.database.quote import get_entities
 from findy.utils.request import get_async_http_session
+from findy.utils.kafka import connect_kafka_producer, publish_message
+from findy.utils.progress import progress_topic, progress_key
 from findy.utils.pd import pd_valid
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,
                               to_pd_timestamp, to_time_str,
@@ -159,7 +161,7 @@ class RecorderForEntities(Recorder):
 
         return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
-    async def process_loop(self, entity, http_session, db_session, throttler):
+    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
         eval_time = 0
         download_time = 0
         persist_time = 0
@@ -178,6 +180,10 @@ class RecorderForEntities(Recorder):
                 # add finished entity to finished_items
                 total_time += await self.on_finish_entity(entity, http_session, db_session, result)
                 break
+
+        (index, desc) = self.share_para[1]
+        data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
         eval_time = PRECISION_STR.format(eval_time)
         download_time = PRECISION_STR.format(download_time)
@@ -198,6 +204,7 @@ class RecorderForEntities(Recorder):
 
     async def run(self):
         db_session = get_db_session(self.region, self.provider, self.data_schema)
+        kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
         if not hasattr(self, 'entities'):
             self.entities: List = None
@@ -207,17 +214,13 @@ class RecorderForEntities(Recorder):
             http_session = get_async_http_session()
             throttler = asyncio.Semaphore(self.share_para[0])
 
-            # tasks = [asyncio.ensure_future(self.process_loop(entity, http_session, throttler)) for entity in self.entities]
-            tasks = [self.process_loop(entity, http_session, db_session, throttler) for entity in self.entities]
+            # tasks = [asyncio.ensure_future(self.process_loop(entity, http_session, db_session, throttler)) for entity in self.entities]
+            tasks = [self.process_loop(entity, http_session, db_session, kafka_producer, throttler) for entity in self.entities]
 
-            (index, desc) = self.share_para[1]
+            # for result in asyncio.as_completed(tasks):
+            #     await result
 
-            pbar = tqdm(total=len(tasks), ncols=90, position=index, desc=f"  {desc}", leave=True)
-            for result in asyncio.as_completed(tasks):
-                await result
-                pbar.update()
-
-            # [await _ for _ in tqdm.as_completed(tasks, ncols=90, position=index, desc=f"  {desc}", leave=True)]
+            [await _ for _ in asyncio.as_completed(tasks)]
 
             await self.on_finish()
 

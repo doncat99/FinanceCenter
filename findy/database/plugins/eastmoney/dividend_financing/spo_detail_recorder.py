@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
+import json
 from datetime import datetime
 
 import pandas as pd
 import numpy as np
-from tqdm.auto import tqdm
 from sqlalchemy import func
 
+from findy import findy_config
 from findy.interface import Region, Provider
 from findy.database.schema.fundamental.dividend_financing import SpoDetail, DividendFinancing
 from findy.database.plugins.eastmoney.common import EastmoneyPageabeDataRecorder
 from findy.database.context import get_db_session
 from findy.utils.time import now_pd_timestamp
 from findy.utils.convert import to_float
+from findy.utils.kafka import connect_kafka_producer, publish_message
+from findy.utils.progress import progress_topic, progress_key
 
 
 class SPODetailRecorder(EastmoneyPageabeDataRecorder):
@@ -64,21 +67,25 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
 
         if need_filleds:
             desc = self.data_schema.__name__ + ": update relevant table"
-            with tqdm(total=len(need_filleds), ncols=90, desc=desc, position=2, leave=True) as pbar:
-                db_session_1 = get_db_session(self.region, self.provider, self.data_schema)
-                for item in need_filleds:
-                    result, column_names = self.data_schema.query_data(
-                        region=self.region,
-                        provider=self.provider,
-                        db_session=db_session_1,
-                        entity_id=item.entity_id,
-                        start_timestamp=item.timestamp,
-                        end_timestamp=f"{item.timestamp.year}-12-31",
-                        func=func.sum(self.data_schema.spo_raising_fund))
 
-                    if isinstance(result, (int, float)):
-                        item.spo_raising_fund = result
-                    pbar.update()
+            db_session_1 = get_db_session(self.region, self.provider, self.data_schema)
+            kafka_producer = connect_kafka_producer(findy_config['kafka'])
+
+            for item in need_filleds:
+                result, column_names = self.data_schema.query_data(
+                    region=self.region,
+                    provider=self.provider,
+                    db_session=db_session_1,
+                    entity_id=item.entity_id,
+                    start_timestamp=item.timestamp,
+                    end_timestamp=f"{item.timestamp.year}-12-31",
+                    func=func.sum(self.data_schema.spo_raising_fund))
+
+                if isinstance(result, (int, float)):
+                    item.spo_raising_fund = result
+
+                data = {"task": 'spo', "total": len(need_filleds), "desc": desc, "leave": True}
+                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
             try:
                 db_session.commit()

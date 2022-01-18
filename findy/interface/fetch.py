@@ -5,13 +5,15 @@ import logging
 import os
 import platform
 import enum
+import json
 import asyncio
 import time
 from datetime import datetime
 
-from tqdm.auto import tqdm
-
+from findy import findy_config
 from findy.interface import Region, Provider, RunMode
+from findy.utils.kafka import connect_kafka_producer, publish_message
+from findy.utils.progress import ProgressBarProcess, progress_topic, progress_key
 from findy.utils.cache import valid, get_cache, dump_cache
 import findy.vendor.aiomultiprocess as amp
 
@@ -352,6 +354,9 @@ async def loop_data_set(args):
 
 
 async def fetch_data(region: Region):
+    pbar = ProgressBarProcess()
+    pbar.start()
+
     print("")
     print("*" * 80)
     print(f"*    Start Fetching {region.value.upper()} Stock information...      {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -382,6 +387,7 @@ async def fetch_data(region: Region):
 
     # calls_list = [(region, item) for item in data_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
 
+    kafka_producer = connect_kafka_producer(findy_config['kafka'])
     Multi = True
 
     if Multi:
@@ -406,14 +412,10 @@ async def fetch_data(region: Region):
                 else:
                     pool_tasks.append(pool.apply(loop_data_set, args=[call]))
 
-            # pbar = tqdm(total=len(pool_tasks), ncols=90, desc="Parallel Jobs", position=0, leave=False)
-            # for result in asyncio.as_completed(pool_tasks):
-            #     await result
-            #     # cache.update({f"{region.value}_{result}": datetime.now()})
-            #     # dump_cache('cache', cache)
-            #     pbar.update()
-
-            for result in tqdm.as_completed(pool_tasks, ncols=90, desc="Parallel Jobs", position=0, leave=False):
+            tasks_len = len(pool_tasks)
+            for result in asyncio.as_completed(pool_tasks):
+                data = {"task": "main", "total": tasks_len, "desc": "Parallel Jobs", "leave": False}
+                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
                 await result
                 # cache.update({f"{region.value}_{result}": datetime.now()})
                 # dump_cache('cache', cache)

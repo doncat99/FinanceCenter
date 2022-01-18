@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
-
+import json
 import demjson
 
 from findy import findy_config
@@ -8,6 +8,8 @@ from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.quote import get_entities
+from findy.utils.kafka import publish_message
+from findy.utils.progress import progress_topic, progress_key
 from findy.utils.time import PRECISION_STR, to_pd_timestamp
 from findy.utils.convert import to_float, pct_to_float
 
@@ -29,7 +31,7 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 codes=self.codes,
                 filters=[self.data_schema.profile.is_(None)])
 
-    async def process_loop(self, entity, http_session, db_session, throttler):
+    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
         assert isinstance(entity, self.data_schema)
 
         async with throttler:
@@ -104,6 +106,10 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 else:
                     self.logger.info("{}{:>14}, {:>18}, time: {}{}".format(
                         prefix, self.data_schema.__name__, entity.id, cost, postfix))
+
+            (index, desc) = self.share_para[1]
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0

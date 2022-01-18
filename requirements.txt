@@ -7,6 +7,9 @@ psycopg2>=2.8.6
 SQLAlchemy>=1.4.23
 sqlalchemy_batch_inserts>=0.0.4
 
+# streaming utils
+kafka_python
+
 # data utils
 pandas>=1.2.3
 numpy>=1.20.1
