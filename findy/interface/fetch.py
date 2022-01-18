@@ -324,8 +324,8 @@ data_set_us = [
 
     # [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
     # [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
     # [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
     # [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
     # [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
@@ -342,12 +342,12 @@ async def loop_data_set(args):
     await arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
     logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
 
-    return arg[Para.FunName.value].__name__
+    return arg
 
     # try:
     #     arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
     #     logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
-    #     return arg[Para.FunName.value].__name__
+    #     return arg[Para.FunName.value]
     # except Exception as e:
     #     logger.error(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}, errors: {e}\n")
     # return None
@@ -406,25 +406,39 @@ async def fetch_data(region: Region):
             for call in calls_list:
                 if call[1][Para.Mode.value] == RunMode.Serial:
                     result = await loop_data_set(call)
+                    data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
+                    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+
                     data['update'] = 1
                     publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
-                    # cache.update({f"{region.value}_{result}": datetime.now()})
+
+                    # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
                     # dump_cache('cache', cache)
                 else:
                     pool_tasks.append(pool.apply(loop_data_set, args=[call]))
 
-            for result in asyncio.as_completed(pool_tasks):
-                await result
+            for task in asyncio.as_completed(pool_tasks):
+                result = await task
+                data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
+                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+
                 data['update'] = 1
                 publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
-                # cache.update({f"{region.value}_{result}": datetime.now()})
+
+                # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
                 # dump_cache('cache', cache)
 
     else:
         for call in calls_list:
-            await loop_data_set(call)
+            result = await loop_data_set(call)
+            data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+
             data['update'] = 1
             publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+
+            # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+            # dump_cache('cache', cache)
 
 
 def fetching(region: Region):
@@ -437,7 +451,7 @@ def fetching(region: Region):
     asyncio.run(fetch_data(region))
 
     kafka_producer = connect_kafka_producer(findy_config['kafka'])
-    data = {"task": "@"}
+    data = {"command": "@end"}
     publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     pbar.join()

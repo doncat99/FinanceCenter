@@ -24,21 +24,35 @@ class ProgressBarProcess():
     def processFun(self, sleep):
         consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
         pbars = {}
+        pdata = {}
+        pfinish = {}
 
         while True:
             for msg in consumer:
                 data = json.loads(msg.value)
-                task = data['task']
 
-                if task == '@':
+                command = data.get('command', None)
+                if command == '@end':
                     return
+                if command == '@task-finish':
+                    task = data['task']
+                    pbar = pbars.get(task, None)
+                    if pbar is not None:
+                        pbar.n = pdata[task]['total']
+                        pbar.refresh()
+                    pfinish[task] = True
+                    continue
 
+                task = data['task']
                 pbar = pbars.get(task, None)
                 if pbar is None:
                     position = data.get('position', None)
                     pbars[task] = tqdm(total=data['total'], ncols=90, desc=data['desc'], position=position, leave=data['leave'])
+                    pdata[task] = data
                     pbar = pbars[task]
-                pbar.update(data['update'])
+
+                if pfinish.get(task, None) is None:
+                    pbar.update(data['update'])
 
             time.sleep(sleep)
 
