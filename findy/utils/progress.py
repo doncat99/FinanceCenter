@@ -47,7 +47,8 @@ class ProgressBarProcess():
                 pbar = pbars.get(task, None)
                 if pbar is None:
                     position = data.get('position', None)
-                    pbars[task] = tqdm(total=data['total'], ncols=90, desc=data['desc'], position=position, leave=data['leave'])
+                    desc = data['desc'] if task == 'main' else f"    {data['desc']}"
+                    pbars[task] = tqdm(total=data['total'], ncols=90, desc=desc, position=position, leave=data['leave'])
                     pdata[task] = data
                     pbar = pbars[task]
 
