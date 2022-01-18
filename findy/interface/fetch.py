@@ -319,18 +319,18 @@ data_set_chn = [
 data_set_us = [
     [interface.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
     [interface.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
-    [interface.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
-    [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
+    # [interface.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
+    # [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
 
-    [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    # [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    # [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 ]
 
 
@@ -354,9 +354,6 @@ async def loop_data_set(args):
 
 
 async def fetch_data(region: Region):
-    pbar = ProgressBarProcess()
-    pbar.start()
-
     print("")
     print("*" * 80)
     print(f"*    Start Fetching {region.value.upper()} Stock information...      {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -373,23 +370,25 @@ async def fetch_data(region: Region):
     print("parallel fetching processing...")
     print("")
 
+    kafka_producer = connect_kafka_producer(findy_config['kafka'])
+    data = {"task": "main", "total": len(data_set), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+
     cache = get_cache('cache')
     calls_list = []
-    index = 1
-    for item in data_set:
+
+    for index, item in enumerate(data_set):
         if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache):
             if item[Para.Mode.value] == RunMode.Serial:
-                item[Para.Desc.value] = (0, item[Para.Desc.value])
+                item[Para.Desc.value] = (index + 1, item[Para.Desc.value])
             else:
-                item[Para.Desc.value] = (index, item[Para.Desc.value])
-                index += 1
+                item[Para.Desc.value] = (index + 1, item[Para.Desc.value])
+
             calls_list.append((region, item))
 
     # calls_list = [(region, item) for item in data_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
 
-    kafka_producer = connect_kafka_producer(findy_config['kafka'])
     Multi = True
-
     if Multi:
         pool_tasks = []
         tasks = len(calls_list)
@@ -407,26 +406,37 @@ async def fetch_data(region: Region):
             for call in calls_list:
                 if call[1][Para.Mode.value] == RunMode.Serial:
                     result = await loop_data_set(call)
+                    data['update'] = 1
+                    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
                     # cache.update({f"{region.value}_{result}": datetime.now()})
                     # dump_cache('cache', cache)
                 else:
                     pool_tasks.append(pool.apply(loop_data_set, args=[call]))
 
-            tasks_len = len(pool_tasks)
             for result in asyncio.as_completed(pool_tasks):
-                data = {"task": "main", "total": tasks_len, "desc": "Parallel Jobs", "leave": False}
-                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
                 await result
+                data['update'] = 1
+                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
                 # cache.update({f"{region.value}_{result}": datetime.now()})
                 # dump_cache('cache', cache)
 
     else:
         for call in calls_list:
             await loop_data_set(call)
+            data['update'] = 1
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
 
 def fetching(region: Region):
+    pbar = ProgressBarProcess()
+    pbar.start()
+
+    print("waiting for kafka connection.....")
+    time.sleep(2)
+
     asyncio.run(fetch_data(region))
+
+    pbar.kill()
 
 
 if __name__ == '__main__':

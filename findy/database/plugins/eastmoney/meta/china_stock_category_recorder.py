@@ -72,7 +72,7 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
                 self.logger.info(f"finish record sina blocks:{entity.value}")
 
             (index, desc) = self.share_para[1]
-            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
             publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
 

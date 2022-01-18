@@ -75,7 +75,7 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                 for need_fill_item in need_fill_items:
                     need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
 
-            data = {"task": 'div', "total": len(self.entities), "desc": desc, "leave": True}
+            data = {"task": 'div', "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
             publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
         try:

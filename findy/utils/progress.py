@@ -15,32 +15,26 @@ progress_key = 'progress_key'
 class ProgressBarProcess():
     def __init__(self, sleep=0.2):
         # 创建子进程
-        self.process = multiprocessing.Process(target=self.processFun)
-        self.sleep = sleep
-        self.pbar = {}
+        self.process = multiprocessing.Process(target=self.processFun, args=(sleep,))
 
     def __del__(self):
         if self.process.is_alive():
             self.process.join()
 
-    def create_bar(self, key, bar_len, ncols=90, desc="Parallel Jobs", position=0, leave=False):
-        self.pbar[key] = tqdm(total=bar_len, ncols=ncols, desc=desc, leave=leave)
-        return self.pbar[key]
-
-    def get_bar(self, data):
-        data = json.loads(data.value)
-        pbar = self.pbar.get(data['task'], None)
-        if pbar is not None:
-            return pbar
-
-        return self.create_bar(data['task'], data['total'], desc=data['desc'], leave=data['leave'])
-
-    def processFun(self):
+    def processFun(self, sleep):
         consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
+        pbars = {}
+
         while True:
             for msg in consumer:
-                self.get_bar(msg).update()
-            time.sleep(self.sleep)
+                data = json.loads(msg.value)
+                pbar = pbars.get(data['task'], None)
+                if pbar is None:
+                    position = data.get('position', None)
+                    pbars[data['task']] = tqdm(total=data['total'], ncols=90, desc=data['desc'], position=position, leave=data['leave'])
+                    pbar = pbars[data['task']]
+                pbar.update(data['update'])
+            time.sleep(sleep)
 
     def start(self):
         self.process.start()

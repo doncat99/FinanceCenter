@@ -11,7 +11,7 @@ def connect_kafka_producer(server):
         # development
         producer_instance = KafkaProducer(
             bootstrap_servers=[server],  # findy_config['kafka']
-            api_version=(0, 10))
+            api_version=(2, 5, 0))
     except Exception as ex:
         print('Exception while connecting Kafka')
         print(ex)
@@ -19,14 +19,15 @@ def connect_kafka_producer(server):
 
 
 def connect_kafka_consumer(topic, server):
-    return KafkaConsumer(topic, bootstrap_servers=[server])
+    return KafkaConsumer(topic, bootstrap_servers=[server], api_version=(2, 5, 0))
 
 
 def publish_message(producer_instance, topic_name, key_bytes, value_bytes):
     try:
         producer_instance.send(topic_name, key=key_bytes, value=value_bytes)
         producer_instance.flush()
-        # print('Message published successfully.')
+        # print('Message published successfully.', value_bytes)
+        # print("")
     except Exception as ex:
         print('Exception in publishing message')
         print(ex)

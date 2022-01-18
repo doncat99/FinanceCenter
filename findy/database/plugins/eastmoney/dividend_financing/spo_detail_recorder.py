@@ -84,7 +84,7 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
                 if isinstance(result, (int, float)):
                     item.spo_raising_fund = result
 
-                data = {"task": 'spo', "total": len(need_filleds), "desc": desc, "leave": True}
+                data = {"task": 'spo', "total": len(need_filleds), "desc": desc, "leave": True, "update": 1}
                 publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
             try:

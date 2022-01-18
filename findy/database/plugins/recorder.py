@@ -182,7 +182,7 @@ class RecorderForEntities(Recorder):
                 break
 
         (index, desc) = self.share_para[1]
-        data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+        data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
         publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
         eval_time = PRECISION_STR.format(eval_time)
@@ -213,6 +213,10 @@ class RecorderForEntities(Recorder):
         if self.entities and len(self.entities) > 0:
             http_session = get_async_http_session()
             throttler = asyncio.Semaphore(self.share_para[0])
+
+            (index, desc) = self.share_para[1]
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True, "update": 0}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
             # tasks = [asyncio.ensure_future(self.process_loop(entity, http_session, db_session, throttler)) for entity in self.entities]
             tasks = [self.process_loop(entity, http_session, db_session, kafka_producer, throttler) for entity in self.entities]

@@ -83,7 +83,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
                     await self.persist(df, db_session)
 
             (index, desc) = self.share_para[1]
-            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True}
+            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
             publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     def format(self, resp, exchange):
