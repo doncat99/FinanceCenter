@@ -18,6 +18,7 @@ class Tasks(db.Model):
     created = db.Column(db.DateTime, default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
     market_id = db.Column(db.String(64), nullable=False)
+    speed = db.Column(db.String(64), default='0it/s')
     completion = db.Column(db.Integer, nullable=False)
 
     # repr method represents how one object of this datatable
