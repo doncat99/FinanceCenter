@@ -5,12 +5,14 @@ Copyright (c) 2019 - present AppSeed.us
 import os
 import time
 from pygtail import Pygtail
-from flask import render_template, current_app, Response
+from flask import render_template, current_app, Response, flash
 
 from findy import findy_env
-from findy import 
+from findy.interface import Region
+from findy.interface.fetch import Para, task_set_chn, task_set_us
+
 from dashboard import db
-from dashboard.datahouse import blueprint
+from dashboard.home import blueprint
 from dashboard.datahouse.models import Tasks
 
 LOG_FILE = os.path.join(findy_env['log_path'], 'findy.log')
@@ -32,13 +34,32 @@ def data_house(template, **kwargs):
 
     tasks = Tasks.query.all()
     if len(tasks) == 0:
-        create_tasks()
+        tasks = create_tasks()
 
-    return render_template(f'home/{template}', stock_cnt=stock_cnt, task_cnt={}, **kwargs)
+    return render_template(f'home/{template}', stock_cnt=stock_cnt, task_cnt=tasks, **kwargs)
 
 
 def create_tasks():
-    task = Tasks(taskname="", market_id="", completion="0")
+    tasks = []
+
+    try:
+        for task in task_set_chn:
+            task = Tasks(taskname=task[Para.Desc.value], market_id=Region.CHN.value, completion="0")
+            db.session.add(task)
+            tasks.append(task)
+
+        for task in task_set_us:
+            task = Tasks(taskname=task[Para.Desc.value], market_id=Region.US.value, completion="0")
+            db.session.add(task)
+            tasks.append(task)
+
+        db.session.commit()
+
+    except Exception as e:
+        print(e)
+        flash("Could Not Add Task!", category="error")
+
+    return tasks
 
 
 @blueprint.route('/log')

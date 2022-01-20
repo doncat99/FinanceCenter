@@ -20,7 +20,7 @@ import findy.vendor.aiomultiprocess as amp
 logger = logging.getLogger(__name__)
 
 
-class interface():
+class task():
     @staticmethod
     async def get_stock_list_data(region: Region, provider: Provider, sleep, process, desc):
         # 股票列表
@@ -259,6 +259,72 @@ class interface():
         await Index1dKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
 
 
+task_set_chn = [
+    [task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24 * 6, RunMode.Serial],
+    [task.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
+    # [task.get_etf_list_data,                Provider.Exchange,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
+    [task.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
+    [task.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
+
+    # [task.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
+    # [task.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
+    # [task.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
+    # [task.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
+    # [task.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
+    # [task.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
+    # [task.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
+
+    # # below functions call join-quant sdk task which limit at most 3 concurrent request
+    # [task.get_finance_factor_data,          Provider.EastMoney, 0, 10, "Finance Factor",           24 * 6,  RunMode.Parallel],
+    # [task.get_balance_sheet_data,           Provider.EastMoney, 0, 10, "Balance Sheet",            24 * 6,  RunMode.Parallel],
+    # [task.get_income_statement_data,        Provider.EastMoney, 0, 10, "Income Statement",         24 * 6,  RunMode.Parallel],
+    # [task.get_cashflow_statement_data,      Provider.EastMoney, 0, 10, "CashFlow Statement",       24,      RunMode.Parallel],
+    # [task.get_stock_valuation_data,         Provider.JoinQuant, 0, 10, "Stock Valuation",          24,      RunMode.Parallel],
+    # [task.get_cross_market_summary_data,    Provider.JoinQuant, 0, 10, "Cross Market Summary",     24,      RunMode.Parallel],
+    # [task.get_stock_summary_data,           Provider.Exchange,  0, 10, "Stock Summary",            24,      RunMode.Parallel],
+    # [task.get_margin_trading_summary_data,  Provider.JoinQuant, 0, 10, "Margin Trading Summary",   24,      RunMode.Parallel],
+    # [task.get_etf_valuation_data,           Provider.JoinQuant, 0, 10, "ETF Valuation",            24,      RunMode.Parallel],
+    # [task.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
+
+    # [task.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
+    [task.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    # [task.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+
+    # [task.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_1w_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Weekly  HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_1mon_hfq_k_data,        Provider.BaoStock,  0, 10, "Stock Monthly HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_1h_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 hours HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_30m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 30 mins HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_15m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 15 mins HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_5m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 5 mins  HFQ K-Data", 24,      RunMode.Parallel],
+    # [task.get_stock_1m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 mins HFQ K-Data",  24,      RunMode.Parallel],
+]
+
+
+task_set_us = [
+    [task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
+    [task.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
+    # [task.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
+    # [task.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
+
+    [task.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    [task.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+]
+
+
 class Para(enum.Enum):
     FunName = 0
     Provider = 1
@@ -269,72 +335,7 @@ class Para(enum.Enum):
     Mode = 6
 
 
-data_set_chn = [
-    [interface.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24 * 6, RunMode.Serial],
-    [interface.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
-    # [interface.get_etf_list_data,                Provider.Exchange,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
-    [interface.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
-    [interface.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
-
-    # [interface.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
-    # [interface.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
-    # [interface.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
-    # [interface.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
-    # [interface.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
-    # [interface.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
-    # [interface.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
-
-    # # below functions call join-quant sdk interface which limit at most 3 concurrent request
-    # [interface.get_finance_factor_data,          Provider.EastMoney, 0, 10, "Finance Factor",           24 * 6,  RunMode.Parallel],
-    # [interface.get_balance_sheet_data,           Provider.EastMoney, 0, 10, "Balance Sheet",            24 * 6,  RunMode.Parallel],
-    # [interface.get_income_statement_data,        Provider.EastMoney, 0, 10, "Income Statement",         24 * 6,  RunMode.Parallel],
-    # [interface.get_cashflow_statement_data,      Provider.EastMoney, 0, 10, "CashFlow Statement",       24,      RunMode.Parallel],
-    # [interface.get_stock_valuation_data,         Provider.JoinQuant, 0, 10, "Stock Valuation",          24,      RunMode.Parallel],
-    # [interface.get_cross_market_summary_data,    Provider.JoinQuant, 0, 10, "Cross Market Summary",     24,      RunMode.Parallel],
-    # [interface.get_stock_summary_data,           Provider.Exchange,  0, 10, "Stock Summary",            24,      RunMode.Parallel],
-    # [interface.get_margin_trading_summary_data,  Provider.JoinQuant, 0, 10, "Margin Trading Summary",   24,      RunMode.Parallel],
-    # [interface.get_etf_valuation_data,           Provider.JoinQuant, 0, 10, "ETF Valuation",            24,      RunMode.Parallel],
-    # [interface.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
-
-    # [interface.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
-    [interface.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    # [interface.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
-
-    # [interface.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_1w_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Weekly  HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_1mon_hfq_k_data,        Provider.BaoStock,  0, 10, "Stock Monthly HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_1h_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 hours HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_30m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 30 mins HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_15m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 15 mins HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_5m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 5 mins  HFQ K-Data", 24,      RunMode.Parallel],
-    # [interface.get_stock_1m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 mins HFQ K-Data",  24,      RunMode.Parallel],
-]
-
-data_set_us = [
-    [interface.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
-    [interface.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
-    # [interface.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
-    # [interface.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
-
-    [interface.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    [interface.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
-]
-
-
-async def loop_data_set(args):
+async def loop_task_set(args):
     now = time.time()
     region, arg = args
     logger.info(f"Start Func: {arg[Para.FunName.value].__name__}")
@@ -347,10 +348,9 @@ async def loop_data_set(args):
     # try:
     #     arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
     #     logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
-    #     return arg[Para.FunName.value]
     # except Exception as e:
     #     logger.error(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}, errors: {e}\n")
-    # return None
+    # return arg
 
 
 async def fetch_data(region: Region):
@@ -360,24 +360,28 @@ async def fetch_data(region: Region):
     print("*" * 80)
 
     if region == Region.CHN:
-        data_set = data_set_chn
+        task_set = task_set_chn
     elif region == Region.US:
-        data_set = data_set_us
+        task_set = task_set_us
     else:
-        data_set = []
+        task_set = []
 
     print("")
     print("parallel fetching processing...")
     print("")
 
     kafka_producer = connect_kafka_producer(findy_config['kafka'])
-    data = {"task": "main", "total": len(data_set), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
-    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+
+    data = {"task": "main", "total": len(task_set), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    publish_message(kafka_producer,
+                    progress_topic,
+                    bytes(progress_key, encoding='utf-8'),
+                    bytes(json.dumps(data), encoding='utf-8'))
 
     cache = get_cache('cache')
     calls_list = []
 
-    for index, item in enumerate(data_set):
+    for index, item in enumerate(task_set):
         if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache):
             if item[Para.Mode.value] == RunMode.Serial:
                 item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
@@ -386,7 +390,7 @@ async def fetch_data(region: Region):
 
             calls_list.append((region, item))
 
-    # calls_list = [(region, item) for item in data_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
+    # calls_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
 
     Multi = True
     if Multi:
@@ -405,37 +409,55 @@ async def fetch_data(region: Region):
         async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
             for call in calls_list:
                 if call[1][Para.Mode.value] == RunMode.Serial:
-                    result = await loop_data_set(call)
-                    data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
-                    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+                    result = await loop_task_set(call)
+
+                    publish_message(kafka_producer,
+                                    progress_topic,
+                                    bytes(progress_key, encoding='utf-8'),
+                                    bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
                     data['update'] = 1
-                    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+                    publish_message(kafka_producer,
+                                    progress_topic,
+                                    bytes(progress_key, encoding='utf-8'),
+                                    bytes(json.dumps(data), encoding='utf-8'))
 
                     # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
                     # dump_cache('cache', cache)
                 else:
-                    pool_tasks.append(pool.apply(loop_data_set, args=[call]))
+                    pool_tasks.append(pool.apply(loop_task_set, args=[call]))
 
             for task in asyncio.as_completed(pool_tasks):
                 result = await task
-                data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
-                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+
+                publish_message(kafka_producer,
+                                progress_topic,
+                                bytes(progress_key, encoding='utf-8'),
+                                bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
                 data['update'] = 1
-                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+                publish_message(kafka_producer,
+                                progress_topic,
+                                bytes(progress_key, encoding='utf-8'),
+                                bytes(json.dumps(data), encoding='utf-8'))
 
                 # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
                 # dump_cache('cache', cache)
 
     else:
         for call in calls_list:
-            result = await loop_data_set(call)
-            data_1 = {"command": "@task-finish", "task": result[Para.Desc.value][0]}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data_1), encoding='utf-8'))
+            result = await loop_task_set(call)
+
+            publish_message(kafka_producer,
+                            progress_topic,
+                            bytes(progress_key, encoding='utf-8'),
+                            bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
             data['update'] = 1
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            publish_message(kafka_producer,
+                            progress_topic,
+                            bytes(progress_key, encoding='utf-8'),
+                            bytes(json.dumps(data), encoding='utf-8'))
 
             # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
             # dump_cache('cache', cache)
