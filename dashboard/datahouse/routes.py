@@ -3,6 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 import os
+import random
 import time
 from pygtail import Pygtail
 from flask import render_template, current_app, Response, flash
@@ -42,14 +43,17 @@ def data_house(template, **kwargs):
 def create_tasks():
     tasks = []
 
+    mypath = os.path.join(os.getcwd(), 'dashboard', 'static', 'assets', 'img', 'small-logos')
+    onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+
     try:
         for task in task_set_chn:
-            task = Tasks(taskname=task[Para.Desc.value], market_id=Region.CHN.value, completion="0")
+            task = Tasks(taskicon=random.choice(onlyfiles), taskname=task[Para.Desc.value], market_id=Region.CHN.value, completion="0")
             db.session.add(task)
             tasks.append(task)
 
         for task in task_set_us:
-            task = Tasks(taskname=task[Para.Desc.value], market_id=Region.US.value, completion="0")
+            task = Tasks(taskicon=random.choice(onlyfiles), taskname=task[Para.Desc.value], market_id=Region.US.value, completion="0")
             db.session.add(task)
             tasks.append(task)
 

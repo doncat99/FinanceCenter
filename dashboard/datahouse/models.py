@@ -14,11 +14,12 @@ class Tasks(db.Model):
     __bind_key__ = 'flask'
 
     id = db.Column(db.Integer, primary_key=True)
+    taskicon = db.Column(db.String(64), nullable=False)
     taskname = db.Column(db.String(64), nullable=False)
     created = db.Column(db.DateTime, default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
     market_id = db.Column(db.String(64), nullable=False)
-    speed = db.Column(db.String(64), default='0it/s')
+    speed = db.Column(db.String(64), default='?it/s')
     completion = db.Column(db.Integer, nullable=False)
 
     # repr method represents how one object of this datatable
