@@ -107,8 +107,8 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                     self.logger.info("{}{:>14}, {:>18}, time: {}{}".format(
                         prefix, self.data_schema.__name__, entity.id, cost, postfix))
 
-            (index, desc) = self.share_para[1]
-            data = {"task": index, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
+            (taskid, desc) = self.share_para[1]
+            data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
             publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 
     async def on_finish_entity(self, entity, http_session, db_session, result):

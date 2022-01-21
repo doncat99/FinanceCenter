@@ -260,79 +260,80 @@ class task():
 
 
 task_set_chn = [
-    [task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24 * 6, RunMode.Serial],
-    [task.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
-    # [task.get_etf_list_data,                Provider.Exchange,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
-    [task.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
-    [task.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
+    ["task_chn_01", task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24 * 6, RunMode.Serial],
+    ["task_chn_02", task.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
+    # ["task_chn_03", task.get_etf_list_data,                Provider.Exchange,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
+    ["task_chn_04", task.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
+    ["task_chn_05", task.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
 
-    # [task.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
-    # [task.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
-    # [task.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
-    # [task.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
-    # [task.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
-    # [task.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
-    # [task.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
+    # ["task_chn_06", task.get_dividend_financing_data,      Provider.EastMoney, 0, 10, "Divdend Financing",        24 * 6,  RunMode.Parallel],
+    # ["task_chn_07", task.get_top_ten_holder_data,          Provider.EastMoney, 0, 10, "Top Ten Holder",           24 * 6,  RunMode.Parallel],
+    # ["task_chn_08", task.get_top_ten_tradable_holder_data, Provider.EastMoney, 0, 10, "Top Ten Tradable Holder",  24 * 6,  RunMode.Parallel],
+    # ["task_chn_09", task.get_dividend_detail_data,         Provider.EastMoney, 0, 10, "Divdend Detail",           24 * 6,  RunMode.Parallel],
+    # ["task_chn_10", task.get_spo_detail_data,              Provider.EastMoney, 0, 10, "SPO Detail",               24 * 6,  RunMode.Parallel],
+    # ["task_chn_11", task.get_rights_issue_detail_data,     Provider.EastMoney, 0, 10, "Rights Issue Detail",      24,      RunMode.Parallel],
+    # ["task_chn_12", task.get_holder_trading_data,          Provider.EastMoney, 0, 10, "Holder Trading",           24 * 6,  RunMode.Parallel],
 
     # # below functions call join-quant sdk task which limit at most 3 concurrent request
-    # [task.get_finance_factor_data,          Provider.EastMoney, 0, 10, "Finance Factor",           24 * 6,  RunMode.Parallel],
-    # [task.get_balance_sheet_data,           Provider.EastMoney, 0, 10, "Balance Sheet",            24 * 6,  RunMode.Parallel],
-    # [task.get_income_statement_data,        Provider.EastMoney, 0, 10, "Income Statement",         24 * 6,  RunMode.Parallel],
-    # [task.get_cashflow_statement_data,      Provider.EastMoney, 0, 10, "CashFlow Statement",       24,      RunMode.Parallel],
-    # [task.get_stock_valuation_data,         Provider.JoinQuant, 0, 10, "Stock Valuation",          24,      RunMode.Parallel],
-    # [task.get_cross_market_summary_data,    Provider.JoinQuant, 0, 10, "Cross Market Summary",     24,      RunMode.Parallel],
-    # [task.get_stock_summary_data,           Provider.Exchange,  0, 10, "Stock Summary",            24,      RunMode.Parallel],
-    # [task.get_margin_trading_summary_data,  Provider.JoinQuant, 0, 10, "Margin Trading Summary",   24,      RunMode.Parallel],
-    # [task.get_etf_valuation_data,           Provider.JoinQuant, 0, 10, "ETF Valuation",            24,      RunMode.Parallel],
-    # [task.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
+    # ["task_chn_13", task.get_finance_factor_data,          Provider.EastMoney, 0, 10, "Finance Factor",           24 * 6,  RunMode.Parallel],
+    # ["task_chn_14", task.get_balance_sheet_data,           Provider.EastMoney, 0, 10, "Balance Sheet",            24 * 6,  RunMode.Parallel],
+    # ["task_chn_15", task.get_income_statement_data,        Provider.EastMoney, 0, 10, "Income Statement",         24 * 6,  RunMode.Parallel],
+    # ["task_chn_16", task.get_cashflow_statement_data,      Provider.EastMoney, 0, 10, "CashFlow Statement",       24,      RunMode.Parallel],
+    # ["task_chn_17", task.get_stock_valuation_data,         Provider.JoinQuant, 0, 10, "Stock Valuation",          24,      RunMode.Parallel],
+    # ["task_chn_18", task.get_cross_market_summary_data,    Provider.JoinQuant, 0, 10, "Cross Market Summary",     24,      RunMode.Parallel],
+    # ["task_chn_19", task.get_stock_summary_data,           Provider.Exchange,  0, 10, "Stock Summary",            24,      RunMode.Parallel],
+    # ["task_chn_20", task.get_margin_trading_summary_data,  Provider.JoinQuant, 0, 10, "Margin Trading Summary",   24,      RunMode.Parallel],
+    # ["task_chn_21", task.get_etf_valuation_data,           Provider.JoinQuant, 0, 10, "ETF Valuation",            24,      RunMode.Parallel],
+    # ["task_chn_22", task.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
 
-    # [task.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
-    [task.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    # [task.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    # ["task_chn_23", task.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
+    ["task_chn_24", task.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_chn_25", task.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    ["task_chn_26", task.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    ["task_chn_27", task.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    ["task_chn_28", task.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    ["task_chn_29", task.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    ["task_chn_30", task.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    # ["task_chn_31", task.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 
-    # [task.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_1w_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Weekly  HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_1mon_hfq_k_data,        Provider.BaoStock,  0, 10, "Stock Monthly HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_1h_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 hours HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_30m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 30 mins HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_15m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 15 mins HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_5m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 5 mins  HFQ K-Data", 24,      RunMode.Parallel],
-    # [task.get_stock_1m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 mins HFQ K-Data",  24,      RunMode.Parallel],
+    # ["task_chn_32", task.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_33", task.get_stock_1w_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Weekly  HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_34", task.get_stock_1mon_hfq_k_data,        Provider.BaoStock,  0, 10, "Stock Monthly HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_35", task.get_stock_1h_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 hours HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_36", task.get_stock_30m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 30 mins HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_37", task.get_stock_15m_hfq_k_data,         Provider.BaoStock,  0, 10, "Stock 15 mins HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_38", task.get_stock_5m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 5 mins  HFQ K-Data", 24,      RunMode.Parallel],
+    # ["task_chn_39", task.get_stock_1m_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock 1 mins HFQ K-Data",  24,      RunMode.Parallel],
 ]
 
 
 task_set_us = [
-    [task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
-    [task.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
-    # [task.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
-    # [task.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
+    ["task_us_01", task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
+    ["task_us_02", task.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
+    ["task_us_03", task.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
+    ["task_us_04", task.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
 
-    [task.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    [task.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    ["task_us_05", task.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_us_06", task.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_us_07", task.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    ["task_us_08", task.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    ["task_us_09", task.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    ["task_us_10", task.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    ["task_us_11", task.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    ["task_us_12", task.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    ["task_us_13", task.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 ]
 
 
 class Para(enum.Enum):
-    FunName = 0
-    Provider = 1
-    Sleep = 2
-    Processor = 3
-    Desc = 4
-    Cache = 5
-    Mode = 6
+    TaskID = 0
+    FunName = 1
+    Provider = 2
+    Sleep = 3
+    Processor = 4
+    Desc = 5
+    Cache = 6
+    Mode = 7
 
 
 async def loop_task_set(args):

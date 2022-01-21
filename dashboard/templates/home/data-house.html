@@ -142,13 +142,13 @@
                           <tr>
                             <th class="text-secondary text-xxs font-weight-bolder opacity-7">Jobs</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Update Time</th>
-                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Speed</th>
+                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Progress</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Completion</th>
                           </tr>
                         </thead>
                         <tbody class="height-200" style="overflow: auto">
                           {% for task in task_cnt %}
-                            {% if task.market_id == "chn" %}
+                            {% if task.marketid == "chn" %}
                               <tr>
                                 <td>
                                   <div class="d-flex px-2 py-1">
@@ -164,17 +164,17 @@
                                   <span class="text-xs font-weight-bold"> {{task.created}} </span>
                                 </td>
                                 <td class="align-middle text-center text-sm">
-                                  <span class="text-xs font-weight-bold"> {{task.speed}} </span>
+                                  <span class="text-xs font-weight-bold"> {{task.progress}} </span>
                                 </td>
                                 <td class="align-middle">
-                                  <div class="progress-wrapper align-middle w-75 mx-auto">
+                                  <div class="progress-wrapper w-50 mx-auto">
                                     <div class="progress-info">
                                       <div class="progress-percentage">
-                                        <span class="text-xs font-weight-bold">{{task.completion}}%</span>
+                                        <span class="text-xs font-weight-bold" id="{{task.taskid}}_label">{{task.completion}}%</span>
                                       </div>
                                     </div>
                                     <div class="progress">
-                                      <div class="progress-bar bg-gradient-info w-{{task.completion}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                      <div class="progress-bar bg-gradient-info" id="{{task.taskid}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                   </div>
                                 </td>
@@ -194,13 +194,13 @@
                           <tr>
                             <th class="text-secondary text-xxs font-weight-bolder opacity-7">Jobs</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Update Time</th>
-                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Speed</th>
+                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Progress</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Completion</th>
                           </tr>
                         </thead>
                         <tbody class="height-200" style="overflow: auto">
                           {% for task in task_cnt %}
-                            {% if task.market_id == "us" %}
+                            {% if task.marketid == "us" %}
                               <tr>
                                 <td>
                                   <div class="d-flex px-2 py-1">
@@ -216,17 +216,17 @@
                                   <span class="text-xs font-weight-bold"> {{task.created}} </span>
                                 </td>
                                 <td class="align-middle text-center text-sm">
-                                  <span class="text-xs font-weight-bold"> {{task.speed}} </span>
+                                  <span class="text-xs font-weight-bold" id="{{task.taskid}}_progress"> {{task.progress}} </span>
                                 </td>
                                 <td class="align-middle">
-                                  <div class="progress-wrapper w-75 mx-auto">
+                                  <div class="progress-wrapper w-50 mx-auto">
                                     <div class="progress-info">
                                       <div class="progress-percentage">
-                                        <span class="text-xs font-weight-bold">{{task.completion}}%</span>
+                                        <span class="text-xs font-weight-bold" id="{{task.taskid}}_label">{{task.completion}}%</span>
                                       </div>
                                     </div>
                                     <div class="progress">
-                                      <div class="progress-bar bg-gradient-info w-{{task.completion}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                      <div class="progress-bar bg-gradient-info" id="{{task.taskid}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                   </div>
                                 </td>
@@ -246,13 +246,13 @@
                           <tr>
                             <th class="text-secondary text-xxs font-weight-bolder opacity-7">Jobs</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Update Time</th>
-                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Speed</th>
+                            <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Progress</th>
                             <th class="text-center text-secondary text-xxs font-weight-bolder opacity-7">Completion</th>
                           </tr>
                         </thead>
                         <tbody class="height-200" style="overflow: auto">
                           {% for task in task_cnt %}
-                            {% if task.market_id == "hk" %}
+                            {% if task.marketid == "hk" %}
                               <tr>
                                 <td>
                                   <div class="d-flex px-2 py-1">
@@ -268,17 +268,17 @@
                                   <span class="text-xs font-weight-bold"> {{task.created}} </span>
                                 </td>
                                 <td class="align-middle text-center text-sm">
-                                  <span class="text-xs font-weight-bold"> {{task.speed}} </span>
+                                  <span class="text-xs font-weight-bold"> {{task.progress}} </span>
                                 </td>
                                 <td class="align-middle">
-                                  <div class="progress-wrapper w-75 mx-auto">
+                                  <div class="progress-wrapper w-50 mx-auto">
                                     <div class="progress-info">
                                       <div class="progress-percentage">
-                                        <span class="text-xs font-weight-bold">{{task.completion}}%</span>
+                                        <span class="text-xs font-weight-bold" id="{{task.taskid}}_label">{{task.completion}}%</span>
                                       </div>
                                     </div>
                                     <div class="progress">
-                                      <div class="progress-bar bg-gradient-info w-{{task.completion}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
+                                      <div class="progress-bar bg-gradient-info" id="{{task.taskid}}" role="progressbar" aria-valuenow="{{task.completion}}" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                   </div>
                                 </td>
@@ -318,22 +318,15 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
   <script src="/static/assets/js/plugins/jquery.min.js"></script>
-  <script type="text/javascript">
-    $("#market_id li").on("click", function(){
-      var selected_market = $(this).attr("value");
-        
-    });
-  </script>
   <script type="text/javascript">
     var source = new EventSource("/log");
 
     source.onmessage = function(event) {
       $('#display_list').prepend(
         '<li><h6 class="mb-1 text-dark font-weight-bold text-sm">' + event.data + '</h6></li>');
-      // $('#progress').text(event.data+'%');
-      // $('#progress').value(event.data);
     };
     // source.onopen = function(){
     //   alert('connection is opened.'+source.readyState);  
@@ -343,6 +336,33 @@
     // };
   </script>
 
+  <script>
+    console.log("Opening the SSE connection")
+    var source = new EventSource("/progress");
+    source.onmessage = function(event) {
+        pbars = JSON.parse(event.data)
+        console.log(pbars)
+        var done = true
+
+        Object.keys(pbars).forEach(function(taskid) {
+          console.log('Key : ' + key + ', Value : ' + pbars[key])
+
+            // data received is in the form : {'0':value, '1':value}
+
+            $(taskid).css('width', pbar.completion+'%').attr('aria-valuenow', pbar.completion);
+            $(key+"_progress").text(pbar.progress+'%');
+            $(key+"_label").text(pbar.completion+'%');
+            if (pbar.completion < 99)
+                done = false
+        })
+        
+        if(done){
+            console.log("Closing the SSE connection")
+            source.close()
+        }
+        
+    }
+  </script>
   <script src="/static/assets/js/plugins/chartjs.min.js"></script>
 
 

@@ -3,14 +3,17 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 import os
+import json
 import random
 import time
 from pygtail import Pygtail
 from flask import render_template, current_app, Response, flash
 
-from findy import findy_env
+from findy import findy_env, findy_config
 from findy.interface import Region
 from findy.interface.fetch import Para, task_set_chn, task_set_us
+from findy.utils.kafka import connect_kafka_consumer
+from findy.utils.progress import progress_topic
 
 from dashboard import db
 from dashboard.home import blueprint
@@ -47,13 +50,21 @@ def create_tasks():
     onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 
     try:
-        for task in task_set_chn:
-            task = Tasks(taskicon=random.choice(onlyfiles), taskname=task[Para.Desc.value], market_id=Region.CHN.value, completion="0")
+        for item in task_set_chn:
+            task = Tasks(taskid=item[Para.TaskID.value],
+                         taskicon=random.choice(onlyfiles),
+                         taskname=item[Para.Desc.value],
+                         marketid=Region.CHN.value,
+                         completion="0")
             db.session.add(task)
             tasks.append(task)
 
-        for task in task_set_us:
-            task = Tasks(taskicon=random.choice(onlyfiles), taskname=task[Para.Desc.value], market_id=Region.US.value, completion="0")
+        for item in task_set_us:
+            task = Tasks(taskid=item[Para.TaskID.value],
+                         taskicon=random.choice(onlyfiles),
+                         taskname=item[Para.Desc.value],
+                         marketid=Region.US.value,
+                         completion="0")
             db.session.add(task)
             tasks.append(task)
 
@@ -75,4 +86,55 @@ def progress_log():
                 yield "data:" + str(line) + "\n\n"
                 time.sleep(0.1)
             time.sleep(1)
+    return Response(generate(), mimetype='text/event-stream')
+
+
+@blueprint.route('/progress')
+def progress():
+    pbars = {}
+    pdata = {}
+    pfinish = {}
+    ptasks = {}
+    sleep = 0.2
+    tasks = Tasks.query.all()
+    for task in tasks:
+        ptasks[task.taskid] = task
+
+    def generate():
+        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
+        while True:
+            for msg in consumer:
+                data = json.loads(msg.value)
+
+                command = data.get('command', None)
+                if command == '@end':
+                    return
+                if command == '@task-finish':
+                    task = data['task']
+                    pbar = pbars.get(task, None)
+                    if pbar is not None:
+                        pbar['update'] = pdata[task]['total']
+                    pfinish[task] = True
+                else:
+                    task = data['task']
+                    pbar = pbars.get(task, None)
+                    if pbar is None:
+                        pbars[task] = {'update': data['update'], 'total': data['total'], 'completion': 0}
+                        pdata[task] = data
+                        pbar = pbars[task]
+
+                    if pfinish.get(task, None) is None:
+                        pbar['update'] += data['update']
+                    pbar['progress'] = f"{pbar['update']}/{pbar['total']}"
+                    pbar['completion'] = int(pbar['update'] / pbar['total'] * 100)
+
+                    ptasks[task]['progress'] = pbar['progress']
+                    ptasks[task]['completion'] = pbar['completion']
+
+                db.session.commit()
+                ret_string = "data:" + json.dumps(pbars) + "\n\n"
+                print(ret_string)
+                yield ret_string
+            time.sleep(sleep)
+
     return Response(generate(), mimetype='text/event-stream')
