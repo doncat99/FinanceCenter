@@ -4,8 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from findy.database.schema import EtfKdataCommon
 
-KdataBase = declarative_base()
+EtfKdataBase = declarative_base()
 
 
-class Etf1dKdata(KdataBase, EtfKdataCommon):
+class Etf1dKdata(EtfKdataBase, EtfKdataCommon):
     __tablename__ = 'etf_1d_kdata'

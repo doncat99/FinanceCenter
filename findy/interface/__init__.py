@@ -13,6 +13,7 @@ class Provider(enum.Enum):
     JoinQuant = 'joinquant'
     BaoStock = 'baostock'
     TuShare = 'tushare'
+    AkShare = 'akshare'
     EastMoney = 'eastmoney'
     Sina = 'sina'
     Yahoo = 'yahoo'
@@ -21,10 +22,10 @@ class Provider(enum.Enum):
 
 
 class EntityType(enum.Enum):
+    Index = 'index'
     Stock = 'stock'
     Block = 'block'
     Coin = 'coin'
-    Index = 'index'
     ETF = 'etf'
     StockDetail = 'stock_detail'
 
