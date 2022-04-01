@@ -122,8 +122,8 @@ def create_db(db_name):
     connection = psycopg2.connect(database='postgres',
                                   user=findy_config['db_user'],
                                   password=findy_config['db_pass'],
-                                  host=findy_config['db_host'],
-                                  port=findy_config['db_port'])
+                                  host=findy_config[f'db_host_{findy_config["location"]}'],
+                                  port=findy_config[f'db_port_{findy_config["location"]}'])
     if connection is not None:
         connection.autocommit = True
         try:
@@ -151,8 +151,11 @@ def build_engine(region: Region) -> Engine:
     create_db(db_name)
 
     link = 'postgresql+psycopg2://{}:{}@{}:{}/{}'.format(
-        findy_config['db_user'], findy_config['db_pass'],
-        findy_config['db_host'], findy_config['db_port'], db_name)
+        findy_config['db_user'],
+        findy_config['db_pass'],
+        findy_config[f'db_host_{findy_config["location"]}'],
+        findy_config[f'db_port_{findy_config["location"]}'],
+        db_name)
     engine = create_engine(link,
                            encoding='utf-8',
                            echo=False,

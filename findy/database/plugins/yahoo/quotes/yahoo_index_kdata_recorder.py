@@ -12,7 +12,7 @@ from findy.database.plugins.recorder import KDataRecorder
 from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
-from findy.vendor.yfinance import YH
+from findy.vendor.yf import YH
 
 
 class YahooUsIndexKdataRecorder(KDataRecorder):

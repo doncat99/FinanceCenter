@@ -5,7 +5,7 @@ from findy.interface import Region, Provider, EntityType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.plugins.recorder import RecorderForEntities
 from findy.database.quote import get_entities
-from findy.vendor.yfinance import Ticker
+from findy.vendor.yf import Ticker
 
 
 class YahooUsStockDetailRecorder(RecorderForEntities):

@@ -51,7 +51,7 @@ def to_bao_entity_type(entity_type: EntityType):
         return "1"
     if entity_type == EntityType.Index:
         return "2"
-    if entity_type == EntityType.ETF:
+    if entity_type == EntityType.Fund:
         return "3"
 
 

@@ -23,24 +23,24 @@ class Config(object):
         config('DB_ENGINE', default='postgresql'),
         config('DB_USERNAME', default=findy_config['db_user']),
         config('DB_PASS', default=findy_config['db_pass']),
-        config('DB_HOST', default=findy_config['db_host']),
-        config('DB_PORT', default=findy_config['db_port']),
+        config('DB_HOST', default=findy_config[f'db_host_{findy_config["location"]}']),
+        config('DB_PORT', default=findy_config[f'db_port_{findy_config["location"]}']),
         config('DB_NAME', default='postgres')
     )
     SQLALCHEMY_CHN_DATA_URI = '{}://{}:{}@{}:{}/{}'.format(
         config('DB_ENGINE', default='postgresql'),
         config('DB_USERNAME', default=findy_config['db_user']),
         config('DB_PASS', default=findy_config['db_pass']),
-        config('DB_HOST', default=findy_config['db_host']),
-        config('DB_PORT', default=findy_config['db_port']),
+        config('DB_HOST', default=findy_config[f'db_host_{findy_config["location"]}']),
+        config('DB_PORT', default=findy_config[f'db_port_{findy_config["location"]}']),
         config('DB_NAME', default='findy_chn')
     )
     SQLALCHEMY_US_DATA_URI = '{}://{}:{}@{}:{}/{}'.format(
         config('DB_ENGINE', default='postgresql'),
         config('DB_USERNAME', default=findy_config['db_user']),
         config('DB_PASS', default=findy_config['db_pass']),
-        config('DB_HOST', default=findy_config['db_host']),
-        config('DB_PORT', default=findy_config['db_port']),
+        config('DB_HOST', default=findy_config[f'db_host_{findy_config["location"]}']),
+        config('DB_PORT', default=findy_config[f'db_port_{findy_config["location"]}']),
         config('DB_NAME', default='findy_us')
     )
     SQLALCHEMY_BINDS = {

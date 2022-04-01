@@ -4,7 +4,8 @@ import time
 
 from sqlalchemy import func
 import pandas as pd
-import pandas_market_calendars as mcal
+import exchange_calendars as tc
+import pytz
 
 from findy.interface import Region, Provider, UsExchange
 from findy.interface.writer import df_to_db
@@ -32,8 +33,6 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        calendar = mcal.get_calendar(entity.upper())
-
         trade_day, column_names = StockTradeDay.query_data(
             region=self.region,
             provider=self.provider,
@@ -42,9 +41,12 @@ class UsStockTradeDayRecorder(RecorderForEntities):
 
         start = to_time_str(trade_day) if trade_day else "1980-01-01"
 
-        dates = calendar.schedule(start_date=start, end_date=to_time_str(now_pd_timestamp(Region.US)))
-        dates = dates.index.to_list()
-        self.logger.info(f'add dates:{dates}')
+        calendar = tc.get_calendar(entity.upper())
+        dates = calendar.sessions_in_range(
+            pd.Timestamp(start, tz=pytz.UTC), pd.Timestamp(to_time_str(now_pd_timestamp(Region.CHN)), tz=pytz.UTC)
+        )
+
+        self.logger.info(f'add dates: {dates}')
 
         if len(dates) > 0:
             df = pd.DataFrame(dates, columns=['timestamp'])

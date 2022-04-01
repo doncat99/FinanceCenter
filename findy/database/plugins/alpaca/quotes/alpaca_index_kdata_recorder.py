@@ -6,23 +6,22 @@ import pandas as pd
 from findy import findy_config
 from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
-from findy.database.schema.meta.stock_meta import Stock
-from findy.database.schema.datatype import StockKdataCommon
+from findy.database.schema.meta.stock_meta import Index
+from findy.database.schema.datatype import IndexKdataCommon
 from findy.database.plugins.recorder import KDataRecorder
 from findy.database.plugins.yahoo.common import to_yahoo_trading_level
-from findy.database.quote import get_entities
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
 from findy.vendor.yf import YH
 
 
-class YahooUsStockKdataRecorder(KDataRecorder):
-    # 数据来自yahoo
+class AlpacaUsIndexKdataRecorder(KDataRecorder):
+    # 数据来自jq
     region = Region.US
-    provider = Provider.Yahoo
-    entity_schema = Stock
+    provider = Provider.Alpaca
+    entity_schema = Index
     # 只是为了把recorder注册到data_schema
-    data_schema = StockKdataCommon
+    data_schema = IndexKdataCommon
 
     def __init__(self,
                  exchanges=[e.value for e in UsExchange],
@@ -45,26 +44,13 @@ class YahooUsStockKdataRecorder(KDataRecorder):
                  share_para=None) -> None:
         level = IntervalLevel(level)
         adjust_type = AdjustType(adjust_type)
-        self.data_schema = self.get_kdata_schema(entity_type=EntityType.Stock, level=level, adjust_type=adjust_type)
+        self.data_schema = self.get_kdata_schema(entity_type=EntityType.Index, level=level, adjust_type=adjust_type)
         self.level = level
 
         super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
         self.adjust_type = adjust_type
-
-    async def init_entities(self, db_session):
-        # init the entity list
-        self.entities, column_names = get_entities(
-            region=self.region,
-            provider=self.provider,
-            db_session=db_session,
-            entity_schema=self.entity_schema,
-            entity_type=self.entity_type,
-            exchanges=self.exchanges,
-            entity_ids=self.entity_ids,
-            codes=self.codes,
-            filters=[Stock.is_active.is_(True)])
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         format = PD_TIME_FORMAT_DAY if self.level >= IntervalLevel.LEVEL_1DAY else PD_TIME_FORMAT_ISO8601
@@ -130,16 +116,7 @@ class YahooUsStockKdataRecorder(KDataRecorder):
         return df
 
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        now = time.time()
-        if result == 2 and not entity.is_active:
-
-            try:
-                db_session.commit()
-            except Exception as e:
-                self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
-                db_session.rollback()
-
-        return time.time() - now
+        return 0
 
     async def on_finish(self):
         pass

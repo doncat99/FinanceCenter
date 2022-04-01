@@ -37,28 +37,12 @@ class Index(StockMetaBase, Portfolio):
     base_point = Column(Float)
 
 
-# etf
-@register_entity(entity_type=EntityType.ETF)
-class Etf(StockMetaBase, Portfolio):
-    __tablename__ = EntityType.ETF.value
-    category = Column(String(length=64))
-
-    @classmethod
-    async def get_stocks(cls, region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
-        from findy.database.quote import get_etf_stocks
-        return await get_etf_stocks(region=region, code=code, codes=codes, ids=ids, timestamp=timestamp, provider=provider)
-
-
 class BlockStock(StockMetaBase, PortfolioStock):
     __tablename__ = 'block_stock'
 
 
 class IndexStock(StockMetaBase, PortfolioStockHistory):
     __tablename__ = 'index_stock'
-
-
-class EtfStock(StockMetaBase, PortfolioStockHistory):
-    __tablename__ = 'etf_stock'
 
 
 # 个股详情

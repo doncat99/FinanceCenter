@@ -10,7 +10,7 @@ from findy.database.schema.fundamental.finance import BalanceSheet
 from findy.database.plugins.recorder import TimestampsDataRecorder
 from findy.database.plugins.yahoo.common import to_report_period_type
 from findy.utils.pd import pd_valid
-from findy.vendor.yfinance import Ticker
+from findy.vendor.yf import Ticker
 
 
 balance_sheet_map = {

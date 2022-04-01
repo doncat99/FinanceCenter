@@ -28,10 +28,10 @@ class task():
         await Stock.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
 
     @staticmethod
-    async def get_etf_list_data(region: Region, provider: Provider, sleep, process, desc):
-        # ETF股票
-        from findy.database.schema.meta.stock_meta import EtfStock
-        await EtfStock.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+    async def get_fund_list_data(region: Region, provider: Provider, sleep, process, desc):
+        # 基金列表
+        from findy.database.schema.meta.fund_meta import Fund
+        await Fund.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
 
     @staticmethod
     async def get_stock_trade_day(region: Region, provider: Provider, sleep, process, desc):
@@ -145,7 +145,7 @@ class task():
         # 个股估值数据
         from findy.database.schema.fundamental.valuation import StockValuation
         await StockValuation.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
-        
+
     @staticmethod
     async def get_etf_valuation_data(region: Region, provider: Provider, sleep, process, desc):
         # ETF估值数据
@@ -262,7 +262,7 @@ class task():
 task_set_chn = [
     ["task_chn_01", task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24 * 6, RunMode.Serial],
     ["task_chn_02", task.get_stock_trade_day,              Provider.BaoStock,  0, 10, "Trade Day",                24,     RunMode.Serial],
-    # ["task_chn_03", task.get_etf_list_data,                Provider.Exchange,  0, 10, "Etf List",                 24 * 6, RunMode.Serial],
+    # ["task_chn_03", task.get_fund_list_data,                Provider.Exchange,  0, 10, "Fund List",                 24 * 6, RunMode.Serial],
     ["task_chn_04", task.get_stock_main_index,             Provider.BaoStock,  0, 10, "Main Index",               24,     RunMode.Serial],
     ["task_chn_05", task.get_stock_detail_data,            Provider.TuShare,   0,  4, "Stock Detail",             24 * 6, RunMode.Parallel],
 

@@ -2,6 +2,7 @@
 import time
 
 import pandas as pd
+import alpaca_trade_api as tradeapi
 
 from findy import findy_config
 from findy.interface import Region, Provider, UsExchange, EntityType
@@ -13,13 +14,12 @@ from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 from findy.database.quote import get_entities
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
-from findy.vendor.yf import YH
 
 
-class YahooUsStockKdataRecorder(KDataRecorder):
+class AlpacaUsStockKdataRecorder(KDataRecorder):
     # 数据来自yahoo
     region = Region.US
-    provider = Provider.Yahoo
+    provider = Provider.Alpaca
     entity_schema = Stock
     # 只是为了把recorder注册到data_schema
     data_schema = StockKdataCommon
@@ -52,6 +52,13 @@ class YahooUsStockKdataRecorder(KDataRecorder):
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
         self.adjust_type = adjust_type
+
+        try:
+            self.api = tradeapi.REST(findy_config['alpaca_api_key'],
+                                     findy_config['alpaca_secret_key'],
+                                     "https://paper-api.alpaca.markets", "v2")
+        except BaseException:
+            raise ValueError("Wrong Account Info!")
 
     async def init_entities(self, db_session):
         # init the entity list

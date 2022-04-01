@@ -23,9 +23,7 @@ findy_env = {}
 
 findy_config = {}
 
-FINDY_HOME = os.environ.get('FINDY_HOME')
-if not FINDY_HOME:
-    FINDY_HOME = os.path.abspath(os.path.join(Path.home(), 'findy-home'))
+FINDY_HOME = os.environ.get('FINDY_HOME', os.path.abspath(os.path.join(Path.home(), 'findy-home')))
 
 
 def init_config(pkg_name: str = None, current_config: dict = None, **kwargs) -> dict:

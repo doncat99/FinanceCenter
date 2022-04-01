@@ -2,17 +2,17 @@
 from sqlalchemy import Column, String, Integer
 from sqlalchemy.ext.declarative import declarative_base
 
-from findy.interface import Region, Provider
+from findy.interface import Region, Provider, EntityType
 from findy.database.schema.datatype import Portfolio, PortfolioStockHistory
 from findy.database.schema.register import register_entity
 
 FundMetaBase = declarative_base()
 
 
-# 个股
-@register_entity(entity_type='fund')
+# 基金
+@register_entity(entity_type=EntityType.Fund)
 class Fund(FundMetaBase, Portfolio):
-    __tablename__ = 'fund'
+    __tablename__ = EntityType.Fund.value
     # 基金管理人
     advisor = Column(String(length=100))
     # 基金托管人

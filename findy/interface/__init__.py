@@ -23,11 +23,12 @@ class Provider(enum.Enum):
 
 class EntityType(enum.Enum):
     Index = 'index'
+    Coin = 'coin'
+    Fund = 'fund'
     Stock = 'stock'
     Block = 'block'
-    Coin = 'coin'
-    ETF = 'etf'
     StockDetail = 'stock_detail'
+    FundDetail = 'fund_detail'
 
 
 class ChnExchange(enum.Enum):

@@ -17,7 +17,7 @@ class BlockCategory(enum.Enum):
     csi = 'csi'
     # 国证指数
     cni = 'cni'
-    # ETF
+    # fund
     etf = 'etf'
 
 
