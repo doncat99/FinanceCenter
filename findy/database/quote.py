@@ -11,7 +11,7 @@ from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema import ReportPeriod, IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin, PortfolioStockHistory
 from findy.database.schema.meta.fund_meta import Fund
-from findy.database.schema.meta.stock_meta import Etf
+# from findy.database.schema.meta.stock_meta import Etf
 from findy.database.schema.register import get_entity_schema_by_type
 from findy.database.plugins.register import get_schema_by_name
 from findy.database.context import get_db_session
@@ -279,9 +279,9 @@ async def get_portfolio_stocks(region: Region, provider: Provider, timestamp, po
 
 
 # etf半年报和年报才有全量的持仓信息，故根据离timestamp最近的报表(年报 or 半年报)来确定持仓
-async def get_etf_stocks(region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
-    return await get_portfolio_stocks(region=region, provider=provider, timestamp=timestamp,
-                                      portfolio_entity=Etf, code=code, codes=codes, ids=ids)
+# async def get_etf_stocks(region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
+#     return await get_portfolio_stocks(region=region, provider=provider, timestamp=timestamp,
+#                                       portfolio_entity=Etf, code=code, codes=codes, ids=ids)
 
 
 async def get_fund_stocks(region: Region, provider: Provider, timestamp, code=None, codes=None, ids=None):
