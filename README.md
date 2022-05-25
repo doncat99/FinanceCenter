@@ -3,7 +3,6 @@ Financial Center: open financial data framework
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-385/)
 [![Platform](https://img.shields.io/powershellgallery/p/DNS.1.1.1.1?color=B)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)]()
-[![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg)]()
 [![Maintenance](https://img.shields.io/badge/Maintained-yes-green.svg)]() 
 ![Contributions welcome](https://img.shields.io/badge/Contributions-welcome-brightgreen.svg)
 <br><br>
