@@ -8,7 +8,7 @@
   "location": "local",
 
   "db_name": "findy",
-  "db_user": "postgres",
+  "db_user": "",
   "db_pass": "",
   "db_host_cloud": "http://doncat99.synology.me/",
   "db_port_cloud": "15432",

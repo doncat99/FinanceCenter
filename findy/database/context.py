@@ -120,31 +120,32 @@ def create_db(db_name):
 
     # warning: windows platform user need to create postgresql database manually
     connection = psycopg2.connect(database='postgres',
-                                  user=findy_config['db_user'],
-                                  password=findy_config['db_pass'],
+                                  user='postgres',
+                                  password='',
                                   host=findy_config[f'db_host_{findy_config["location"]}'],
                                   port=findy_config[f'db_port_{findy_config["location"]}'])
     if connection is not None:
         connection.autocommit = True
-        try:
-            with connection.cursor() as cur:
+        with connection.cursor() as cur:
+            try:
                 cur.execute("SELECT datname FROM pg_database;")
                 list_database = cur.fetchall()
+                # print("list_database", list_database)
                 if (db_name,) not in list_database:
                     sql_query = f"CREATE DATABASE {db_name}"
                     cur.execute(sql_query)
-                    logger.info(f'async database {db_name} successfully created')
-        except Exception as e:
-            logger.warning(f'async database {db_name} is not created, with error: {e}')
-            raise e
-        finally:
-            connection.close()
+                    logger.info(f'database {db_name} successfully created')
+            except Exception as e:
+                logger.warning(f'database {db_name} is not created, with error: {e}')
+                raise e
+            finally:
+                connection.close()
     else:
-        logger.error(f'connection not established, async database {db_name} is not created')
+        logger.error(f'connection not established, database {db_name} is not created')
 
 
 def build_engine(region: Region) -> Engine:
-    logger.debug(f'start building {region} async database engine...')
+    logger.debug(f'start building {region} database engine...')
 
     db_name = f"{findy_config['db_name']}_{region.value}"
 
@@ -169,7 +170,7 @@ def build_engine(region: Region) -> Engine:
                            executemany_values_page_size=10000,
                            executemany_batch_page_size=500)
 
-    logger.debug(f'{region} async engine connect successed')
+    logger.debug(f'{region} engine connect successed')
     return engine
 
 

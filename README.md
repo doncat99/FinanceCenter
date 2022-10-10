@@ -92,89 +92,129 @@ The FinDy installation consists of setting up the following components:
 
 Command line tools
 
-```
+```shell
 xcode-select --install #xcode command line tools
 ```
 
 Homebrew
 
-```
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```shell
+/bin/bash -c "$(curl -fsSL https://gitee.com/ineo6/homebrew-install/raw/master/install.sh)"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/huangdon/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 brew install git cmake pkg-config openssl
 brew link openssl --force
 ```
 
+
 ### 2. Database
 
-FinDy recommends using a PostgreSQL database. But you can use MySQL too, see [MySQL setup guide](database_mysql.md).
+FinDy recommends using a PostgreSQL database. But you can use MySQL too, see [MySQL setup guide](database_mysql.md).<br>
+```shell
+# Install package
+brew install postgres
+postgres -V
 
-```
-brew install postgresql
-ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
-launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
-```
+# Start PostgreSQL server
+pg_ctl -D /usr/local/var/postgres start
+#Or you can start the PostgreSQL server and have it start up at login automatically
+brew services start postgresql
 
-Login to PostgreSQL
+# Stop PostgreSQL server
+pg_ctl -D /usr/local/var/postgres stop
+#To make it stop starting up automatically at login
+brew services stop postgresql
 
-```
-psql -d postgres
-```
+# Login to PostgreSQL
+psql -U XXX(superuser role) -d postgres
 
-Create a user for FinDy.
+# Create a user for FinDy
+CREATE USER postgres with NOSUPERUSER CREATEDB CREATEROLE INHERIT LOGIN;
+CREATE USER xxx(normal user, ex: don);
 
-```
-CREATE USER xxx;
-```
+# Create the FinDy production database & grant all privileges on database
+CREATE DATABASE findy OWNER postgres;
 
-Create the FinDy production database & grant all privileges on database
-
-```
-CREATE DATABASE findy OWNER xxx;
-```
-
-Quit the database session
-
-```
+# Quit the database session
 \q
-```
 
-Try connecting to the new database with the new user
-
-```
+# Try connecting to the new database with the new user
 sudo -u git -H psql -d findy
+
+# tuning postgres (optional)
+cpan -i DBD::Pg
+cd pgtune
+chmod +x postgresqltuner.pl
+./pg_tune.sh
 ```
 
 ### 3. Redis
 
-```
+```shell
 brew install redis
 ln -sfv /usr/local/opt/redis/*.plist ~/Library/LaunchAgents
 ```
 
 Redis config is located in `/usr/local/etc/redis.conf`. Make a copy:
 
-```
+```shell
 cp /usr/local/etc/redis.conf /usr/local/etc/redis.conf.orig
 ```
 
 Disable Redis listening on TCP by setting 'port' to 0
 
-```
+```shell
 sed 's/^port .*/port 0/' /usr/local/etc/redis.conf.orig | sudo tee /usr/local/etc/redis.conf
 ```
 
 Edit file (`nano /usr/local/etc/redis.conf`) and uncomment:
 
-```
+```shell
 unixsocket /tmp/redis.sock
 unixsocketperm 777
 ```
 
 Start Redis
 
-```
+```shell
 launchctl load ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
 ```
+
+
+### 4. Kafka
+```shell
+# Install package
+brew install zookeeper
+brew install kafka
+
+modify file /opt/homebrew/etc/kafka/server.properties, active line listeners=PLAINTEXT://:9092 as below:
+
+############################# Socket Server Settings #############################
+# The address the socket server listens on. It will get the value returned from 
+# java.net.InetAddress.getCanonicalHostName() if not configured.
+#   FORMAT:
+#     listeners = listener_name://host_name:port
+#   EXAMPLE:
+#     listeners = PLAINTEXT://your.host.name:9092
+listeners=PLAINTEXT://localhost:9092
+
+# Start kafka server
+brew services start zookeeper
+brew services start kafka
+
+pip install kafka_python
+```
+
+
+### 5. Pip Packages
+```shell
+pip install -r requirements_mac_arm64.txt
+
+# optional, generate requirement.txt file from project imports
+$ pipreqs ./ --force
+```
+
 <br>
 
 # Configure FinDy Settings
@@ -190,8 +230,8 @@ Default (`config.json`) setting
   "db_name": "findy",
   "db_host": "192.168.1.133",
   "db_port": "15432",
-  "db_user": "postgres",
-  "db_pass": "123",
+  "db_user": "",
+  "db_pass": "",
 
   "redis_pass": "",
   "kafka": "localhost:9092",
@@ -320,13 +360,13 @@ stocks = [(code, gb.get_group(code)) for code in gb.groups]
 
 # Docker Usage
 ### Docker Execute
-```
+```shell
 docker-compose stop; docker-compose rm -f ; docker-compose build --no-cache
 docker-compose up -d
 ```
 
 ### View Log
-```
+```shell
 docker-compose logs -f 
 ```
 
