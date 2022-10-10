@@ -32,8 +32,8 @@ class EntityType(enum.Enum):
 
 
 class ChnExchange(enum.Enum):
-    SZSE = 'sh'
-    SSE = 'sz'
+    SZSE = 'sz'
+    SSE = 'sh'
 
 
 class UsExchange(enum.Enum):
