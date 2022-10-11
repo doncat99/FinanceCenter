@@ -1,35 +1,69 @@
+
+appdirs==1.4.4
+cryptography==37.0.1
+
+
+Flask==2.2.2
+flask_login==0.6.2
+flask_migrate==3.1.0
+flask_sqlalchemy==3.0.0
+flask_wtf==1.0.1
+Jinja2==3.1.2
+multitasking==0.0.11
+
+optionaldict==0.1.2
+
+
+pygtail==0.12.0
+python-decouple==3.6
+python_dateutil==2.8.2
+
+
+requests_pkcs12==1.14
+
+setuptools==59.8.0
+
+
+
+
+ujson==5.5.0
+
+WTForms==3.0.1
+xmltodict==0.13.0
+
+
+
+
 # multiprocessing utils
 # numba>=0.53.1
-uvloop
+uvloop>=0.17.0
 
 # database utils
-psycopg2>=2.8.6
-SQLAlchemy>=1.4.23
+psycopg2>=2.9.4
+SQLAlchemy>=1.4.41
 sqlalchemy_batch_inserts>=0.0.4
 
-# streaming utils
-kafka_python
-
 # data utils
-pandas>=1.2.3
-numpy>=1.20.1
-demjson>=2.2.4
+pandas>=1.5.0
+numpy>=1.21.5
+demjson>=1.6
 
 # date utils
-pytz>=2021.1
-tzlocal>=2.1
+pytz>=2022.4
+tzlocal>=4.2
 
 # http utils
-requests>=2.24.0
-aiohttp>=3.7.4
+requests>=2.27.1
+aiohttp>=3.8.1
 # aiohttp_client_cache>=0.3.0
 retrying>=1.3.3
 
 # market data
-tushare
+tushare>=1.2.85
 akshare
 alpaca_trade_api
-exchange_calendars
+exchange_calendars>=4.2.3
 
 # monitoring utils
-tqdm
+tqdm>=4.64.0
+
