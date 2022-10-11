@@ -287,13 +287,13 @@ task_set_chn = [
     # ["task_chn_22", task.get_moneyflow_data,               Provider.Sina,      1, 10, "MoneyFlow Statement",      24,      RunMode.Parallel],
 
     # ["task_chn_23", task.get_etf_1d_k_data,                Provider.Sina,      0, 10, "ETF Daily K-Data",         24,      RunMode.Parallel],
-    ["task_chn_24", task.get_stock_1d_k_data,              Provider.BaoStock,  0, 30, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    ["task_chn_25", task.get_stock_1w_k_data,              Provider.BaoStock,  0, 30, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    ["task_chn_26", task.get_stock_1mon_k_data,            Provider.BaoStock,  0, 30, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    ["task_chn_27", task.get_stock_1h_k_data,              Provider.BaoStock,  0, 30, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    ["task_chn_28", task.get_stock_30m_k_data,             Provider.BaoStock,  0, 30, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    ["task_chn_29", task.get_stock_15m_k_data,             Provider.BaoStock,  0, 30, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    ["task_chn_30", task.get_stock_5m_k_data,              Provider.BaoStock,  0, 30, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    ["task_chn_24", task.get_stock_1d_k_data,              Provider.BaoStock,  0, 100, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_chn_25", task.get_stock_1w_k_data,              Provider.BaoStock,  0, 100, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    ["task_chn_26", task.get_stock_1mon_k_data,            Provider.BaoStock,  0, 100, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    ["task_chn_27", task.get_stock_1h_k_data,              Provider.BaoStock,  0,  50, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    ["task_chn_28", task.get_stock_30m_k_data,             Provider.BaoStock,  0,  50, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    ["task_chn_29", task.get_stock_15m_k_data,             Provider.BaoStock,  0,  40, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    ["task_chn_30", task.get_stock_5m_k_data,              Provider.BaoStock,  0,  20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
     # ["task_chn_31", task.get_stock_1m_k_data,              Provider.BaoStock,  0, 10, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 
     # ["task_chn_32", task.get_stock_1d_hfq_k_data,          Provider.BaoStock,  0, 10, "Stock Daily   HFQ K-Data", 24,      RunMode.Parallel],
@@ -339,8 +339,8 @@ class Para(enum.Enum):
 async def loop_task_set(args):
     now = time.time()
     region, arg = args
-    logger.info(f"Start Func: {arg[Para.FunName.value].__name__}")
 
+    logger.info(f"Start Func: {arg[Para.FunName.value].__name__}")
     await arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
     logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
 
@@ -379,7 +379,10 @@ async def fetch_data(region: Region):
                     bytes(progress_key, encoding='utf-8'),
                     bytes(json.dumps(data), encoding='utf-8'))
 
-    cache = get_cache('cache')
+    schedule_log_file = f'update_schedule_log_{region.value}'
+    cache = get_cache(schedule_log_file)
+    if cache == None:
+        cache = {}
     calls_list = []
 
     for index, item in enumerate(task_set):
@@ -397,8 +400,8 @@ async def fetch_data(region: Region):
     if Multi:
         pool_tasks = []
         tasks = len(calls_list)
-        cpus = min(tasks, os.cpu_count())
-        childconcurrency = round(tasks / cpus)
+        cpus = max(tasks, min(1, os.cpu_count()))
+        childconcurrency = max(1, round(tasks / cpus))
 
         current_os = platform.system().lower()
         if current_os != "windows":
@@ -423,8 +426,8 @@ async def fetch_data(region: Region):
                                     bytes(progress_key, encoding='utf-8'),
                                     bytes(json.dumps(data), encoding='utf-8'))
 
-                    # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-                    # dump_cache('cache', cache)
+                    cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+                    dump_cache(schedule_log_file, cache)
                 else:
                     pool_tasks.append(pool.apply(loop_task_set, args=[call]))
 
@@ -442,8 +445,8 @@ async def fetch_data(region: Region):
                                 bytes(progress_key, encoding='utf-8'),
                                 bytes(json.dumps(data), encoding='utf-8'))
 
-                # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-                # dump_cache('cache', cache)
+                cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+                dump_cache(schedule_log_file, cache)
 
     else:
         for call in calls_list:
@@ -460,8 +463,8 @@ async def fetch_data(region: Region):
                             bytes(progress_key, encoding='utf-8'),
                             bytes(json.dumps(data), encoding='utf-8'))
 
-            # cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-            # dump_cache('cache', cache)
+            cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+            dump_cache(schedule_log_file, cache)
 
 
 def fetching(region: Region):

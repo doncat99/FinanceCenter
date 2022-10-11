@@ -7,6 +7,7 @@ from typing import List, Union
 import asyncio
 
 import pandas as pd
+from sqlalchemy import func
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
@@ -122,7 +123,7 @@ class RecorderForEntities(Recorder):
     async def record(self, entity, http_session, db_session, para):
         raise NotImplementedError
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         raise NotImplementedError
 
     async def on_finish_entity(self, entity, http_session, db_session, result):
@@ -148,13 +149,13 @@ class RecorderForEntities(Recorder):
             start_point = time.time()
 
             # fetch
-            is_finish, download_time, para = await self.record(entity, http_session, db_session, para)
+            is_finish, download_time, df_record = await self.record(entity, http_session, db_session, para)
             if is_finish:
                 # await self.sleep(0.1)
                 return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
             # save
-            is_finish, persist_time, count = await self.persist(entity, http_session, db_session, para)
+            is_finish, persist_time, count = await self.persist(entity, http_session, db_session, df_record)
             if is_finish:
                 # await self.sleep(0.1)
                 return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time
@@ -280,14 +281,19 @@ class TimeSeriesDataRecorder(RecorderForEntities):
             columns=['id', self.get_evaluated_time_field()])
         return pd.DataFrame(data, columns=column_names)
 
-    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
-        latest_timestamp = None
+    async def eval_fetch_timestamps(self, entity, http_session, db_session):
+
+        time_field = self.get_evaluated_time_field()
         try:
-            if pd_valid(ref_record):
-                time_field = self.get_evaluated_time_field()
-                latest_timestamp = ref_record[time_field].max(axis=0)
+            time_column = eval(f'self.data_schema.{time_field}')
+            latest_timestamp, column_names = self.data_schema.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                func=func.max(time_column))
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
+            latest_timestamp = None
 
         if not latest_timestamp:
             latest_timestamp = entity.timestamp
@@ -315,13 +321,13 @@ class TimeSeriesDataRecorder(RecorderForEntities):
     async def eval(self, entity, http_session, db_session):
         start_point = time.time()
 
-        ref_record = await self.get_referenced_saved_record(entity, db_session)
+        # ref_record = await self.get_referenced_saved_record(entity, db_session)
 
-        cost = PRECISION_STR.format(time.time() - start_point)
-        self.logger.debug(f'get latest saved record: {len(ref_record)}, cost: {cost}')
+        # cost = PRECISION_STR.format(time.time() - start_point)
+        # self.logger.debug(f'get latest saved record: {len(ref_record)}, cost: {cost}')
 
         start, end, size, timestamps = \
-            await self.eval_fetch_timestamps(entity, ref_record, http_session)
+            await self.eval_fetch_timestamps(entity, http_session, db_session)
 
         cost = PRECISION_STR.format(time.time() - start_point)
         self.logger.debug(f'evaluate entity: {entity.id}, time: {cost}')
@@ -329,17 +335,18 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         # no more to record
         is_finish = True if size == 0 else False
 
-        return is_finish, time.time() - start_point, (ref_record, start, end, size, timestamps)
+        return is_finish, time.time() - start_point, (start, end, size, timestamps)
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         start_point = time.time()
 
-        (ref_record, df_record) = para
         saved_counts = 0
         is_finished = False
 
         if pd_valid(df_record):
             assert 'id' in df_record.columns
+
+            ref_record = await self.get_referenced_saved_record(entity, db_session)
             saved_counts = await df_to_db(region=self.region,
                                           provider=self.provider,
                                           data_schema=self.data_schema,
@@ -453,10 +460,10 @@ class KDataRecorder(TimeSeriesDataRecorder):
             return time_delta.days
 
         if level == IntervalLevel.LEVEL_1WEEK:
-            return int(math.ceil(time_delta.days / 7))
+            return round(time_delta.days / 7)
 
         if level == IntervalLevel.LEVEL_1MON:
-            return int(math.ceil(time_delta.days / 30))
+            return round(time_delta.days / 31)
 
         if time_delta.days > 0:
             seconds = (time_delta.days + 1) * one_day_trading_seconds
@@ -466,14 +473,19 @@ class KDataRecorder(TimeSeriesDataRecorder):
             return min(int(math.ceil(seconds / level.to_second())),
                        one_day_trading_seconds / level.to_second())
 
-    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
-        latest_timestamp = None
+    async def eval_fetch_timestamps(self, entity, http_session, db_session):
+        time_field = self.get_evaluated_time_field()
         try:
-            if pd_valid(ref_record):
-                time_field = self.get_evaluated_time_field()
-                latest_timestamp = ref_record[time_field].max(axis=0)
+            time_column = eval(f'self.data_schema.{time_field}')
+            latest_timestamp, column_names = self.data_schema.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                func=func.max(time_column))
+
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
+            latest_timestamp = None
 
         if not latest_timestamp:
             latest_timestamp = entity.timestamp
@@ -534,7 +546,7 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
     def init_timestamps(self, entity_item, http_session) -> List[pd.Timestamp]:
         raise NotImplementedError
 
-    async def eval_fetch_timestamps(self, entity, ref_record, http_session):
+    async def eval_fetch_timestamps(self, entity, http_session, db_session):
         timestamps = self.security_timestamps_map.get(entity.id)
         if not timestamps:
             timestamps = self.init_timestamps(entity, http_session)
@@ -551,13 +563,17 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
 
         timestamps.sort()
 
-        latest_timestamp = None
+        time_field = self.get_evaluated_time_field()
         try:
-            if pd_valid(ref_record):
-                time_field = self.get_evaluated_time_field()
-                latest_timestamp = ref_record[time_field].max(axis=0)
+            time_column = eval(f'self.data_schema.{time_field}')
+            latest_timestamp, column_names = self.data_schema.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                func=func.max(time_column))
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
+            latest_timestamp = None
 
         if latest_timestamp is not None and isinstance(latest_timestamp, pd.Timestamp):
             timestamps = [t for t in timestamps if t >= latest_timestamp]

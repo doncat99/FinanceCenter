@@ -161,11 +161,11 @@ def build_engine(region: Region) -> Engine:
                            encoding='utf-8',
                            echo=False,
                            poolclass=QueuePool,
-                           pool_size=10,
+                           pool_size=5,
                            pool_recycle=3600,
                            max_overflow=2,
+                           pool_timeout=30,
                            pool_pre_ping=True,
-                           pool_use_lifo=True,
                            executemany_mode='values',
                            executemany_values_page_size=10000,
                            executemany_batch_page_size=500)
@@ -239,7 +239,7 @@ def bind_engine(region: Region,
     # create index
     # create_index(region, engine, schema_base)
 
-    db_session = sessionmaker(bind=engine)()
+    db_session = sessionmaker(bind=engine, expire_on_commit=False)()
     enable_batch_inserting(db_session)
 
     return db_session

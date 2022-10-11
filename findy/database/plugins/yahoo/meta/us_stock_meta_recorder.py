@@ -72,7 +72,7 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
         return False, time.time() - start_point, None
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         start_point = time.time()
 
         try:
@@ -80,7 +80,8 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
         except Exception as e:
             self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
             db_session.rollback()
-
+        finally:
+            db_session.close()
         return True, time.time() - start_point, 1
 
     async def on_finish_entity(self, entity, http_session, db_session, result):

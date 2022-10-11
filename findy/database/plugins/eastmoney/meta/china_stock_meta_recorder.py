@@ -93,6 +93,8 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                 except Exception as e:
                     self.logger.error(f'{self.__class__.__name__}, error: {e}')
                     db_session.rollback()
+                finally:
+                    db_session.close()
 
                 cost = PRECISION_STR.format(time.time() - now)
 

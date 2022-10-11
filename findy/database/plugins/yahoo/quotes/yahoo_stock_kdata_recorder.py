@@ -78,9 +78,9 @@ class YahooUsStockKdataRecorder(KDataRecorder):
             try:
                 code = entity.code
                 if self.level < IntervalLevel.LEVEL_1DAY:
-                    df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), period="3mon")
+                    df, msg = await YH.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), period="3mon")
                 else:
-                    df, msg = await YH.fetch(http_session, code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
+                    df, msg = await YH.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
                 if isinstance(msg, str) and "symbol may be delisted" in msg:
                     entity.is_active = False
                 return df
@@ -100,13 +100,13 @@ class YahooUsStockKdataRecorder(KDataRecorder):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
+        (start, end, size, timestamps) = para
 
         end_timestamp = to_time_str(self.end_timestamp) if self.end_timestamp else None
         df = await self.yh_get_bars(http_session, entity, start=start, end=end_timestamp)
 
         if pd_valid(df):
-            return False, time.time() - start_point, (ref_record, self.format(entity, df))
+            return False, time.time() - start_point, self.format(entity, df)
 
         return True, time.time() - start_point, None
 
@@ -138,7 +138,8 @@ class YahooUsStockKdataRecorder(KDataRecorder):
             except Exception as e:
                 self.logger.error(f'{self.__class__.__name__}, rollback error: {e}')
                 db_session.rollback()
-
+            finally:
+                db_session.close()
         return time.time() - now
 
     async def on_finish(self):

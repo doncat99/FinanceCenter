@@ -60,6 +60,8 @@ async def df_to_db(region: Region,
         except Exception as e:
             logger.error(f'df_to_db {data_schema.__tablename__}, error: {e}')
             db_session.rollback()
+        finally:
+            db_session.close()
         df_new = df
 
     else:
@@ -115,3 +117,5 @@ def del_data(db_session, data_schema: Type[Mixin], filters: List = None):
     except Exception as e:
         logger.error(f'df_to_db {data_schema.__tablename__}, error: {e}')
         db_session.rollback()
+    finally:
+        db_session.close()

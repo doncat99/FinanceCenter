@@ -98,8 +98,6 @@ class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
-
         url = self.category_stocks_url.format(entity.code, '1')
         async with http_session.get(url) as response:
             text = await response.text()
@@ -125,7 +123,7 @@ class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):
             the_list = numba_boost_up(results)
             if the_list:
                 df = pd.DataFrame.from_records(the_list)
-                return False, time.time() - start_point, (ref_record, self.format(entity, df))
+                return False, time.time() - start_point, self.format(entity, df)
 
             return True, time.time() - start_point, None
 

@@ -83,5 +83,7 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
         except Exception as e:
             self.logger.error(f'{self.__class__.__name__}, error: {e}')
             db_session.rollback()
+        finally:
+            db_session.close()
 
         await super().on_finish()

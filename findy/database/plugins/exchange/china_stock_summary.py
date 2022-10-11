@@ -48,7 +48,7 @@ class StockSummaryRecorder(TimestampsDataRecorder):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
+        (start, end, size, timestamps) = para
 
         json_results = []
 
@@ -86,12 +86,12 @@ class StockSummaryRecorder(TimestampsDataRecorder):
                         df['timestamp'] = pd.to_datetime(df['timestamp'])
                         df['name'] = '上证指数'
                         df = self.format(df)
-                        return False, time.time() - start_point, (ref_record, df)
+                        return False, time.time() - start_point, df
 
         if len(json_results) > 0:
             df = pd.DataFrame.from_records(json_results)
             df = self.format(df)
-            return False, time.time() - start_point, (ref_record, df)
+            return False, time.time() - start_point, df
 
         return True, time.time() - start_point, None
 

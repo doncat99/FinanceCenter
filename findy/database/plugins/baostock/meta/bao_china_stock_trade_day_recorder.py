@@ -76,13 +76,13 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         start_point = time.time()
         saved = await df_to_db(region=self.region,
                                provider=self.provider,
                                data_schema=self.data_schema,
                                db_session=db_session,
-                               df=para)
+                               df=df_record)
         return True, time.time() - start_point, saved
 
     async def on_finish_entity(self, entity, http_session, db_session, result):

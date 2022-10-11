@@ -20,14 +20,15 @@ def to_postgresql(region: Region, df, tablename):
     db_engine = get_db_engine(region)
     connection = db_engine.raw_connection()
     cursor = connection.cursor()
-    try:
-        cursor.copy_from(output, tablename, null='', columns=list(df.columns))
+    cursor.copy_from(output, tablename, null='', columns=list(df.columns))
+
+    try:        
         connection.commit()
-        saved = len(df)
     except Exception as e:
         logger.error(f'copy_from failed on table: [ {tablename} ], {e}')
         connection.rollback()
     finally:
+        saved = len(df)
         cursor.close()
         connection.close()
     return saved
@@ -40,13 +41,16 @@ def from_postgresql(region: Region, query):
     db_engine = get_db_engine(region)
     connection = db_engine.raw_connection()
     cursor = connection.cursor()
+
     try:
         store = StringIO()
         cursor.copy_expert(copy_sql, store)
         store.seek(0)
-        return pd.read_csv(store)
+        ret = pd.read_csv(store)
     except Exception as e:
         logger.error(f'copy_expert failed on query: [ {query} ], {e}')
-    cursor.close()
-    connection.close()
-    return None
+        ret = None
+    finally:
+        cursor.close()
+        connection.close()
+        return ret

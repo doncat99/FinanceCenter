@@ -4,8 +4,7 @@ import time
 
 from sqlalchemy import func
 import pandas as pd
-import exchange_calendars as tc
-import pytz
+import exchange_calendars as calendars
 
 from findy.interface import Region, Provider, UsExchange
 from findy.interface.writer import df_to_db
@@ -39,12 +38,10 @@ class UsStockTradeDayRecorder(RecorderForEntities):
             db_session=db_session,
             func=func.max(StockTradeDay.timestamp))
 
-        start = to_time_str(trade_day) if trade_day else "1980-01-01"
+        start = to_time_str(trade_day) if trade_day else "2003-10-11"
 
-        calendar = tc.get_calendar(entity.upper())
-        dates = calendar.sessions_in_range(
-            pd.Timestamp(start, tz=pytz.UTC), pd.Timestamp(to_time_str(now_pd_timestamp(Region.CHN)), tz=pytz.UTC)
-        )
+        calendar = calendars.get_calendar(entity.upper())
+        dates = calendar.sessions_in_range(start, to_time_str(now_pd_timestamp(Region.US)))
 
         self.logger.info(f'add dates: {dates}')
 
@@ -66,13 +63,13 @@ class UsStockTradeDayRecorder(RecorderForEntities):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         start_point = time.time()
         saved = await df_to_db(region=self.region,
                                provider=self.provider,
                                data_schema=self.data_schema,
                                db_session=db_session,
-                               df=para)
+                               df=df_record)
         return True, time.time() - start_point, saved
 
     async def on_finish_entity(self, entity, http_session, db_session, result):

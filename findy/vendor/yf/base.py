@@ -23,10 +23,11 @@ from __future__ import print_function
 
 import time as _time
 import datetime as _datetime
+import pytz as _tz
 import requests as _requests
 import pandas as _pd
 import numpy as _np
-# import re as _re
+import re as _re
 
 try:
     from urllib.parse import quote as urlencode
@@ -35,7 +36,7 @@ except ImportError:
 
 from . import utils
 
-# import json as _json
+import json as _json
 # import re as _re
 # import sys as _sys
 
@@ -43,6 +44,7 @@ from . import shared
 
 _BASE_URL_ = 'https://query2.finance.yahoo.com'
 _SCRAPE_URL_ = 'https://finance.yahoo.com/quote'
+_ROOT_URL_ = 'https://finance.yahoo.com'
 
 
 class TickerBase():
@@ -52,6 +54,7 @@ class TickerBase():
         self._history = None
         self._base_url = _BASE_URL_
         self._scrape_url = _SCRAPE_URL_
+        self._tz = None
 
         self._fundamentals = False
         self._info = None
@@ -63,22 +66,17 @@ class TickerBase():
         self._mutualfund_holders = None
         self._isin = None
         self._news = []
+        self._shares = None
 
         self._calendar = None
         self._expirations = {}
+        self._earnings_dates = None
+        self._earnings_history = None
 
-        self._earnings = {
-            "yearly": utils.empty_df(),
-            "quarterly": utils.empty_df()}
-        self._financials = {
-            "yearly": utils.empty_df(),
-            "quarterly": utils.empty_df()}
-        self._balancesheet = {
-            "yearly": utils.empty_df(),
-            "quarterly": utils.empty_df()}
-        self._cashflow = {
-            "yearly": utils.empty_df(),
-            "quarterly": utils.empty_df()}
+        self._earnings = None
+        self._financials = None
+        self._balancesheet = None
+        self._cashflow = None
 
         # accept isin as ticker
         if utils.is_isin(self.ticker):
@@ -102,8 +100,8 @@ class TickerBase():
 
     def history(self, period="1mo", interval="1d",
                 start=None, end=None, prepost=False, actions=True,
-                auto_adjust=True, back_adjust=False,
-                proxy=None, rounding=False, tz=None, timeout=None, **kwargs):
+                auto_adjust=True, back_adjust=False, keepna=False,
+                proxy=None, rounding=False, timeout=None, **kwargs):
         """
         :Parameters:
             period : str
@@ -125,14 +123,14 @@ class TickerBase():
                 Adjust all OHLC automatically? Default is True
             back_adjust: bool
                 Back-adjusted data to mimic true historical prices
+            keepna: bool
+                Keep NaN rows returned by Yahoo?
+                Default is False
             proxy: str
                 Optional. Proxy server URL scheme. Default is None
             rounding: bool
                 Round values to 2 decimal places?
                 Optional. Default is False = precision suggested by Yahoo!
-            tz: str
-                Optional timezone locale for dates.
-                (default data is returned as non-localized dates)
             timeout: None or float
                 If not None stops waiting for a response after given number of
                 seconds. (Can also be a fraction of a second e.g. 0.01)
@@ -143,21 +141,38 @@ class TickerBase():
                     error message printing to console.
         """
 
+        # Work with errors
+        debug_mode = True
+        if "debug" in kwargs and isinstance(kwargs["debug"], bool):
+            debug_mode = kwargs["debug"]
+
+        err_msg = "No data found for this date range, symbol may be delisted"
+
         if start or period is None or period.lower() == "max":
-            if start is None:
-                start = -631159200
-            elif isinstance(start, _datetime.datetime):
-                start = int(_time.mktime(start.timetuple()))
-            else:
-                start = int(_time.mktime(
-                    _time.strptime(str(start), '%Y-%m-%d')))
+            # Check can get TZ. Fail => probably delisted
+            try:
+                tz = self._get_ticker_tz()
+            except KeyError as e:
+                if "exchangeTimezoneName" in str(e):
+                    shared._DFS[self.ticker] = utils.empty_df()
+                    shared._ERRORS[self.ticker] = err_msg
+                    if "many" not in kwargs and debug_mode:
+                        print('- %s: %s' % (self.ticker, err_msg))
+                    return utils.empty_df()
+                else:
+                    raise
+
             if end is None:
                 end = int(_time.time())
-            elif isinstance(end, _datetime.datetime):
-                end = int(_time.mktime(end.timetuple()))
             else:
-                end = int(_time.mktime(_time.strptime(str(end), '%Y-%m-%d')))
-
+                end = utils._parse_user_dt(end, tz)
+            if start is None:
+                if interval == "1m":
+                    start = end - 604800  # Subtract 7 days
+                else:
+                    start = -631159200
+            else:
+                start = utils._parse_user_dt(start, tz)
             params = {"period1": start, "period2": end}
         else:
             period = period.lower()
@@ -181,25 +196,32 @@ class TickerBase():
         url = "{}/v8/finance/chart/{}".format(self._base_url, self.ticker)
 
         session = self.session or _requests
-        data = session.get(
-            url=url,
-            params=params,
-            proxies=proxy,
-            headers=utils.user_agent_headers,
-            timeout=timeout
-        )
-        if "Will be right back" in data.text:
-            raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n"
-                               "Our engineers are working quickly to resolve "
-                               "the issue. Thank you for your patience.")
-        data = data.json()
+        data = None
 
-        # Work with errors
-        debug_mode = True
-        if "debug" in kwargs and isinstance(kwargs["debug"], bool):
-            debug_mode = kwargs["debug"]
+        try:
+            data = session.get(
+                url=url,
+                params=params,
+                proxies=proxy,
+                headers=utils.user_agent_headers,
+                timeout=timeout
+            )
+            if "Will be right back" in data.text or data is None:
+                raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n"
+                                   "Our engineers are working quickly to resolve "
+                                   "the issue. Thank you for your patience.")
 
-        err_msg = "No data found for this date range, symbol may be delisted"
+            data = data.json()
+        except Exception:
+            pass
+
+        if data is None or not type(data) is dict or 'status_code' in data.keys():
+            shared._DFS[self.ticker] = utils.empty_df()
+            shared._ERRORS[self.ticker] = err_msg
+            if "many" not in kwargs and debug_mode:
+                print('- %s: %s' % (self.ticker, err_msg))
+            return utils.empty_df()
+
         if "chart" in data and data["chart"]["error"]:
             err_msg = data["chart"]["error"]["description"]
             shared._DFS[self.ticker] = utils.empty_df()
@@ -218,7 +240,12 @@ class TickerBase():
 
         # parse quotes
         try:
-            quotes = utils.parse_quotes(data["chart"]["result"][0], tz)
+            quotes = utils.parse_quotes(data["chart"]["result"][0])
+            # Yahoo bug fix - it often appends latest price even if after end date
+            if end and not quotes.empty:
+                endDt = _pd.to_datetime(_datetime.datetime.utcfromtimestamp(end))
+                if quotes.index[quotes.shape[0]-1] >= endDt:
+                    quotes = quotes.iloc[0:quotes.shape[0]-1]
         except Exception:
             shared._DFS[self.ticker] = utils.empty_df()
             shared._ERRORS[self.ticker] = err_msg
@@ -266,10 +293,13 @@ class TickerBase():
                 "chart"]["result"][0]["meta"]["priceHint"])
         quotes['Volume'] = quotes['Volume'].fillna(0).astype(_np.int64)
 
-        quotes.dropna(inplace=True)
+        if not keepna:
+            quotes.dropna(inplace=True)
 
         # actions
-        dividends, splits = utils.parse_actions(data["chart"]["result"][0], tz)
+        dividends, splits = utils.parse_actions(data["chart"]["result"][0])
+
+        tz_exchange = data["chart"]["result"][0]["meta"]["exchangeTimezoneName"]
 
         # combine
         df = _pd.concat([quotes, dividends, splits], axis=1, sort=True)
@@ -277,17 +307,16 @@ class TickerBase():
         df["Stock Splits"].fillna(0, inplace=True)
 
         # index eod/intraday
-        df.index = df.index.tz_localize("UTC").tz_convert(
-            data["chart"]["result"][0]["meta"]["exchangeTimezoneName"])
+        df.index = df.index.tz_localize("UTC").tz_convert(tz_exchange)
 
+        df = utils.fix_Yahoo_dst_issue(df, params["interval"])
+            
         if params["interval"][-1] == "m":
             df.index.name = "Datetime"
         elif params["interval"] == "1h":
             pass
         else:
-            df.index = _pd.to_datetime(df.index.date)
-            if tz is not None:
-                df.index = df.index.tz_localize(tz)
+            df.index = _pd.to_datetime(df.index.date).tz_localize(tz_exchange)
             df.index.name = "Date"
 
         # duplicates and missing rows cleanup
@@ -303,74 +332,36 @@ class TickerBase():
 
     # ------------------------
 
-    def _get_fundamentals(self, kind=None, proxy=None):
-        def cleanup(data):
-            df = _pd.DataFrame(data).drop(columns=['maxAge'])
-            for col in df.columns:
-                df[col] = _np.where(
-                    df[col].astype(str) == '-', _np.nan, df[col])
+    def _get_ticker_tz(self):
+        if not self._tz is None:
+            return self._tz
 
-            df.set_index('endDate', inplace=True)
-            try:
-                df.index = _pd.to_datetime(df.index, unit='s')
-            except ValueError:
-                df.index = _pd.to_datetime(df.index)
-            df = df.T
-            df.columns.name = ''
-            df.index.name = 'Breakdown'
+        tkr_tz = utils.cache_lookup_tkr_tz(self.ticker)
+        if tkr_tz is None:
+            tkr_tz = self.info["exchangeTimezoneName"]
+            # info fetch is relatively slow so cache timezone
+            utils.cache_store_tkr_tz(self.ticker, tkr_tz)
 
-            df.index = utils.camel2title(df.index)
-            return df
+        self._tz = tkr_tz
+        return tkr_tz
 
+    def _get_info(self, proxy=None):
         # setup proxy in requests format
         if proxy is not None:
             if isinstance(proxy, dict) and "https" in proxy:
                 proxy = proxy["https"]
             proxy = {"https": proxy}
 
-        if self._fundamentals:
+        if (self._info is None) or (self._sustainability is None) or (self._recommendations is None):
+            ## Need to fetch
+            pass
+        else:
             return
 
         ticker_url = "{}/{}".format(self._scrape_url, self.ticker)
 
         # get info and sustainability
         data = utils.get_json(ticker_url, proxy, self.session)
-
-        # holders
-        try:
-            resp = utils.get_html(ticker_url + '/holders', proxy, self.session)
-            holders = _pd.read_html(resp)
-        except Exception:
-            holders = []
-
-        if len(holders) >= 3:
-            self._major_holders = holders[0]
-            self._institutional_holders = holders[1]
-            self._mutualfund_holders = holders[2]
-        elif len(holders) >= 2:
-            self._major_holders = holders[0]
-            self._institutional_holders = holders[1]
-        elif len(holders) >= 1:
-            self._major_holders = holders[0]
-
-        # self._major_holders = holders[0]
-        # self._institutional_holders = holders[1]
-
-        if self._institutional_holders is not None:
-            if 'Date Reported' in self._institutional_holders:
-                self._institutional_holders['Date Reported'] = _pd.to_datetime(
-                    self._institutional_holders['Date Reported'])
-            if '% Out' in self._institutional_holders:
-                self._institutional_holders['% Out'] = self._institutional_holders[
-                    '% Out'].str.replace('%', '').astype(float) / 100
-
-        if self._mutualfund_holders is not None:
-            if 'Date Reported' in self._mutualfund_holders:
-                self._mutualfund_holders['Date Reported'] = _pd.to_datetime(
-                    self._mutualfund_holders['Date Reported'])
-            if '% Out' in self._mutualfund_holders:
-                self._mutualfund_holders['% Out'] = self._mutualfund_holders[
-                    '% Out'].str.replace('%', '').astype(float) / 100
 
         # sustainability
         d = {}
@@ -402,7 +393,7 @@ class TickerBase():
         except Exception:
             pass
 
-       # For ETFs, provide this valuable data: the top holdings of the ETF
+        # For ETFs, provide this valuable data: the top holdings of the ETF
         try:
             if 'topHoldings' in data:
                 self._info.update(data['topHoldings'])
@@ -463,10 +454,85 @@ class TickerBase():
         except Exception:
             pass
 
+    def _get_fundamentals(self, proxy=None):
+        def cleanup(data):
+            df = _pd.DataFrame(data).drop(columns=['maxAge'])
+            for col in df.columns:
+                df[col] = _np.where(
+                    df[col].astype(str) == '-', _np.nan, df[col])
+
+            df.set_index('endDate', inplace=True)
+            try:
+                df.index = _pd.to_datetime(df.index, unit='s')
+            except ValueError:
+                df.index = _pd.to_datetime(df.index)
+            df = df.T
+            df.columns.name = ''
+            df.index.name = 'Breakdown'
+
+            # rename incorrect yahoo key
+            df.rename(index={'treasuryStock': 'Gains Losses Not Affecting Retained Earnings'}, inplace=True)
+
+            df.index = utils.camel2title(df.index)
+            return df
+
+        # setup proxy in requests format
+        if proxy is not None:
+            if isinstance(proxy, dict) and "https" in proxy:
+                proxy = proxy["https"]
+            proxy = {"https": proxy}
+
+        if self._fundamentals:
+            return
+
+        ticker_url = "{}/{}".format(self._scrape_url, self.ticker)
+
+        # holders
+        try:
+            resp = utils.get_html(ticker_url + '/holders', proxy, self.session)
+            holders = _pd.read_html(resp)
+        except Exception:
+            holders = []
+
+        if len(holders) >= 3:
+            self._major_holders = holders[0]
+            self._institutional_holders = holders[1]
+            self._mutualfund_holders = holders[2]
+        elif len(holders) >= 2:
+            self._major_holders = holders[0]
+            self._institutional_holders = holders[1]
+        elif len(holders) >= 1:
+            self._major_holders = holders[0]
+
+        # self._major_holders = holders[0]
+        # self._institutional_holders = holders[1]
+
+        if self._institutional_holders is not None:
+            if 'Date Reported' in self._institutional_holders:
+                self._institutional_holders['Date Reported'] = _pd.to_datetime(
+                    self._institutional_holders['Date Reported'])
+            if '% Out' in self._institutional_holders:
+                self._institutional_holders['% Out'] = self._institutional_holders[
+                    '% Out'].str.replace('%', '').astype(float) / 100
+
+        if self._mutualfund_holders is not None:
+            if 'Date Reported' in self._mutualfund_holders:
+                self._mutualfund_holders['Date Reported'] = _pd.to_datetime(
+                    self._mutualfund_holders['Date Reported'])
+            if '% Out' in self._mutualfund_holders:
+                self._mutualfund_holders['% Out'] = self._mutualfund_holders[
+                    '% Out'].str.replace('%', '').astype(float) / 100
+
+        self._get_info(proxy)
+
         # get fundamentals
         data = utils.get_json(ticker_url + '/financials', proxy, self.session)
 
         # generic patterns
+        self._earnings = {"yearly": utils.empty_df(), "quarterly": utils.empty_df()}
+        self._cashflow = {"yearly": utils.empty_df(), "quarterly": utils.empty_df()}
+        self._balancesheet = {"yearly": utils.empty_df(), "quarterly": utils.empty_df()}
+        self._financials = {"yearly": utils.empty_df(), "quarterly": utils.empty_df()}
         for key in (
             (self._cashflow, 'cashflowStatement', 'cashflowStatements'),
             (self._balancesheet, 'balanceSheet', 'balanceSheetStatements'),
@@ -504,6 +570,21 @@ class TickerBase():
             except Exception:
                 pass
 
+        # shares outstanding
+        try:
+            # keep only years with non None data
+            available_shares = [shares_data for shares_data in data['annualBasicAverageShares'] if shares_data]
+            shares = _pd.DataFrame(available_shares)
+            shares['Year'] = shares['asOfDate'].agg(lambda x: int(x[:4]))
+            shares.set_index('Year', inplace=True)
+            shares.drop(columns=['dataId', 'asOfDate',
+                        'periodType', 'currencyCode'], inplace=True)
+            shares.rename(
+                columns={'reportedValue': "BasicShares"}, inplace=True)
+            self._shares = shares
+        except Exception:
+            pass
+
         # Analysis
         data = utils.get_json(ticker_url + '/analysis', proxy, self.session)
 
@@ -523,24 +604,68 @@ class TickerBase():
                         if isinstance(colval, dict):
                             dict_cols.append(colname)
                             for k, v in colval.items():
-                                new_colname = colname + ' ' + utils.camel2title([k])[0]
+                                new_colname = colname + ' ' + \
+                                    utils.camel2title([k])[0]
                                 analysis.loc[idx, new_colname] = v
 
-                self._analysis = analysis[[c for c in analysis.columns if c not in dict_cols]]
+                self._analysis = analysis[[
+                    c for c in analysis.columns if c not in dict_cols]]
             except Exception:
                 pass
+
+        # Complementary key-statistics (currently fetching the important trailingPegRatio which is the value shown in the website)
+        res = {}
+        try:
+            my_headers = {'user-agent': 'curl/7.55.1', 'accept': 'application/json', 'content-type': 'application/json',
+                          'referer': 'https://finance.yahoo.com/', 'cache-control': 'no-cache', 'connection': 'close'}
+            p = _re.compile(r'root\.App\.main = (.*);')
+            r = _requests.session().get('https://finance.yahoo.com/quote/{}/key-statistics?p={}'.format(self.ticker,
+                                                                                                        self.ticker), headers=my_headers)
+            q_results = {}
+            my_qs_keys = ['pegRatio']  # QuoteSummaryStore
+            # , 'quarterlyPegRatio']  # QuoteTimeSeriesStore
+            my_ts_keys = ['trailingPegRatio']
+
+            # Complementary key-statistics
+            data = _json.loads(p.findall(r.text)[0])
+            key_stats = data['context']['dispatcher']['stores']['QuoteTimeSeriesStore']
+            q_results.setdefault(self.ticker, [])
+            for i in my_ts_keys:
+                # j=0
+                try:
+                    # res = {i: key_stats['timeSeries'][i][1]['reportedValue']['raw']}
+                    # We need to loop over multiple items, if they exist: 0,1,2,..
+                    zzz = key_stats['timeSeries'][i]
+                    for j in range(len(zzz)):
+                        if key_stats['timeSeries'][i][j]:
+                            res = {i: key_stats['timeSeries']
+                                   [i][j]['reportedValue']['raw']}
+                            q_results[self.ticker].append(res)
+
+                # print(res)
+                # q_results[ticker].append(res)
+                except:
+                    q_results[ticker].append({i: np.nan})
+
+            res = {'Company': ticker}
+            q_results[ticker].append(res)
+        except Exception:
+            pass
+
+        if 'trailingPegRatio' in res:
+            self._info['trailingPegRatio'] = res['trailingPegRatio']
 
         self._fundamentals = True
 
     def get_recommendations(self, proxy=None, as_dict=False, *args, **kwargs):
-        self._get_fundamentals(proxy=proxy)
+        self._get_info(proxy)
         data = self._recommendations
         if as_dict:
             return data.to_dict()
         return data
 
     def get_calendar(self, proxy=None, as_dict=False, *args, **kwargs):
-        self._get_fundamentals(proxy=proxy)
+        self._get_info(proxy)
         data = self._calendar
         if as_dict:
             return data.to_dict()
@@ -570,14 +695,14 @@ class TickerBase():
             return data
 
     def get_info(self, proxy=None, as_dict=False, *args, **kwargs):
-        self._get_fundamentals(proxy=proxy)
+        self._get_info(proxy)
         data = self._info
         if as_dict:
             return data.to_dict()
         return data
 
     def get_sustainability(self, proxy=None, as_dict=False, *args, **kwargs):
-        self._get_fundamentals(proxy=proxy)
+        self._get_info(proxy)
         data = self._sustainability
         if as_dict:
             return data.to_dict()
@@ -646,6 +771,13 @@ class TickerBase():
             actions = self._history[["Dividends", "Stock Splits"]]
             return actions[actions != 0].dropna(how='all').fillna(0)
         return []
+
+    def get_shares(self, proxy=None, as_dict=False, *args, **kwargs):
+        self._get_fundamentals(proxy=proxy)
+        data = self._shares
+        if as_dict:
+            return data.to_dict()
+        return data
 
     def get_isin(self, proxy=None):
         # *** experimental ***
@@ -720,3 +852,121 @@ class TickerBase():
         # parse news
         self._news = data.get("news", [])
         return self._news
+
+    def get_earnings_dates(self, proxy=None):
+        if self._earnings_dates is not None:
+            return self._earnings_dates
+
+        # setup proxy in requests format
+        if proxy is not None:
+            if isinstance(proxy, dict) and "https" in proxy:
+                proxy = proxy["https"]
+            proxy = {"https": proxy}
+
+        page_size = 100  # YF caps at 100, don't go higher
+        page_offset = 0
+        dates = None
+        while True:
+            url = "{}/calendar/earnings?symbol={}&offset={}&size={}".format(
+                _ROOT_URL_, self.ticker, page_offset, page_size)
+
+            session = self.session or _requests
+            data = session.get(
+                url=url,
+                proxies=proxy,
+                headers=utils.user_agent_headers
+            ).text
+
+            if "Will be right back" in data:
+                raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n"
+                                   "Our engineers are working quickly to resolve "
+                                   "the issue. Thank you for your patience.")
+
+            try:
+                data = _pd.read_html(data)[0]
+            except ValueError:
+                if page_offset == 0:
+                    # Should not fail on first page
+                    if "Showing Earnings for:" in data:
+                        # Actually YF was successful, problem is company doesn't have earnings history
+                        dates = utils.empty_earnings_dates_df()
+                break
+
+            if dates is None:
+                dates = data
+            else:
+                dates = _pd.concat([dates, data], axis=0)
+            page_offset += page_size
+
+        if dates is None:
+            raise Exception("No data found, symbol may be delisted")
+        dates = dates.reset_index(drop=True)
+
+        # Drop redundant columns
+        dates = dates.drop(["Symbol", "Company"], axis=1)
+
+        # Convert types
+        for cn in ["EPS Estimate", "Reported EPS", "Surprise(%)"]:
+            dates.loc[dates[cn] == '-', cn] = "NaN"
+            dates[cn] = dates[cn].astype(float)
+
+        # Convert % to range 0->1:
+        dates["Surprise(%)"] *= 0.01
+
+        # Parse earnings date string
+        cn = "Earnings Date"
+        # - remove AM/PM and timezone from date string
+        tzinfo = dates[cn].str.extract('([AP]M[a-zA-Z]*)$')
+        dates[cn] = dates[cn].replace(' [AP]M[a-zA-Z]*$', '', regex=True)
+        # - split AM/PM from timezone
+        tzinfo = tzinfo[0].str.extract('([AP]M)([a-zA-Z]*)', expand=True)
+        tzinfo.columns = ["AM/PM", "TZ"]
+        # - combine and parse
+        dates[cn] = dates[cn] + ' ' + tzinfo["AM/PM"]
+        dates[cn] = _pd.to_datetime(dates[cn], format="%b %d, %Y, %I %p")
+        # - instead of attempting decoding of ambiguous timezone abbreviation, just use 'info':
+        dates[cn] = dates[cn].dt.tz_localize(
+            tz=self.info["exchangeTimezoneName"])
+
+        dates = dates.set_index("Earnings Date")
+
+        self._earnings_dates = dates
+
+        return dates
+
+    def get_earnings_history(self, proxy=None):
+        if self._earnings_history:
+            return self._earnings_history
+
+        # setup proxy in requests format
+        if proxy is not None:
+            if isinstance(proxy, dict) and "https" in proxy:
+                proxy = proxy["https"]
+            proxy = {"https": proxy}
+
+        url = "{}/calendar/earnings?symbol={}".format(_ROOT_URL_, self.ticker)
+        session = self.session or _requests
+        data = session.get(
+            url=url,
+            proxies=proxy,
+            headers=utils.user_agent_headers
+        ).text
+
+        if "Will be right back" in data:
+            raise RuntimeError("*** YAHOO! FINANCE IS CURRENTLY DOWN! ***\n"
+                               "Our engineers are working quickly to resolve "
+                               "the issue. Thank you for your patience.")
+
+        try:
+            # read_html returns a list of pandas Dataframes of all the tables in `data`
+            data = _pd.read_html(data)[0]
+            data.replace("-", _np.nan, inplace=True)
+
+            data['EPS Estimate'] = _pd.to_numeric(data['EPS Estimate'])
+            data['Reported EPS'] = _pd.to_numeric(data['Reported EPS'])
+            self._earnings_history = data
+        # if no tables are found a ValueError is thrown
+        except ValueError:
+            print("Could not find data for {}.".format(self.ticker))
+            return
+        return data

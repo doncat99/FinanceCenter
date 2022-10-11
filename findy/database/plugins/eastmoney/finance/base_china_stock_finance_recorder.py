@@ -113,7 +113,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
+        (start, end, size, timestamps) = para
         # different with the default timestamps handling
         param = await self.generate_request_param(entity, start, end, size, timestamps, http_session)
         self.logger.info(f'request param:{param}')
@@ -121,7 +121,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
         result = await self.api_wrapper.request(http_session, url=self.url, param=param,
                                                 method=self.request_method,
                                                 path_fields=self.generate_path_fields(entity, http_session))
-        return False, time.time() - start_point, (ref_record, pd.DataFrame.from_records(result))
+        return False, time.time() - start_point, pd.DataFrame.from_records(result)
 
     def get_original_time_field(self):
         return 'ReportDate'
@@ -175,5 +175,6 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                     except Exception as e:
                         self.logger.error(f'{self.__class__.__name__}, error: {e}')
                         db_session.rollback()
-
+                    finally:
+                        db_session.close()
         return total_time + time.time() - now

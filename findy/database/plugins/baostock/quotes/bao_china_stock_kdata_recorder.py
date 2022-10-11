@@ -94,7 +94,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
+        (start, end, size, timestamps) = para
 
         start = to_time_str(start)
         if self.bao_trading_level in ['d', 'w', 'm']:
@@ -110,7 +110,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                                adjustflag=to_bao_adjust_flag(self.adjust_type))
 
         if pd_valid(df):
-            return False, time.time() - start_point, (ref_record, self.format(entity, df))
+            return False, time.time() - start_point, self.format(entity, df)
 
         return True, time.time() - start_point, None
 
@@ -152,6 +152,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
             except Exception as e:
                 self.logger.error(f'{self.__class__.__name__}, error: {e}')
                 db_session.rollback()
+            finally:
+                db_session.close()
 
         return time.time() - now
 

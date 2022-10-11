@@ -1,4 +1,4 @@
-# Copyright 2018 John Reese
+# Copyright 2022 Amethyst Reese
 # Licensed under the MIT license
 
 import asyncio
@@ -144,8 +144,8 @@ class Process:
 
             return result
 
-        except Exception as e:
-            log.exception(f"aio process {os.getpid()} failed with {e}")
+        except BaseException:
+            log.exception(f"aio process {os.getpid()} failed")
             raise
 
     def start(self) -> None:

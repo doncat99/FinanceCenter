@@ -71,13 +71,13 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
 
         return df
 
-    async def persist(self, entity, http_session, db_session, para):
+    async def persist(self, entity, http_session, db_session, df_record):
         start_point = time.time()
         saved = await df_to_db(region=self.region,
                                provider=self.provider,
                                data_schema=self.data_schema,
                                db_session=db_session,
-                               df=para,
+                               df=df_record,
                                force_update=True)
         return True, time.time() - start_point, saved
 

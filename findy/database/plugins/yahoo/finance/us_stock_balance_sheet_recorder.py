@@ -474,8 +474,6 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
     def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
-
         # get stock info
         balance_sheet = self.yh_get_balance_sheet(entity.code)
 
@@ -486,7 +484,7 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
         balance_sheet['timestamp'] = balance_sheet.index
 
         if pd_valid(balance_sheet):
-            return False, time.time() - start_point, (ref_record, self.format(entity, balance_sheet))
+            return False, time.time() - start_point, self.format(entity, balance_sheet)
 
         return True, time.time() - start_point, None
 

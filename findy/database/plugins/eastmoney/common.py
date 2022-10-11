@@ -4,6 +4,7 @@ import time
 
 import demjson
 import pandas as pd
+from sqlalchemy import func
 
 from findy.interface import Region, Provider, ChnExchange
 from findy.database.schema import ReportPeriod, CompanyType
@@ -150,7 +151,7 @@ class BaseEastmoneyRecorder(object):
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
-        (ref_record, start, end, size, timestamps) = para
+        (start, end, size, timestamps) = para
 
         if timestamps:
             original_list = []
@@ -173,7 +174,7 @@ class BaseEastmoneyRecorder(object):
                 original_list += tmp_list
                 if len(original_list) == self.batch_size:
                     break
-            return False, time.time() - start_point, (ref_record, pd.DataFrame.from_records(original_list))
+            return False, time.time() - start_point, pd.DataFrame.from_records(original_list)
 
         else:
             param = self.generate_request_param(entity, start, end, size, None, http_session)
@@ -239,7 +240,7 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder
         else:
             return result
 
-    async def eval_fetch_timestamps(self, entity, referenced_record, http_session):
+    async def eval_fetch_timestamps(self, entity, http_session, db_session):
         remote_count = await self.get_remote_count(entity, http_session)
 
         if remote_count is None:
@@ -250,7 +251,13 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder
             return None, None, 0, None
 
         # get local count
-        local_count = len(referenced_record)
+        count, column_names = self.data_schema.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                func=func.count(self.data_schema.id))
+
+        local_count = count
 
         # FIXME:the > case
         size = remote_count - local_count
@@ -290,14 +297,19 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
             return df.loc[df[self.get_evaluated_time_field()].idxmax()]
         return None
 
-    async def eval_fetch_timestamps(self, entity, referenced_record, http_session):
+    async def eval_fetch_timestamps(self, entity, http_session, db_session):
         # get latest record
-        latest_record = None
+        time_field = self.get_evaluated_time_field()
         try:
-            if pd_valid(referenced_record):
-                latest_record = referenced_record.loc[referenced_record[self.get_evaluated_time_field()].idxmax()]
+            time_column = eval(f'self.data_schema.{time_field}')
+            latest_record, column_names = self.data_schema.query_data(
+                region=self.region,
+                provider=self.provider,
+                db_session=db_session,
+                func=func.max(time_column))
         except Exception as e:
             self.logger.warning(f"get referenced_record failed with error: {e}")
+            latest_record = None
 
         if latest_record is not None:
             remote_record = self.get_remote_latest_record(entity, http_session)
