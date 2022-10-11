@@ -18,6 +18,8 @@ Financial Center: open financial data framework
     - [1. Packages / Dependencies](#1-packages--dependencies)
     - [2. Database](#2-database)
     - [3. Redis](#3-redis)
+    - [4. Kafka](#4-kafka)
+    - [5. Pip Packages](#5-pip-packages)
 - [Configure FinDy Settings](#configure-findy-settings)
 - [Updates:](#updates)
     - [(25 Dec 2021)](#25-dec-2021)
@@ -131,7 +133,6 @@ psql -U XXX(superuser role) -d postgres
 
 # Create a user for FinDy
 CREATE USER postgres with NOSUPERUSER CREATEDB CREATEROLE INHERIT LOGIN;
-CREATE USER xxx(normal user, ex: don);
 
 # Create the FinDy production database & grant all privileges on database
 CREATE DATABASE findy OWNER postgres;
