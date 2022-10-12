@@ -399,7 +399,7 @@ async def fetch_data(region: Region):
     if Multi:
         pool_tasks = []
         tasks = len(calls_list)
-        cpus = min(tasks, os.cpu_count())
+        cpus = max(1, min(tasks, os.cpu_count()))
         childconcurrency = max(1, round(tasks / cpus))
 
         current_os = platform.system().lower()
