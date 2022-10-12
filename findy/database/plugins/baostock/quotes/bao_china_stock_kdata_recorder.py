@@ -2,6 +2,7 @@
 import time
 
 import pandas as pd
+import asyncio
 
 from findy import findy_config
 from findy.interface import Region, Provider, ChnExchange, EntityType
@@ -88,7 +89,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
         try:
             return _bao_get_bars(code, start, end, frequency, adjustflag, fields)
         except Exception as e:
-            self.logger.error(f'bao_get_bars, code: {code}, error: {e}')
+            self.logger.error(f'bao_get_bars, frequency: {frequency}, code: {code}, error: {e}')
         return None
 
     async def record(self, entity, http_session, db_session, para):
@@ -108,7 +109,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                                frequency=self.bao_trading_level,
                                fields=to_bao_trading_field(self.bao_trading_level),
                                adjustflag=to_bao_adjust_flag(self.adjust_type))
-
+        await asyncio.sleep(0.005)
+        
         if pd_valid(df):
             return False, time.time() - start_point, self.format(entity, df)
 

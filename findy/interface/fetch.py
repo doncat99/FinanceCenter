@@ -365,19 +365,11 @@ async def fetch_data(region: Region):
     elif region == Region.US:
         task_set = task_set_us
     else:
-        task_set = []
+        return
 
     print("")
     print("parallel fetching processing...")
     print("")
-
-    kafka_producer = connect_kafka_producer(findy_config['kafka'])
-
-    data = {"task": "main", "total": len(task_set), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
-    publish_message(kafka_producer,
-                    progress_topic,
-                    bytes(progress_key, encoding='utf-8'),
-                    bytes(json.dumps(data), encoding='utf-8'))
 
     schedule_log_file = f'update_schedule_log_{region.value}'
     cache = get_cache(schedule_log_file)
@@ -393,14 +385,21 @@ async def fetch_data(region: Region):
                 item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
 
             calls_list.append((region, item))
-
     # calls_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
+
+    kafka_producer = connect_kafka_producer(findy_config['kafka'])
+
+    data = {"task": "main", "total": len(calls_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    publish_message(kafka_producer,
+                    progress_topic,
+                    bytes(progress_key, encoding='utf-8'),
+                    bytes(json.dumps(data), encoding='utf-8'))
 
     Multi = True
     if Multi:
         pool_tasks = []
         tasks = len(calls_list)
-        cpus = max(tasks, min(1, os.cpu_count()))
+        cpus = min(tasks, os.cpu_count())
         childconcurrency = max(1, round(tasks / cpus))
 
         current_os = platform.system().lower()
