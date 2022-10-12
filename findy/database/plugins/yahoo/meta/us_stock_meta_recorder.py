@@ -25,7 +25,9 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
                 db_session=db_session,
                 entity_type=EntityType.StockDetail,
                 codes=self.codes,
-                filters=[StockDetail.profile.is_(None)])
+                filters=[StockDetail.market_cap == 0, 
+                         StockDetail.sector.is_(None),
+                         StockDetail.country.is_(None)])
 
     def yh_get_info(self, code):
         retry = 3
@@ -37,12 +39,20 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
             except Exception as e:
                 msg = str(e)
                 error_msg = f'yh_get_info, code: {code}, error: {msg}'
-                time.sleep(60 * 10)
+                # time.sleep(60 * 10)
 
         self.logger.error(error_msg)
         return None
 
     async def eval(self, entity, http_session, db_session):
+        # entity_saved, column_names = StockDetail.query_data(
+        #     region=self.region,
+        #     provider=self.provider,
+        #     db_session=db_session,
+        #     entity_id=entity.entity_id,
+        #     limit=1)
+
+        # return entity.market_cap > 0, 0, None
         return not isinstance(entity, StockDetail), 0, None
 
     async def record(self, entity, http_session, db_session, para):

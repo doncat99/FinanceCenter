@@ -290,7 +290,9 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
-                func=func.max(time_column))
+                entity_id=entity.entity_id,
+                func=func.max(time_column),
+                limit=1)
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
             latest_timestamp = None
@@ -481,8 +483,9 @@ class KDataRecorder(TimeSeriesDataRecorder):
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
-                func=func.max(time_column))
-
+                entity_id=entity.entity_id,
+                func=func.max(time_column),
+                limit=1)
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
             latest_timestamp = None
@@ -570,7 +573,9 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
-                func=func.max(time_column))
+                entity_id=entity.entity_id,
+                func=func.max(time_column),
+                limit=1)
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
             latest_timestamp = None

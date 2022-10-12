@@ -306,7 +306,9 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
-                func=func.max(time_column))
+                entity_id=entity.entity_id,
+                func=func.max(time_column),
+                limit=1)
         except Exception as e:
             self.logger.warning(f"get referenced_record failed with error: {e}")
             latest_record = None

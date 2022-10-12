@@ -53,7 +53,8 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
             region=self.region,
             provider=self.provider,
             db_session=db_session,
-            func=func.max(StockTradeDay.timestamp))
+            func=func.max(StockTradeDay.timestamp),
+            limit=1)
 
         start = to_time_str(trade_day) if trade_day else "1990-12-19"
 
