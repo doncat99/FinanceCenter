@@ -372,24 +372,27 @@ async def fetch_data(region: Region):
     print("")
 
     schedule_log_file = f'update_schedule_log_{region.value}'
-    cache = get_cache(schedule_log_file)
-    if cache == None:
-        cache = {}
-    calls_list = []
+    schedule_cache = get_cache(schedule_log_file)
+    
+    if schedule_cache == None:
+        schedule_cache = {}
+
+    all_tasks_list = []
+    parallel_tasks_list = []
 
     for index, item in enumerate(task_set):
-        if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache):
+        if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache):
             if item[Para.Mode.value] == RunMode.Serial:
                 item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
             else:
                 item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
 
-            calls_list.append((region, item))
-    # calls_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], cache)]
+            all_tasks_list.append((region, item))
+    # all_tasks_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
 
     kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
-    data = {"task": "main", "total": len(calls_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    data = {"task": "main", "total": len(all_tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
     publish_message(kafka_producer,
                     progress_topic,
                     bytes(progress_key, encoding='utf-8'),
@@ -397,8 +400,7 @@ async def fetch_data(region: Region):
 
     Multi = True
     if Multi:
-        pool_tasks = []
-        tasks = len(calls_list)
+        tasks = len(all_tasks_list)
         cpus = max(1, min(tasks, os.cpu_count()))
         childconcurrency = max(1, round(tasks / cpus))
 
@@ -410,9 +412,9 @@ async def fetch_data(region: Region):
             loop_initializer = None
 
         async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
-            for call in calls_list:
-                if call[1][Para.Mode.value] == RunMode.Serial:
-                    result = await loop_task_set(call)
+            for task in all_tasks_list:
+                if task[1][Para.Mode.value] == RunMode.Serial:
+                    result = await loop_task_set(task)
 
                     publish_message(kafka_producer,
                                     progress_topic,
@@ -425,31 +427,12 @@ async def fetch_data(region: Region):
                                     bytes(progress_key, encoding='utf-8'),
                                     bytes(json.dumps(data), encoding='utf-8'))
 
-                    cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-                    dump_cache(schedule_log_file, cache)
+                    schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+                    dump_cache(schedule_log_file, schedule_cache)
                 else:
-                    pool_tasks.append(pool.apply(loop_task_set, args=[call]))
+                    parallel_tasks_list.append(task)
 
-            for task in asyncio.as_completed(pool_tasks):
-                result = await task
-
-                publish_message(kafka_producer,
-                                progress_topic,
-                                bytes(progress_key, encoding='utf-8'),
-                                bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
-
-                data['update'] = 1
-                publish_message(kafka_producer,
-                                progress_topic,
-                                bytes(progress_key, encoding='utf-8'),
-                                bytes(json.dumps(data), encoding='utf-8'))
-
-                cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-                dump_cache(schedule_log_file, cache)
-
-    else:
-        for call in calls_list:
-            result = await loop_task_set(call)
+            result = await pool.map(loop_task_set, parallel_tasks_list)
 
             publish_message(kafka_producer,
                             progress_topic,
@@ -462,8 +445,26 @@ async def fetch_data(region: Region):
                             bytes(progress_key, encoding='utf-8'),
                             bytes(json.dumps(data), encoding='utf-8'))
 
-            cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-            dump_cache(schedule_log_file, cache)
+            schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+            dump_cache(schedule_log_file, schedule_cache)
+
+    else:
+        for task in all_tasks_list:
+            result = await loop_task_set(task)
+
+            publish_message(kafka_producer,
+                            progress_topic,
+                            bytes(progress_key, encoding='utf-8'),
+                            bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
+
+            data['update'] = 1
+            publish_message(kafka_producer,
+                            progress_topic,
+                            bytes(progress_key, encoding='utf-8'),
+                            bytes(json.dumps(data), encoding='utf-8'))
+
+            schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+            dump_cache(schedule_log_file, schedule_cache)
 
 
 def fetching(region: Region):

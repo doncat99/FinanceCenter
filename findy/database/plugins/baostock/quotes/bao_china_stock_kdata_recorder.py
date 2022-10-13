@@ -2,7 +2,7 @@
 import time
 
 import pandas as pd
-import asyncio
+# import asyncio
 
 from findy import findy_config
 from findy.interface import Region, Provider, ChnExchange, EntityType
@@ -109,7 +109,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                                frequency=self.bao_trading_level,
                                fields=to_bao_trading_field(self.bao_trading_level),
                                adjustflag=to_bao_adjust_flag(self.adjust_type))
-        await asyncio.sleep(0.005)
+        # await asyncio.sleep(0.005)
         
         if pd_valid(df):
             return False, time.time() - start_point, self.format(entity, df)
