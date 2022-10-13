@@ -377,8 +377,7 @@ async def fetch_data(region: Region):
     if schedule_cache == None:
         schedule_cache = {}
 
-    all_tasks_list = []
-    parallel_tasks_list = []
+    tasks_list = []
 
     for index, item in enumerate(task_set):
         if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache):
@@ -387,52 +386,20 @@ async def fetch_data(region: Region):
             else:
                 item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
 
-            all_tasks_list.append((region, item))
-    # all_tasks_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
+            tasks_list.append((region, item))
+    # tasks_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
 
     kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
-    data = {"task": "main", "total": len(all_tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    data = {"task": "main", "total": len(tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
     publish_message(kafka_producer,
                     progress_topic,
                     bytes(progress_key, encoding='utf-8'),
                     bytes(json.dumps(data), encoding='utf-8'))
 
-    Multi = True
-    if Multi:
-        tasks = len(all_tasks_list)
-        cpus = max(1, min(tasks, os.cpu_count()))
-        childconcurrency = max(1, round(tasks / cpus))
-
-        current_os = platform.system().lower()
-        if current_os != "windows":
-            import uvloop
-            loop_initializer = uvloop.new_event_loop
-        else:
-            loop_initializer = None
-
-        async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
-            for task in all_tasks_list:
-                if task[1][Para.Mode.value] == RunMode.Serial:
-                    result = await loop_task_set(task)
-
-                    publish_message(kafka_producer,
-                                    progress_topic,
-                                    bytes(progress_key, encoding='utf-8'),
-                                    bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
-
-                    data['update'] = 1
-                    publish_message(kafka_producer,
-                                    progress_topic,
-                                    bytes(progress_key, encoding='utf-8'),
-                                    bytes(json.dumps(data), encoding='utf-8'))
-
-                    schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
-                    dump_cache(schedule_log_file, schedule_cache)
-                else:
-                    parallel_tasks_list.append(task)
-
-            result = await pool.map(loop_task_set, parallel_tasks_list)
+    for task in tasks_list[:]:
+        if task[1][Para.Mode.value] == RunMode.Serial:
+            result = await loop_task_set(task)
 
             publish_message(kafka_producer,
                             progress_topic,
@@ -447,9 +414,39 @@ async def fetch_data(region: Region):
 
             schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
             dump_cache(schedule_log_file, schedule_cache)
+            tasks_list.remove(task)
 
+    Multi = True
+    if Multi:
+        tasks = len(tasks_list)
+        cpus = max(1, min(tasks, os.cpu_count()))
+        childconcurrency = max(1, round(tasks / cpus))
+
+        current_os = platform.system().lower()
+        if current_os != "windows":
+            import uvloop
+            loop_initializer = uvloop.new_event_loop
+        else:
+            loop_initializer = None
+
+        async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
+        # async with amp.Pool() as pool:
+            async for result in pool.map(loop_task_set, tasks_list):
+                publish_message(kafka_producer,
+                                progress_topic,
+                                bytes(progress_key, encoding='utf-8'),
+                                bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
+
+                data['update'] = 1
+                publish_message(kafka_producer,
+                                progress_topic,
+                                bytes(progress_key, encoding='utf-8'),
+                                bytes(json.dumps(data), encoding='utf-8'))
+
+                schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+                dump_cache(schedule_log_file, schedule_cache)
     else:
-        for task in all_tasks_list:
+        for task in tasks_list:
             result = await loop_task_set(task)
 
             publish_message(kafka_producer,
