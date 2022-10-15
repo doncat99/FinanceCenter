@@ -225,19 +225,11 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                  force_update=False,
                  sleeping_time=5,
                  default_size=findy_config['batch_size'],
-                 real_time=False,
                  fix_duplicate_way='add',
                  start_timestamp=None,
                  end_timestamp=None,
-                 close_hour=0,
-                 close_minute=0,
                  share_para=None) -> None:
         self.default_size = default_size
-        self.real_time = real_time
-
-        self.close_hour = close_hour
-        self.close_minute = close_minute
-
         self.fix_duplicate_way = fix_duplicate_way
         self.start_timestamp = to_pd_timestamp(start_timestamp)
         self.end_timestamp = to_pd_timestamp(end_timestamp)
@@ -345,17 +337,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         # could not get more data
         else:
-            # not realtime
-            if not self.real_time:
-                is_finished = True
-
-            # realtime and to the close time
-            elif (self.close_hour is not None) and (self.close_minute is not None):
-                now = now_pd_timestamp(self.region)
-                if now.hour >= self.close_hour:
-                    if now.minute - self.close_minute >= 5:
-                        self.logger.info(f'{entity.id} now is the close time: {now}')
-                        is_finished = True
+            is_finished = True
 
         if isinstance(self, KDataRecorder):
             is_finished = True
@@ -394,25 +376,17 @@ class KDataRecorder(TimeSeriesDataRecorder):
                  force_update=True,
                  sleeping_time=10,
                  default_size=findy_config['batch_size'],
-                 real_time=False,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
-                 close_hour=0,
-                 close_minute=0,
                  # child add
                  level=IntervalLevel.LEVEL_1DAY,
-                 kdata_use_begin_time=False,
-                 one_day_trading_minutes=24 * 60,
                  share_para=None):
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size, real_time,
+                         force_update, sleeping_time, default_size,
                          fix_duplicate_way, start_timestamp, end_timestamp,
-                         close_hour, close_minute, share_para=share_para)
-
+                         share_para=share_para)
         self.level = IntervalLevel(level)
-        self.kdata_use_begin_time = kdata_use_begin_time
-        self.one_day_trading_minutes = one_day_trading_minutes
 
     @staticmethod
     def get_kdata_schema(entity_type: EntityType,
@@ -505,7 +479,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
         size = self.eval_size_of_timestamp(start_timestamp=start,
                                            end_timestamp=end,
                                            level=self.level,
-                                           one_day_trading_minutes=self.one_day_trading_minutes)
+                                           one_day_trading_minutes=4 * 60)
 
         return start, end, size, None
 
@@ -521,17 +495,13 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                  force_update=False,
                  sleeping_time=5,
                  default_size=findy_config['batch_size'],
-                 real_time=False,
                  fix_duplicate_way='add',
                  start_timestamp=None,
                  end_timestamp=None,
-                 close_hour=0,
-                 close_minute=0,
                  share_para=None) -> None:
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size, real_time,
+                         force_update, sleeping_time, default_size,
                          fix_duplicate_way, start_timestamp, end_timestamp,
-                         close_hour=close_hour, close_minute=close_minute,
                          share_para=share_para)
         self.security_timestamps_map = {}
 

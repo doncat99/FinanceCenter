@@ -108,13 +108,9 @@ class Mixin(object):
                           force_update=None,
                           sleeping_time=None,
                           default_size=None,
-                          real_time=None,
                           fix_duplicate_way=None,
                           start_timestamp=None,
                           end_timestamp=None,
-                          close_hour=None,
-                          close_minute=None,
-                          one_day_trading_minutes=None,
                           **kwargs):
         assert hasattr(cls, 'provider_map_recorder') and cls.provider_map_recorder
         # print(f'{cls.__name__} registered recorders:{cls.provider_map_recorder}')

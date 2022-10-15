@@ -85,11 +85,10 @@ class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):
     category_stocks_url = 'https://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&cmd=C.{}{}&sty=SFCOO&st=(Close)&sr=-1&p=1&ps=300&cb=jsonp_B66B5BAA1C1B47B5BB9778045845B947&token=7bc05d0d4c3c22ef9fca8c2a912d779c'
 
     def __init__(self, exchanges=None, entity_ids=None, codes=None, batch_size=10, force_update=False, sleeping_time=5,
-                 default_size=findy_config['batch_size'], real_time=False, fix_duplicate_way='add',
-                 start_timestamp=None, end_timestamp=None, close_hour=0, close_minute=0) -> None:
+                 default_size=findy_config['batch_size'], fix_duplicate_way='add',
+                 start_timestamp=None, end_timestamp=None) -> None:
         super().__init__(EntityType.Block, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
-                         close_minute)
+                         default_size, fix_duplicate_way, start_timestamp, end_timestamp)
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         return entity.id + '_' + df['stock_id']

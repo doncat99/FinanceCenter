@@ -34,15 +34,12 @@ class ChinaStockKdataRecorder(KDataRecorder):
 
     def __init__(self, entity_type=EntityType.Index, exchanges=None, entity_ids=None,
                  codes=None, batch_size=10, force_update=False, sleeping_time=10,
-                 default_size=10000, real_time=True, fix_duplicate_way='add',
+                 default_size=10000, fix_duplicate_way='add',
                  start_timestamp=None, end_timestamp=None,
-                 level=IntervalLevel.LEVEL_1WEEK, kdata_use_begin_time=False,
-                 close_hour=0, close_minute=0, one_day_trading_minutes=24 * 60) -> None:
+                 level=IntervalLevel.LEVEL_1WEEK) -> None:
         self.data_schema = get_kdata_schema(entity_type=entity_type, level=level)
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
-                         close_minute, level, kdata_use_begin_time,
-                         one_day_trading_minutes)
+                         default_size, fix_duplicate_way, start_timestamp, end_timestamp, level)
 
     async def init_entities(self, db_session):
         entities, column_names = get_entities(

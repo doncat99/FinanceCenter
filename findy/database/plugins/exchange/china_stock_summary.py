@@ -35,10 +35,10 @@ class StockSummaryRecorder(TimestampsDataRecorder):
 
     def __init__(self, exchanges=['cn'], entity_ids=None, codes=['000001'], batch_size=10,
                  force_update=False, sleeping_time=5, default_size=findy_config['batch_size'],
-                 real_time=False, fix_duplicate_way='add', share_para=None) -> None:
+                 fix_duplicate_way='add', share_para=None) -> None:
         super().__init__(EntityType.Index, exchanges, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size, real_time,
-                         fix_duplicate_way, share_para=share_para)
+                         force_update, sleeping_time, default_size, fix_duplicate_way,
+                         share_para=share_para)
 
     def init_timestamps(self, entity, http_session):
         return pd.date_range(start=entity.timestamp,

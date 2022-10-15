@@ -31,16 +31,13 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
                  force_update=False,
                  sleeping_time=5,
                  default_size=findy_config['batch_size'],
-                 real_time=False,
                  fix_duplicate_way='add',
                  start_timestamp=None,
                  end_timestamp=None,
-                 close_hour=0,
-                 close_minute=0,
                  share_para=None) -> None:
         super().__init__(entity_type, exchanges, entity_ids, codes, batch_size, force_update,
-                         sleeping_time, default_size, real_time, fix_duplicate_way, start_timestamp,
-                         end_timestamp, close_hour, close_minute, share_para=share_para)
+                         sleeping_time, default_size, fix_duplicate_way, start_timestamp,
+                         end_timestamp, share_para=share_para)
 
         try:
             self.fetch_jq_timestamp = True

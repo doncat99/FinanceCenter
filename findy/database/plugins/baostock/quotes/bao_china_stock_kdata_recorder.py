@@ -39,15 +39,10 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                  force_update=True,
                  sleeping_time=0,
                  default_size=findy_config['batch_size'],
-                 real_time=False,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
                  level=IntervalLevel.LEVEL_1WEEK,
-                 kdata_use_begin_time=False,
-                 close_hour=15,
-                 close_minute=0,
-                 one_day_trading_minutes=4 * 60,
                  adjust_type=AdjustType.qfq,
                  share_para=None) -> None:
         level = IntervalLevel(level)
@@ -56,8 +51,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
         self.bao_trading_level = to_bao_trading_level(level)
 
         super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
-                         close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
+                         default_size, fix_duplicate_way, start_timestamp, end_timestamp, level,
+                         share_para=share_para)
         self.adjust_type = adjust_type
 
     async def init_entities(self, db_session):
