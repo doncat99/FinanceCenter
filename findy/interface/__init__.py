@@ -14,8 +14,6 @@ class Provider(enum.Enum):
     BaoStock = 'baostock'
     TuShare = 'tushare'
     AkShare = 'akshare'
-    EastMoney = 'eastmoney'
-    Sina = 'sina'
     Yahoo = 'yahoo'
     Alpaca = 'alpaca'
     Findy = 'findy'

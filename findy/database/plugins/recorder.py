@@ -77,8 +77,9 @@ class RecorderForEntities(Recorder):
                  force_update=False,
                  sleeping_time=10,
                  share_para=None) -> None:
-        assert self.data_schema is not None
+        assert self.region is not None
         assert self.provider is not None
+        assert self.data_schema is not None
         assert self.provider in self.data_schema.providers[self.region]
 
         # setup the entities you want to record
@@ -153,7 +154,6 @@ class RecorderForEntities(Recorder):
         download_time = 0
         persist_time = 0
         total_time = 0
-
 
         while True:
             result, eval_, download_, persist_, total_, extra = await self.process_entity(entity, http_session, db_session, throttler)
