@@ -202,7 +202,8 @@ def create_index(region: Region, engine, schema_base):
 
             logger.debug(f'create async index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
 
-            for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
+            # for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
+            for col in ['timestamp', 'entity_id', 'code', 'report_period']: 
                 if col in table.c:
                     index_name = f'{table_name}_{col}_index'
                     if index_name not in index_column_names:
@@ -237,7 +238,7 @@ def bind_engine(region: Region,
     schema_base.metadata.create_all(engine, checkfirst=True)
 
     # create index
-    # create_index(region, engine, schema_base)
+    create_index(region, engine, schema_base)
 
     db_session = sessionmaker(bind=engine, expire_on_commit=False)()
     enable_batch_inserting(db_session)

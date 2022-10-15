@@ -2,7 +2,6 @@
 from datetime import datetime
 import time
 
-from sqlalchemy import func
 import pandas as pd
 import exchange_calendars as calendars
 
@@ -36,7 +35,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
             region=self.region,
             provider=self.provider,
             db_session=db_session,
-            func=func.max(StockTradeDay.timestamp),
+            order=StockTradeDay.timestamp.desc(),
             limit=1)
 
         start = to_time_str(trade_day) if trade_day else "2003-10-11"

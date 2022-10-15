@@ -7,7 +7,6 @@ from typing import List, Union
 import asyncio
 
 import pandas as pd
-from sqlalchemy import func
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
@@ -286,13 +285,14 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamp, column_names = self.data_schema.query_data(
+            latest_timestamps, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
-                func=func.max(time_column),
-                limit=1)
+                order=time_column.desc(),
+                limit=100)
+            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
             latest_timestamp = None
@@ -479,13 +479,14 @@ class KDataRecorder(TimeSeriesDataRecorder):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamp, column_names = self.data_schema.query_data(
+            latest_timestamps, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
-                func=func.max(time_column),
-                limit=1)
+                order=time_column.desc(),
+                limit=100)
+            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
             latest_timestamp = None
@@ -569,13 +570,14 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamp, column_names = self.data_schema.query_data(
+            latest_timestamps, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
-                func=func.max(time_column),
-                limit=1)
+                order=time_column.desc(),
+                limit=100)
+            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
             latest_timestamp = None
