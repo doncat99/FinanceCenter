@@ -38,8 +38,6 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
         async with throttler:
             now = time.time()
 
-            self.result = None
-
             if entity.exchange == ChnExchange.SSE.value:
                 fc = f"{entity.code}01"
             if entity.exchange == ChnExchange.SZSE.value:

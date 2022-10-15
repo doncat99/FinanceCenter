@@ -129,7 +129,7 @@ class RecorderForEntities(Recorder):
         is_finish, eval_time, para = await self.eval(entity, http_session, db_session)
         if is_finish:
             # await self.sleep(0.1)
-            return 1, eval_time, download_time, persist_time, time.time() - start_point
+            return 1, eval_time, download_time, persist_time, time.time() - start_point, None
 
         async with throttler:
             start_point = time.time()
@@ -138,15 +138,15 @@ class RecorderForEntities(Recorder):
             is_finish, download_time, df_record = await self.record(entity, http_session, db_session, para)
             if is_finish:
                 # await self.sleep(0.1)
-                return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time
+                return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time, None
 
             # save
-            is_finish, persist_time, count = await self.persist(entity, http_session, db_session, df_record)
+            is_finish, persist_time, extra = await self.persist(entity, http_session, db_session, df_record)
             if is_finish:
                 # await self.sleep(0.1)
-                return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time
+                return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time, extra
 
-        return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time
+        return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time, None
 
     async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         eval_time = 0
@@ -154,10 +154,9 @@ class RecorderForEntities(Recorder):
         persist_time = 0
         total_time = 0
 
-        self.result = None
 
         while True:
-            result, eval_, download_, persist_, total_ = await self.process_entity(entity, http_session, db_session, throttler)
+            result, eval_, download_, persist_, total_, extra = await self.process_entity(entity, http_session, db_session, throttler)
             eval_time += eval_
             download_time += download_
             persist_time += persist_
@@ -180,10 +179,10 @@ class RecorderForEntities(Recorder):
         postfix = "\n" if findy_config['debug'] else ""
 
         name = entity if isinstance(entity, str) else entity.id
-        if self.result is not None:
+        if extra is not None:
             self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}, size: {:>7}, date: [ {}, {} ]{}".format(
                 prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time,
-                self.result[0], self.result[1], self.result[2], postfix))
+                extra[0], extra[1], extra[2], postfix))
         else:
             self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}{}".format(
                 prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time, postfix))
@@ -345,9 +344,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         start_timestamp = to_time_str(df_record['timestamp'].min(axis=0))
         end_timestamp = to_time_str(df_record['timestamp'].max(axis=0))
 
-        self.result = [saved_counts, start_timestamp, end_timestamp]
-
-        return is_finished, time.time() - start_point, saved_counts
+        return is_finished, time.time() - start_point, [saved_counts, start_timestamp, end_timestamp]
 
     async def run(self):
         db_session = get_db_session(self.region, self.provider, self.data_schema)
