@@ -291,7 +291,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
-                limit=100)
+                limit=1000)
             latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
@@ -485,7 +485,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
-                limit=100)
+                limit=1000)
             latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
@@ -576,7 +576,7 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
-                limit=100)
+                limit=1000)
             latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
