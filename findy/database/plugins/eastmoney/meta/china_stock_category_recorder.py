@@ -31,9 +31,9 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
     }
 
     async def init_entities(self, db_session):
-        self.entities = [BlockCategory.industry, BlockCategory.concept]
+        return [BlockCategory.industry, BlockCategory.concept]
 
-    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         async with throttler:
             async with http_session.get(self.category_map_url[entity]) as response:
                 text = await response.text()
@@ -71,9 +71,8 @@ class EastmoneyChinaBlockRecorder(RecorderForEntities):
                                    df=df)
                 self.logger.info(f"finish record sina blocks:{entity.value}")
 
-            (taskid, desc) = self.share_para[1]
-            data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update["update"] = 1
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
 
 class EastmoneyChinaBlockStockRecorder(TimeSeriesDataRecorder):

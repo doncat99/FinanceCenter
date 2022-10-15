@@ -17,17 +17,16 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
         super().__init__(entity_type=EntityType.StockDetail, batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
 
     async def init_entities(self, db_session):
-        # init the entity list
-        if not self.force_update:
-            self.entities, column_names = get_entities(
-                region=self.region,
-                provider=self.provider,
-                db_session=db_session,
-                entity_type=EntityType.StockDetail,
-                codes=self.codes,
-                filters=[StockDetail.market_cap == 0, 
-                         StockDetail.sector.is_(None),
-                         StockDetail.country.is_(None)])
+        entities, column_names = get_entities(
+            region=self.region,
+            provider=self.provider,
+            db_session=db_session,
+            entity_type=EntityType.StockDetail,
+            codes=self.codes,
+            filters=[StockDetail.market_cap == 0, 
+                        StockDetail.sector.is_(None),
+                        StockDetail.country.is_(None)])
+        return entities
 
     def yh_get_info(self, code):
         retry = 3
@@ -97,5 +96,5 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

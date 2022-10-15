@@ -45,7 +45,7 @@ class ChinaStockKdataRecorder(KDataRecorder):
                          one_day_trading_minutes)
 
     async def init_entities(self, db_session):
-        self.entities, column_names = get_entities(
+        entities, column_names = get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -55,6 +55,7 @@ class ChinaStockKdataRecorder(KDataRecorder):
             entity_ids=self.entity_ids,
             # 只抓概念和行业
             filters=[Index.category.in_([BlockCategory.industry.value, BlockCategory.concept.value])])
+        return entities
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         format = PD_TIME_FORMAT_DAY if self.level >= IntervalLevel.LEVEL_1DAY else PD_TIME_FORMAT_ISO8601
@@ -118,5 +119,5 @@ class ChinaStockKdataRecorder(KDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

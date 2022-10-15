@@ -53,12 +53,13 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         desc = DividendFinancing.__name__ + ": update relevant table"
         db_session = get_db_session(self.region, self.provider, DividendFinancing)
         kafka_producer = connect_kafka_producer(findy_config['kafka'])
+        pbar_update = {"task": 'div', "total": len(entities), "desc": desc, "leave": True, "update": 1}
 
-        for entity in self.entities:
+        for entity in entities:
             code_security = {}
             code_security[entity.code] = entity
 
@@ -75,8 +76,7 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
                 for need_fill_item in need_fill_items:
                     need_fill_item.ipo_raising_fund = code_security[entity.code].raising_fund
 
-            data = {"task": 'div', "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
         try:
             db_session.commit()
@@ -86,4 +86,4 @@ class DividendFinancingRecorder(EastmoneyPageabeDataRecorder):
         finally:
             db_session.close()
 
-        await super().on_finish()
+        await super().on_finish(entities)

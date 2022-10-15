@@ -26,7 +26,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
     data_schema = StockTradeDay
 
     async def init_entities(self, db_session):
-        self.entities = ['stock_sz_000001']
+        return ['stock_sz_000001']
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         return df['timestamp'].dt.strftime(time_fmt)
@@ -44,7 +44,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
         except Exception as e:
             self.logger.error(f'bao_get_trade_days, error: {e}')
         return None
-
+    
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
@@ -55,7 +55,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
             order=StockTradeDay.timestamp.desc(),
             limit=1)
 
-        start = to_time_str(trade_day) if trade_day else "1990-12-19"
+        start = to_time_str(trade_day[0].timestamp) if trade_day and len(trade_day) > 0 else "1990-12-19"
 
         df = self.bao_get_trade_days(start_date=start)
 
@@ -88,5 +88,5 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

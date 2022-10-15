@@ -48,9 +48,9 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         last_year = str(now_pd_timestamp(self.region).year)
-        codes = [item.code for item in self.entities]
+        codes = [item.code for item in entities]
 
         db_session = get_db_session(self.region, self.provider, DividendFinancing)
 
@@ -92,4 +92,4 @@ class RightsIssueDetailRecorder(EastmoneyPageabeDataRecorder):
             finally:
                 db_session.close()
 
-        await super().on_finish()
+        await super().on_finish(entities)

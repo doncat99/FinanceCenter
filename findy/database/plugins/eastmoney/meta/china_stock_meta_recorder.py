@@ -20,18 +20,19 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
     data_schema = StockDetail
 
     async def init_entities(self, db_session):
-        if not self.force_update:
-            # init the entity list
-            self.entities, column_names = get_entities(
-                region=self.region,
-                provider=self.provider,
-                db_session=db_session,
-                entity_type=EntityType.StockDetail,
-                exchanges=[e.value for e in ChnExchange],
-                codes=self.codes,
-                filters=[self.data_schema.profile.is_(None)])
+        # init the entity list
+        entities, column_names = get_entities(
+            region=self.region,
+            provider=self.provider,
+            db_session=db_session,
+            entity_type=EntityType.StockDetail,
+            exchanges=[e.value for e in ChnExchange],
+            codes=self.codes,
+            filters=[self.data_schema.profile.is_(None)])
+        return entities
+            
 
-    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         assert isinstance(entity, self.data_schema)
 
         async with throttler:
@@ -109,12 +110,11 @@ class EastmoneyChinaStockDetailRecorder(RecorderForEntities):
                     self.logger.info("{}{:>14}, {:>18}, time: {}{}".format(
                         prefix, self.data_schema.__name__, entity.id, cost, postfix))
 
-            (taskid, desc) = self.share_para[1]
-            data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update["update"] = 1
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

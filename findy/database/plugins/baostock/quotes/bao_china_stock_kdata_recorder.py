@@ -62,7 +62,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
 
     async def init_entities(self, db_session):
         # init the entity list
-        self.entities, column_names = get_entities(
+        entities, column_names = get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -72,6 +72,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
             entity_ids=self.entity_ids,
             codes=self.codes,
             filters=[Stock.is_active.is_(True)])
+        return entities
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         format = PD_TIME_FORMAT_DAY if self.level >= IntervalLevel.LEVEL_1DAY else PD_TIME_FORMAT_ISO8601
@@ -159,5 +160,5 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
 
         return time.time() - now
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

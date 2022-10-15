@@ -21,7 +21,7 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
     data_schema = StockDetail
 
     async def init_entities(self, db_session):
-        self.entities = [e.value for e in ChnExchange]
+        return [e.value for e in ChnExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
@@ -84,5 +84,5 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

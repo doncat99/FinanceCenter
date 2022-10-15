@@ -151,9 +151,9 @@ class DataReader(object):
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
+                entity_id=entity_id,
                 index=[self.category_field, self.time_field],
                 order=data_schema.timestamp.desc(),
-                entity_id=entity_id,
                 limit=window)
 
             if data and len(data) > 0:

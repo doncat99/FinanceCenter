@@ -111,5 +111,5 @@ class StockSummaryRecorder(TimestampsDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

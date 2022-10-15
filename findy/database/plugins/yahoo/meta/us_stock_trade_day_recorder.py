@@ -20,7 +20,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     data_schema = StockTradeDay
 
     async def init_entities(self, db_session):
-        self.entities = [UsExchange.NYSE.value]
+        return [UsExchange.NYSE.value]
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         return df['timestamp'].dt.strftime(time_fmt)
@@ -38,7 +38,7 @@ class UsStockTradeDayRecorder(RecorderForEntities):
             order=StockTradeDay.timestamp.desc(),
             limit=1)
 
-        start = to_time_str(trade_day) if trade_day else "2003-10-11"
+        start = to_time_str(trade_day[0].timestamp) if trade_day and len(trade_day) > 0 else "2003-10-11"
 
         calendar = calendars.get_calendar(entity.upper())
         dates = calendar.sessions_in_range(start, to_time_str(now_pd_timestamp(Region.US)))
@@ -75,5 +75,5 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass

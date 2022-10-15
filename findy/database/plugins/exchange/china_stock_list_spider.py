@@ -57,7 +57,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     }
 
     async def init_entities(self, db_session):
-        self.entities = [e.value for e in ChnExchange]
+        return [e.value for e in ChnExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
@@ -65,7 +65,7 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     def get_original_time_field(self):
         return 'list_date'
 
-    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         url = self.category_map_url.get(entity, None)
         if url is None:
             return
@@ -82,9 +82,8 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
                 if pd_valid(df):
                     await self.persist(df, db_session)
 
-            (taskid, desc) = self.share_para[1]
-            data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update["update"] = 1
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     def format(self, resp, exchange):
         df = None
@@ -145,5 +144,5 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         self.logger.info("persist stock list successs")

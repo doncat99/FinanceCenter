@@ -97,16 +97,14 @@ class RecorderForEntities(Recorder):
 
         # setup the entities you want to record
         self.entity_type = entity_type
+        self.entity_ids = entity_ids
         self.exchanges = exchanges
         self.codes = codes
         self.share_para = share_para
 
-        # set entity_ids or (entity_type,exchanges,codes)
-        self.entity_ids = entity_ids
-
     async def init_entities(self, db_session):
         # init the entity list
-        self.entities, column_names = get_entities(
+        entities, column_names = get_entities(
             region=self.region,
             provider=self.provider,
             db_session=db_session,
@@ -115,6 +113,7 @@ class RecorderForEntities(Recorder):
             exchanges=self.exchanges,
             entity_ids=self.entity_ids,
             codes=self.codes)
+        return entities
 
     async def eval(self, entity, http_session, db_session):
         raise NotImplementedError
@@ -128,7 +127,7 @@ class RecorderForEntities(Recorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         raise NotImplementedError
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         raise NotImplementedError
 
     async def process_entity(self, entity, http_session, db_session, throttler):
@@ -161,7 +160,7 @@ class RecorderForEntities(Recorder):
 
         return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time
 
-    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         eval_time = 0
         download_time = 0
         persist_time = 0
@@ -180,10 +179,9 @@ class RecorderForEntities(Recorder):
                 # add finished entity to finished_items
                 total_time += await self.on_finish_entity(entity, http_session, db_session, result)
                 break
-
-        (taskid, desc) = self.share_para[1]
-        data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+        
+        pbar_update["update"] = 1
+        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
         eval_time = PRECISION_STR.format(eval_time)
         download_time = PRECISION_STR.format(download_time)
@@ -206,27 +204,25 @@ class RecorderForEntities(Recorder):
         db_session = get_db_session(self.region, self.provider, self.data_schema)
         kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
-        if not hasattr(self, 'entities'):
-            self.entities: List = None
-            await self.init_entities(db_session)
+        entities = await self.init_entities(db_session)
 
-        if self.entities and len(self.entities) > 0:
+        if entities and len(entities) > 0:
             http_session = get_async_http_session()
             throttler = asyncio.Semaphore(self.share_para[0])
 
             (taskid, desc) = self.share_para[1]
-            data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 0}
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update = {"task": taskid, "total": len(entities), "desc": desc, "leave": True, "update": 0}
+            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
-            # tasks = [asyncio.ensure_future(self.process_loop(entity, http_session, db_session, throttler)) for entity in self.entities]
-            tasks = [self.process_loop(entity, http_session, db_session, kafka_producer, throttler) for entity in self.entities]
+            # tasks = [asyncio.ensure_future(self.process_loop(entity, pbar_update, http_session, db_session, throttler)) for entity in entities]
+            tasks = [self.process_loop(entity, pbar_update, http_session, db_session, kafka_producer, throttler) for entity in entities]
 
             # for result in asyncio.as_completed(tasks):
             #     await result
 
             [await _ for _ in asyncio.as_completed(tasks)]
 
-            await self.on_finish()
+            await self.on_finish(entities)
 
             return await http_session.close()
 

@@ -51,9 +51,9 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         last_year = str(now_pd_timestamp(Region.CHN).year)
-        codes = [item.code for item in self.entities]
+        codes = [item.code for item in entities]
 
         db_session = get_db_session(self.region, self.provider, DividendFinancing)
 
@@ -70,7 +70,8 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
 
             db_session_1 = get_db_session(self.region, self.provider, self.data_schema)
             kafka_producer = connect_kafka_producer(findy_config['kafka'])
-
+            pbar_update = {"task": 'spo', "total": len(need_filleds), "desc": desc, "leave": True, "update": 1}
+            
             for item in need_filleds:
                 result, column_names = self.data_schema.query_data(
                     region=self.region,
@@ -84,8 +85,7 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
                 if isinstance(result, (int, float)):
                     item.spo_raising_fund = result
 
-                data = {"task": 'spo', "total": len(need_filleds), "desc": desc, "leave": True, "update": 1}
-                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+                publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
             try:
                 db_session.commit()
@@ -95,4 +95,4 @@ class SPODetailRecorder(EastmoneyPageabeDataRecorder):
             finally:
                 db_session.close()
 
-        await super().on_finish()
+        await super().on_finish(entities)

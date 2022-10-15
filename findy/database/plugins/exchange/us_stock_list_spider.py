@@ -33,7 +33,7 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     data_schema = Stock
 
     async def init_entities(self, db_session):
-        self.entities = [e.value for e in UsExchange]
+        return [e.value for e in UsExchange]
 
     def generate_domain_id(self, entity, df):
         return df['entity_type'] + '_' + df['exchange'] + '_' + df['code']
@@ -41,7 +41,7 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     def get_original_time_field(self):
         return 'list_date'
 
-    async def process_loop(self, entity, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
         url = 'https://api.nasdaq.com/api/screener/stocks'
         params = {'download': 'true', 'exchange': entity}
 
@@ -55,9 +55,8 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
         except Exception as e:
             self.logger.info(f"persist {entity} stock list failed with error: {e}")
 
-        (taskid, desc) = self.share_para[1]
-        data = {"task": taskid, "total": len(self.entities), "desc": desc, "leave": True, "update": 1}
-        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+        pbar_update["update"] = 1
+        publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     def format(self, content, exchange):
         df = pd.DataFrame(content)
@@ -104,5 +103,5 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     async def on_finish_entity(self, entity, http_session, db_session, result):
         return 0
 
-    async def on_finish(self):
+    async def on_finish(self, entities):
         pass
