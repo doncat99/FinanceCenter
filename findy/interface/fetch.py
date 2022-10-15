@@ -12,7 +12,7 @@ from datetime import datetime
 
 from findy import findy_config
 from findy.interface import Region, Provider, RunMode
-from findy.utils.kafka import connect_kafka_producer, publish_message
+from findy.utils.kafka import publish_message
 from findy.utils.progress import ProgressBarProcess, progress_topic, progress_key
 from findy.utils.cache import valid, get_cache, dump_cache
 import findy.vendor.aiomultiprocess as amp
@@ -338,23 +338,15 @@ class Para(enum.Enum):
 
 async def loop_task_set(args):
     now = time.time()
-    region, arg = args
+    region, item, _ = args
 
-    logger.info(f"Start Func: {arg[Para.FunName.value].__name__}")
-    await arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
-    logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
-
-    return arg
-
-    # try:
-    #     arg[Para.FunName.value](region, arg[Para.Provider.value], arg[Para.Sleep.value], arg[Para.Processor.value], arg[Para.Desc.value])
-    #     logger.info(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
-    # except Exception as e:
-    #     logger.error(f"End Func: {arg[Para.FunName.value].__name__}, cost: {time.time() - now}, errors: {e}\n")
-    # return arg
+    logger.info(f"Start Func: {item[Para.FunName.value].__name__}")
+    await item[Para.FunName.value](region, item[Para.Provider.value], item[Para.Sleep.value], item[Para.Processor.value], item[Para.Desc.value])
+    logger.info(f"End Func: {item[Para.FunName.value].__name__}, cost: {time.time() - now}\n")
+    return item
 
 
-async def fetch_data(region: Region):
+async def fetch_process(region: Region, kafka_producer):
     print("")
     print("*" * 80)
     print(f"*    Start Fetching {region.value.upper()} Stock information...      {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -377,19 +369,7 @@ async def fetch_data(region: Region):
     if schedule_cache == None:
         schedule_cache = {}
 
-    tasks_list = []
-
-    for index, item in enumerate(task_set):
-        if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache):
-            if item[Para.Mode.value] == RunMode.Serial:
-                item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
-            else:
-                item[Para.Desc.value] = (index + 2, item[Para.Desc.value])
-
-            tasks_list.append((region, item))
-    # tasks_list = [(region, item) for item in task_set if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
-
-    kafka_producer = connect_kafka_producer(findy_config['kafka'])
+    tasks_list = [(region, item, index) for index, item in enumerate(task_set) if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
 
     data = {"task": "main", "total": len(tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
     publish_message(kafka_producer,
@@ -398,6 +378,8 @@ async def fetch_data(region: Region):
                     bytes(json.dumps(data), encoding='utf-8'))
 
     for task in tasks_list[:]:
+        task[1][Para.Desc.value] = (task[2] + 2, task[1][Para.Desc.value])
+
         if task[1][Para.Mode.value] == RunMode.Serial:
             result = await loop_task_set(task)
 
@@ -412,7 +394,7 @@ async def fetch_data(region: Region):
                             bytes(progress_key, encoding='utf-8'),
                             bytes(json.dumps(data), encoding='utf-8'))
 
-            schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
+            schedule_cache.update({f"{task[0].value}_{result[Para.FunName.value].__name__}": datetime.now()})
             dump_cache(schedule_log_file, schedule_cache)
             tasks_list.remove(task)
 
@@ -430,7 +412,6 @@ async def fetch_data(region: Region):
             loop_initializer = None
 
         async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
-        # async with amp.Pool() as pool:
             async for result in pool.map(loop_task_set, tasks_list):
                 publish_message(kafka_producer,
                                 progress_topic,
@@ -466,14 +447,14 @@ async def fetch_data(region: Region):
 
 def fetching(region: Region):
     pbar = ProgressBarProcess()
-    pbar.start()
-
+    pbar.start()   
+    
+    kafka_producer = pbar.getProducer()
     print("waiting for kafka connection.....")
     time.sleep(5)
 
-    asyncio.run(fetch_data(region))
+    asyncio.run(fetch_process(region, kafka_producer))
 
-    kafka_producer = connect_kafka_producer(findy_config['kafka'])
     data = {"command": "@end"}
     publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
 

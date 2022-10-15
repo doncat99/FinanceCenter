@@ -6,7 +6,7 @@ import json
 from tqdm.auto import tqdm
 
 from findy import findy_config
-from findy.utils.kafka import connect_kafka_consumer
+from findy.utils.kafka import connect_kafka_producer, connect_kafka_consumer
 
 progress_topic = 'progress_topic'
 progress_key = 'progress_key'
@@ -14,14 +14,23 @@ progress_key = 'progress_key'
 
 class ProgressBarProcess():
     def __init__(self, sleep=0.2):
+        self.kafka_producer = None
+
         # 创建子进程
-        self.process = multiprocessing.Process(target=self.processFun, args=(sleep,))
+        self.process = multiprocessing.Process(target=self.consuming, args=(sleep,))   
 
     def __del__(self):
         if self.process.is_alive():
             self.process.join()
+            
+    def getProducer(self):
+        if self.kafka_producer:
+            return self.kafka_producer
 
-    def processFun(self, sleep):
+        self.kafka_producer = connect_kafka_producer(findy_config['kafka'])
+        return self.kafka_producer
+
+    def consuming(self, sleep):
         consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
         pbars = {}
         pdata = {}

@@ -64,7 +64,7 @@ def now_time_str(region: Region, fmt=TIME_FORMAT_DAY):
     return to_time_str(the_time=now_pd_timestamp(region), fmt=fmt)
 
 
-def next_dates(the_time, days=1) -> pd.Timestamp:
+def next_date(the_time, days=1) -> pd.Timestamp:
     return to_pd_timestamp(the_time) + datetime.timedelta(days=days)
 
 

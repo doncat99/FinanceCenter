@@ -23,7 +23,7 @@ from findy.utils.progress import progress_topic, progress_key
 from findy.utils.pd import pd_valid
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,
                               to_pd_timestamp, to_time_str,
-                              now_pd_timestamp, next_dates,
+                              now_pd_timestamp, next_date,
                               is_same_date)
 
 
@@ -285,14 +285,14 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamps, column_names = self.data_schema.query_data(
+            latest_records, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
             latest_timestamp = None
@@ -479,14 +479,14 @@ class KDataRecorder(TimeSeriesDataRecorder):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamps, column_names = self.data_schema.query_data(
+            latest_records, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
             latest_timestamp = None
@@ -508,7 +508,11 @@ class KDataRecorder(TimeSeriesDataRecorder):
         else:
             end = now
 
-        start_timestamp = next_dates(latest_timestamp)
+        try:
+            start_timestamp = next_date(latest_timestamp)
+        except Exception as e:
+            print(e)
+
         start = max(self.start_timestamp, start_timestamp) if self.start_timestamp else start_timestamp
 
         if start >= end:
@@ -570,14 +574,14 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
         time_field = self.get_evaluated_time_field()
         try:
             time_column = eval(f'self.data_schema.{time_field}')
-            latest_timestamps, column_names = self.data_schema.query_data(
+            latest_records, column_names = self.data_schema.query_data(
                 region=self.region,
                 provider=self.provider,
                 db_session=db_session,
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_timestamps[0] if len(latest_timestamps) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
             latest_timestamp = None
