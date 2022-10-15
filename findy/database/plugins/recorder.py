@@ -34,9 +34,7 @@ class Meta(type):
         if hasattr(cls, 'data_schema') and hasattr(cls, 'provider'):
             if cls.data_schema and issubclass(cls.data_schema, Mixin):
                 # print(f'{cls.__name__}:{cls.data_schema.__name__}:{cls.region}:{cls.provider}')
-                cls.data_schema.register_recorder_cls(cls.region,
-                                                      cls.provider,
-                                                      cls)
+                cls.data_schema.register_recorder_cls(cls.region, cls.provider, cls)
         # else:
         #     print(cls)
         return cls
@@ -45,22 +43,11 @@ class Meta(type):
 class Recorder(metaclass=Meta):
     logger = logging.getLogger(__name__)
 
-    # overwrite them to setup the data you want to record
-    region: Region = None
-    provider: Provider = None
-    data_schema: Mixin = None
-
     def __init__(self,
                  batch_size: int = 10,
                  force_update: bool = False,
                  sleeping_time: int = 10) -> None:
-
         self.logger = logging.getLogger(self.__class__.__name__)
-
-        assert self.data_schema is not None
-        assert self.provider is not None
-        assert self.provider in self.data_schema.providers[self.region]
-
         self.batch_size = batch_size
         self.force_update = force_update
         self.sleeping_time = sleeping_time
@@ -75,8 +62,10 @@ class Recorder(metaclass=Meta):
 
 
 class RecorderForEntities(Recorder):
-    # overwrite them to fetch the entity list
+    # overwrite them to setup the data you want to record
+    region: Region = None
     provider: Provider = None
+    data_schema: Mixin = None
     entity_schema: EntityMixin = None
 
     def __init__(self,
@@ -88,12 +77,9 @@ class RecorderForEntities(Recorder):
                  force_update=False,
                  sleeping_time=10,
                  share_para=None) -> None:
-
-        super().__init__(batch_size=batch_size,
-                         force_update=force_update,
-                         sleeping_time=sleeping_time)
-
+        assert self.data_schema is not None
         assert self.provider is not None
+        assert self.provider in self.data_schema.providers[self.region]
 
         # setup the entities you want to record
         self.entity_type = entity_type
@@ -101,6 +87,8 @@ class RecorderForEntities(Recorder):
         self.exchanges = exchanges
         self.codes = codes
         self.share_para = share_para
+        
+        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time)
 
     async def init_entities(self, db_session):
         # init the entity list
