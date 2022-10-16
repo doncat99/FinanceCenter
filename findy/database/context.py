@@ -165,10 +165,10 @@ def build_engine(region: Region) -> Engine:
                            pool_recycle=3600,
                            max_overflow=2,
                            pool_timeout=30,
-                           pool_pre_ping=True,
-                           executemany_mode='values',
-                           executemany_values_page_size=10000,
-                           executemany_batch_page_size=500)
+                           pool_pre_ping=True)
+                        #    executemany_mode='values',
+                        #    executemany_values_page_size=10000,
+                        #    executemany_batch_page_size=500)
 
     logger.debug(f'{region} engine connect successed')
     return engine

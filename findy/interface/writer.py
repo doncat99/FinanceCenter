@@ -93,14 +93,14 @@ async def df_to_db(region: Region,
 
     rmdup = time.time()
     cost = PRECISION_STR.format(rmdup - now)
-    logger.info(f"remove duplicated: {cost}")
+    logger.debug(f"remove duplicated: {cost}")
 
     saved = 0
     if pd_valid(df_new):
         saved = to_postgresql(region, df_new, data_schema.__tablename__)
 
     cost = PRECISION_STR.format(time.time() - rmdup)
-    logger.info(f"write db: {cost}, size: {saved}")
+    logger.debug(f"write db: {cost}, size: {saved}")
 
     return saved
 
