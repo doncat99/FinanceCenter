@@ -3,7 +3,6 @@ import time
 from io import StringIO
 
 import pandas as pd
-
 from sqlalchemy.dialects import postgresql
 
 from findy.interface import Region
@@ -14,16 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 def to_postgresql(region: Region, df, tablename):
-    now = time.time()
+    # now = time.time()
 
     saved = len(df)
     output = StringIO()
     df.to_csv(output, sep='\t', index=False, header=False, encoding='utf-8')
     output.seek(0)
 
-    to_csv_time = time.time()
-    cost = PRECISION_STR.format(to_csv_time - now)
-    logger.debug(f"write to csv: {cost}, size: {saved}")
+    # to_csv_time = time.time()
+    # cost = PRECISION_STR.format(to_csv_time - now)
+    # logger.debug(f"dataFrame to IO: {cost}, size: {saved}")
 
     db_engine = get_db_engine(region)
     connection = db_engine.raw_connection()
@@ -38,9 +37,9 @@ def to_postgresql(region: Region, df, tablename):
         cursor.close()
         connection.close()
     
-    to_db_time = time.time()
-    cost = PRECISION_STR.format(to_db_time - to_csv_time)
-    logger.debug(f"write to db: {cost}, size: {saved}")
+    # to_db_time = time.time()
+    # cost = PRECISION_STR.format(to_db_time - to_csv_time)
+    # logger.debug(f"write to db: {cost}, size: {saved}")
 
     return saved
 

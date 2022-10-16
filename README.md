@@ -150,6 +150,62 @@ chmod +x postgresqltuner.pl
 ./pg_tune.sh
 ```
 
+For MacOS, if you wish to enlarge system share memory from 4MB to 512 MB, make following:
+
+1. Disable SIP: Restart computer to Recovery mode, Select "Terminal" and run command csrutil disable, then restart computer
+2. Create /Library/LaunchDaemons/com.startup.sysctl.plist
+    ```xml
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <!-- DISABLE SIP TO USE: macOS Recovery > Utilities > Terminal > `csrutil disable` > Reboot -->
+      <plist version="1.0">
+          <dict>
+              <key>Label</key>
+              <string>com.startup.sysctl</string>
+              <key>LaunchOnlyOnce</key>
+              <true/>
+              <key>StandardErrorPath</key>
+                  <string>/private/tmp/sysctl.err</string>
+              <key>StandardOutPath</key>
+                  <string>/private/tmp/sysctl.out</string>
+              <key>ProgramArguments</key>
+              <array>
+                  <string>/usr/sbin/sysctl</string>
+                  <string>-w</string>
+                  <string>kern.sysv.shmmax=16777216</string>
+                  <string>kern.sysv.shmmin=1</string>
+                  <string>kern.sysv.shmmni=128</string>
+                  <string>kern.sysv.shmseg=512</string>
+                  <string>kern.sysv.shmall=4096</string>
+              </array>
+              <key>RunAtLoad</key>
+              <true/>
+          </dict>
+      </plist>
+    ```
+3. Load the PLIST after a few housekeeping items
+    ```shell
+    # sanity check
+    sysctl -a | grep shm
+
+    # set permissions
+    sudo chown root:wheel /Library/LaunchDaemons/com.startup.sysctl.plist
+
+    # validate key-value pairs
+    plutil /Library/LaunchDaemons/com.startup.sysctl.plist
+
+    # load plist
+    sudo launchctl bootstrap system /Library/LaunchDaemons/com.startup.sysctl.plist
+
+    # check logs
+    tail -f /tmp/sysctl.out
+    tail -f /tmp/sysctl.err
+
+    # recheck sysctl values
+    sysctl -a | grep shm
+    ```
+
+
 ### 3. Redis
 
 ```shell

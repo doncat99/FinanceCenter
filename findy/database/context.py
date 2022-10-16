@@ -32,73 +32,73 @@ __db_sessions = {}
 __dbname_map_index = {}
 
 
-@event.listens_for(Engine, "connect")
-def connect(dbapi_connection, connection_record):
-    connection_record.info['pid'] = os.getpid()
+# @event.listens_for(Engine, "connect")
+# def connect(dbapi_connection, connection_record):
+#     connection_record.info['pid'] = os.getpid()
 
 
-@event.listens_for(Engine, "engine_connect")
-def ping_connection(connection, branch):
-    if branch:
-        # "branch" refers to a sub-connection of a connection,
-        # we don't want to bother pinging on these.
-        return
+# @event.listens_for(Engine, "engine_connect")
+# def ping_connection(connection, branch):
+#     if branch:
+#         # "branch" refers to a sub-connection of a connection,
+#         # we don't want to bother pinging on these.
+#         return
 
-    # turn off "close with result".  This flag is only used with
-    # "connectionless" execution, otherwise will be False in any case
-    save_should_close_with_result = connection.should_close_with_result
-    connection.should_close_with_result = False
+#     # turn off "close with result".  This flag is only used with
+#     # "connectionless" execution, otherwise will be False in any case
+#     save_should_close_with_result = connection.should_close_with_result
+#     connection.should_close_with_result = False
 
-    try:
-        # run a SELECT 1.   use a core select() so that
-        # the SELECT of a scalar value without a table is
-        # appropriately formatted for the backend
-        connection.scalar(select([1]))
-    except exc.DBAPIError as err:
-        # catch SQLAlchemy's DBAPIError, which is a wrapper
-        # for the DBAPI's exception.  It includes a .connection_invalidated
-        # attribute which specifies if this connection is a "disconnect"
-        # condition, which is based on inspection of the original exception
-        # by the dialect in use.
-        if err.connection_invalidated:
-            # run the same SELECT again - the connection will re-validate
-            # itself and establish a new connection.  The disconnect detection
-            # here also causes the whole connection pool to be invalidated
-            # so that all stale connections are discarded.
-            connection.scalar(select([1]))
-        else:
-            raise
-    finally:
-        # restore "close with result"
-        connection.should_close_with_result = save_should_close_with_result
-
-
-@event.listens_for(Engine, "checkout")
-def checkout(dbapi_connection, connection_record, connection_proxy):
-    pid = os.getpid()
-    if connection_record.info['pid'] != pid:
-        connection_record.connection = connection_proxy.connection = None
-        raise exc.DisconnectionError(
-                "Connection record belongs to pid %s, "
-                "attempting to check out in pid %s" %
-                (connection_record.info['pid'], pid))
+#     try:
+#         # run a SELECT 1.   use a core select() so that
+#         # the SELECT of a scalar value without a table is
+#         # appropriately formatted for the backend
+#         connection.scalar(select([1]))
+#     except exc.DBAPIError as err:
+#         # catch SQLAlchemy's DBAPIError, which is a wrapper
+#         # for the DBAPI's exception.  It includes a .connection_invalidated
+#         # attribute which specifies if this connection is a "disconnect"
+#         # condition, which is based on inspection of the original exception
+#         # by the dialect in use.
+#         if err.connection_invalidated:
+#             # run the same SELECT again - the connection will re-validate
+#             # itself and establish a new connection.  The disconnect detection
+#             # here also causes the whole connection pool to be invalidated
+#             # so that all stale connections are discarded.
+#             connection.scalar(select([1]))
+#         else:
+#             raise
+#     finally:
+#         # restore "close with result"
+#         connection.should_close_with_result = save_should_close_with_result
 
 
-@event.listens_for(Engine, "before_cursor_execute")
-def before_cursor_execute(conn, cursor, statement,
-                          parameters, context, executemany):
-    if findy_config['debug'] == 2:
-        conn.info.setdefault('query_start_time', []).append(time.time())
-        logger_time.debug("Start Query: %s", statement[:50])
+# @event.listens_for(Engine, "checkout")
+# def checkout(dbapi_connection, connection_record, connection_proxy):
+#     pid = os.getpid()
+#     if connection_record.info['pid'] != pid:
+#         connection_record.connection = connection_proxy.connection = None
+#         raise exc.DisconnectionError(
+#                 "Connection record belongs to pid %s, "
+#                 "attempting to check out in pid %s" %
+#                 (connection_record.info['pid'], pid))
 
 
-@event.listens_for(Engine, "after_cursor_execute")
-def after_cursor_execute(conn, cursor, statement,
-                         parameters, context, executemany):
-    if findy_config['debug'] == 2:
-        total = time.time() - conn.info['query_start_time'].pop(-1)
-        logger_time.debug("Query Complete!")
-        logger_time.debug("Total Time: %f", total)
+# @event.listens_for(Engine, "before_cursor_execute")
+# def before_cursor_execute(conn, cursor, statement,
+#                           parameters, context, executemany):
+#     if findy_config['debug'] == 2:
+#         conn.info.setdefault('query_start_time', []).append(time.time())
+#         logger_time.debug("Start Query: %s", statement[:50])
+
+
+# @event.listens_for(Engine, "after_cursor_execute")
+# def after_cursor_execute(conn, cursor, statement,
+#                          parameters, context, executemany):
+#     if findy_config['debug'] == 2:
+#         total = time.time() - conn.info['query_start_time'].pop(-1)
+#         logger_time.debug("Query Complete!")
+#         logger_time.debug("Total Time: %f", total)
 
 
 @contextlib.contextmanager
