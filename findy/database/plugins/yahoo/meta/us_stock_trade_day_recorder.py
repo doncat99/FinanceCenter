@@ -69,7 +69,8 @@ class UsStockTradeDayRecorder(RecorderForEntities):
                                provider=self.provider,
                                data_schema=self.data_schema,
                                db_session=db_session,
-                               df=df_record)
+                               df=df_record,
+                               ref_entity=entity)
         return True, time.time() - start_point, saved
 
     async def on_finish_entity(self, entity, http_session, db_session, result):

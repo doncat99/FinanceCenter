@@ -265,7 +265,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if latest_records and len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning("get ref_record failed with error: {}".format(e))
             latest_timestamp = None
@@ -321,13 +321,13 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         if pd_valid(df_record):
             assert 'id' in df_record.columns
 
-            ref_record = await self.get_referenced_saved_record(entity, db_session)
+            # ref_record = await self.get_referenced_saved_record(entity, db_session)
             saved_counts = await df_to_db(region=self.region,
                                           provider=self.provider,
                                           data_schema=self.data_schema,
                                           db_session=db_session,
                                           df=df_record,
-                                          ref_df=ref_record,
+                                          ref_entity=entity,
                                           fix_duplicate_way=self.fix_duplicate_way)
             if saved_counts == 0:
                 is_finished = True
@@ -438,7 +438,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if latest_records and len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref record failed with error: {e}')
             latest_timestamp = None
@@ -528,7 +528,7 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                 entity_id=entity.entity_id,
                 order=time_column.desc(),
                 limit=1000)
-            latest_timestamp = latest_records[0].timestamp if len(latest_records) > 0 else None
+            latest_timestamp = latest_records[0].timestamp if latest_records and len(latest_records) > 0 else None
         except Exception as e:
             self.logger.warning(f'get ref_record failed with error: {e}')
             latest_timestamp = None

@@ -21,7 +21,7 @@ async def df_to_db(region: Region,
                    data_schema: DeclarativeMeta,
                    db_session,
                    df: pd.DataFrame,
-                   ref_df: pd.DataFrame = None,
+                   ref_entity = None,
                    drop_duplicates: bool = True,
                    fix_duplicate_way: str = 'ignore',
                    force_update=False) -> object:
@@ -65,12 +65,16 @@ async def df_to_db(region: Region,
         df_new = df
 
     else:
-        if ref_df is None:
+        ref_df = None
+        if ref_entity is not None:
             data, column_names = data_schema.query_data(
                 region=region,
                 provider=provider,
                 db_session=db_session,
+                entity_id=ref_entity.id,
                 columns=[data_schema.id, data_schema.timestamp])
+                # order=data_schema.desc(),
+                # limit=1000)
 
             if data and len(data) > 0:
                 ref_df = pd.DataFrame(data, columns=column_names)
@@ -87,15 +91,16 @@ async def df_to_db(region: Region,
         #         df_add.id = uuid.uuid1()
         #         df_new = pd.concat([df_new, df_add])
 
-    cost = PRECISION_STR.format(time.time() - now)
-    logger.debug(f"remove duplicated: {cost}")
+    rmdup = time.time()
+    cost = PRECISION_STR.format(rmdup - now)
+    logger.info(f"remove duplicated: {cost}")
 
     saved = 0
     if pd_valid(df_new):
         saved = to_postgresql(region, df_new, data_schema.__tablename__)
 
-    cost = PRECISION_STR.format(time.time() - now)
-    logger.debug(f"write db: {cost}, size: {saved}")
+    cost = PRECISION_STR.format(time.time() - rmdup)
+    logger.info(f"write db: {cost}, size: {saved}")
 
     return saved
 
