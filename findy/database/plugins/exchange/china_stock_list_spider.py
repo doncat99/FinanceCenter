@@ -83,7 +83,8 @@ class ExchangeChinaStockListRecorder(RecorderForEntities):
                     await self.persist(df, db_session)
 
             pbar_update["update"] = 1
-            publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(pbar_update), encoding='utf-8'))
+            publish_message(kafka_producer, progress_topic, progress_key,
+                            bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     def format(self, resp, exchange):
         df = None

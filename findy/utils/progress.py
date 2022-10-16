@@ -9,7 +9,7 @@ from findy import findy_config
 from findy.utils.kafka import connect_kafka_producer, connect_kafka_consumer
 
 progress_topic = 'progress_topic'
-progress_key = 'progress_key'
+progress_key = bytes('progress_key', encoding='utf-8')
 
 
 class ProgressBarProcess():
@@ -31,7 +31,7 @@ class ProgressBarProcess():
         return self.kafka_producer
 
     def consuming(self, sleep):
-        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'], "progressbar")
+        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'], self.process.name)
         pbars = {}
         pdata = {}
         pfinish = {}

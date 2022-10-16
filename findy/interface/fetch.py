@@ -371,11 +371,9 @@ async def fetch_process(region: Region, kafka_producer):
 
     tasks_list = [(region, item, index) for index, item in enumerate(task_set) if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
 
-    data = {"task": "main", "total": len(tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
-    publish_message(kafka_producer,
-                    progress_topic,
-                    bytes(progress_key, encoding='utf-8'),
-                    bytes(json.dumps(data), encoding='utf-8'))
+    pbar_update = {"task": "main", "total": len(tasks_list), "desc": "Total Jobs", "position": 0, "leave": True, "update": 0}
+    publish_message(kafka_producer, progress_topic, progress_key,
+                    bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     for task in tasks_list[:]:
         task[1][Para.Desc.value] = (task[2] + 2, task[1][Para.Desc.value])
@@ -383,16 +381,12 @@ async def fetch_process(region: Region, kafka_producer):
         if task[1][Para.Mode.value] == RunMode.Serial:
             result = await loop_task_set(task)
 
-            publish_message(kafka_producer,
-                            progress_topic,
-                            bytes(progress_key, encoding='utf-8'),
+            publish_message(kafka_producer, progress_topic, progress_key,
                             bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
-            data['update'] = 1
-            publish_message(kafka_producer,
-                            progress_topic,
-                            bytes(progress_key, encoding='utf-8'),
-                            bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update['update'] = 1
+            publish_message(kafka_producer, progress_topic, progress_key,
+                            bytes(json.dumps(pbar_update), encoding='utf-8'))
 
             schedule_cache.update({f"{task[0].value}_{result[Para.FunName.value].__name__}": datetime.now()})
             dump_cache(schedule_log_file, schedule_cache)
@@ -413,16 +407,12 @@ async def fetch_process(region: Region, kafka_producer):
 
         async with amp.Pool(cpus, childconcurrency=childconcurrency, loop_initializer=loop_initializer) as pool:
             async for result in pool.map(loop_task_set, tasks_list):
-                publish_message(kafka_producer,
-                                progress_topic,
-                                bytes(progress_key, encoding='utf-8'),
+                publish_message(kafka_producer, progress_topic, progress_key,
                                 bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
-                data['update'] = 1
-                publish_message(kafka_producer,
-                                progress_topic,
-                                bytes(progress_key, encoding='utf-8'),
-                                bytes(json.dumps(data), encoding='utf-8'))
+                pbar_update['update'] = 1
+                publish_message(kafka_producer, progress_topic, progress_key,
+                                bytes(json.dumps(pbar_update), encoding='utf-8'))
 
                 schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
                 dump_cache(schedule_log_file, schedule_cache)
@@ -430,16 +420,12 @@ async def fetch_process(region: Region, kafka_producer):
         for task in tasks_list:
             result = await loop_task_set(task)
 
-            publish_message(kafka_producer,
-                            progress_topic,
-                            bytes(progress_key, encoding='utf-8'),
+            publish_message(kafka_producer, progress_topic, progress_key,
                             bytes(json.dumps({"command": "@task-finish", "task": result[Para.Desc.value][0]}), encoding='utf-8'))
 
-            data['update'] = 1
-            publish_message(kafka_producer,
-                            progress_topic,
-                            bytes(progress_key, encoding='utf-8'),
-                            bytes(json.dumps(data), encoding='utf-8'))
+            pbar_update['update'] = 1
+            publish_message(kafka_producer, progress_topic, progress_key,
+                            bytes(json.dumps(pbar_update), encoding='utf-8'))
 
             schedule_cache.update({f"{region.value}_{result[Para.FunName.value].__name__}": datetime.now()})
             dump_cache(schedule_log_file, schedule_cache)
@@ -455,8 +441,9 @@ def fetching(region: Region):
 
     asyncio.run(fetch_process(region, kafka_producer))
 
-    data = {"command": "@end"}
-    publish_message(kafka_producer, progress_topic, bytes(progress_key, encoding='utf-8'), bytes(json.dumps(data), encoding='utf-8'))
+    pbar_update = {"command": "@end"}
+    publish_message(kafka_producer, progress_topic, progress_key,
+                    bytes(json.dumps(pbar_update), encoding='utf-8'))
 
     pbar.join()
 
