@@ -3,7 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 import os
-import json
+import msgpack
 import random
 import time
 from pygtail import Pygtail
@@ -104,7 +104,7 @@ def progress():
         consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'], 'dash-progressbar')
         while True:
             for msg in consumer:
-                data = json.loads(msg.value)
+                data = msgpack.loads(msg.value)
 
                 command = data.get('command', None)
                 if command == '@end':
@@ -132,7 +132,7 @@ def progress():
                     ptasks[task]['completion'] = pbar['completion']
 
                 db.session.commit()
-                ret_string = "data:" + json.dumps(pbars) + "\n\n"
+                ret_string = "data:" + msgpack.dumps(pbars) + "\n\n"
                 print(ret_string)
                 yield ret_string
             time.sleep(sleep)
