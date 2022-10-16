@@ -31,7 +31,7 @@ class ProgressBarProcess():
         return self.kafka_producer
 
     def consuming(self, sleep):
-        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'], self.process.name)
+        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
         pbars = {}
         pdata = {}
         pfinish = {}

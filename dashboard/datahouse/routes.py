@@ -101,7 +101,7 @@ def progress():
         ptasks[task.taskid] = task
 
     def generate():
-        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'], 'dash-progressbar')
+        consumer = connect_kafka_consumer(progress_topic, findy_config['kafka'])
         while True:
             for msg in consumer:
                 data = msgpack.loads(msg.value)

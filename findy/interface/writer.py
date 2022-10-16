@@ -75,9 +75,15 @@ async def df_to_db(region: Region,
                 columns=[data_schema.id, data_schema.timestamp])
                 # order=data_schema.desc(),
                 # limit=1000)
-
-            if data and len(data) > 0:
-                ref_df = pd.DataFrame(data, columns=column_names)
+        else:
+            data, column_names = data_schema.query_data(
+                region=region,
+                provider=provider,
+                db_session=db_session,
+                columns=[data_schema.id, data_schema.timestamp])
+            
+        if data and len(data) > 0:
+            ref_df = pd.DataFrame(data, columns=column_names)
 
         if pd_valid(ref_df):
             df_new = df[~df.id.isin(ref_df.id)]

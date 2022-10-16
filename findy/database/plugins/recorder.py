@@ -179,9 +179,14 @@ class RecorderForEntities(Recorder):
 
         name = entity if isinstance(entity, str) else entity.id
         if extra is not None:
-            self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}, size: {:>7}, date: [ {}, {} ]{}".format(
-                prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time,
-                extra[0], extra[1], extra[2], postfix))
+            if isinstance(extra, int):
+                self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}, size: {:>7}, {}".format(
+                    prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time,
+                    extra, postfix))
+            elif isinstance(extra, list):
+                self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}, size: {:>7}, date: [ {}, {} ]{}".format(
+                    prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time,
+                    extra[0], extra[1], extra[2], postfix))
         else:
             self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}{}".format(
                 prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time, postfix))
@@ -321,7 +326,6 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         if pd_valid(df_record):
             assert 'id' in df_record.columns
 
-            # ref_record = await self.get_referenced_saved_record(entity, db_session)
             saved_counts = await df_to_db(region=self.region,
                                           provider=self.provider,
                                           data_schema=self.data_schema,
