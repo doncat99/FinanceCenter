@@ -44,7 +44,7 @@ class BaoChinaStockTradeDayRecorder(RecorderForEntities):
         except Exception as e:
             self.logger.error(f'bao_get_trade_days, error: {e}')
         return None
-    
+
     async def record(self, entity, http_session, db_session, para):
         start_point = time.time()
 
