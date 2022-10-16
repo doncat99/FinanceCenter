@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import time
-import json
+import msgpack
 import math
 from typing import List, Union
 import asyncio
@@ -167,8 +167,7 @@ class RecorderForEntities(Recorder):
                 break
         
         pbar_update["update"] = 1
-        publish_message(kafka_producer, progress_topic, progress_key, 
-                        bytes(json.dumps(pbar_update), encoding='utf-8'))
+        publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
 
         eval_time = PRECISION_STR.format(eval_time)
         download_time = PRECISION_STR.format(download_time)
@@ -199,8 +198,7 @@ class RecorderForEntities(Recorder):
 
             (taskid, desc) = self.share_para[1]
             pbar_update = {"task": taskid, "total": len(entities), "desc": desc, "leave": True, "update": 0}
-            publish_message(kafka_producer, progress_topic, progress_key, 
-                            bytes(json.dumps(pbar_update), encoding='utf-8'))
+            publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))
 
             # tasks = [asyncio.ensure_future(self.process_loop(entity, pbar_update, http_session, db_session, throttler)) for entity in entities]
             tasks = [self.process_loop(entity, pbar_update, http_session, db_session, kafka_producer, throttler) for entity in entities]

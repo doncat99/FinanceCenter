@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import multiprocessing
 import time
-import json
+import msgpack
 
 from tqdm.auto import tqdm
 
@@ -38,7 +38,7 @@ class ProgressBarProcess():
 
         while True:
             for msg in consumer:
-                data = json.loads(msg.value)
+                data = msgpack.loads(msg.value)
 
                 command = data.get('command', None)
                 if command == '@end':

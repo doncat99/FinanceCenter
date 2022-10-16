@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
-import json
+import msgpack
 
 import pandas as pd
 
@@ -56,8 +56,7 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
             self.logger.info(f"persist {entity} stock list failed with error: {e}")
 
         pbar_update["update"] = 1
-        publish_message(kafka_producer, progress_topic, progress_key,
-                        bytes(json.dumps(pbar_update), encoding='utf-8'))
+        publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
 
     def format(self, content, exchange):
         df = pd.DataFrame(content)
