@@ -78,7 +78,6 @@ class TushareChinaStockDetailRecorder(RecorderForEntities):
                                data_schema=self.data_schema,
                                db_session=db_session,
                                df=df_record,
-                               ref_entity=entity,
                                force_update=True)
         return True, time.time() - start_point, saved
 
