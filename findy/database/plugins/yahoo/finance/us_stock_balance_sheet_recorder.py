@@ -441,6 +441,7 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
     region = Region.US
     provider = Provider.Yahoo
     data_schema = BalanceSheet
+    exchanges = [e.value for e in UsExchange]
 
     def __init__(self,
                  batch_size=10,
@@ -449,7 +450,6 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
                  codes=None,
                  share_para=None) -> None:
         super().__init__(entity_type=EntityType.Stock,
-                         exchanges=[e.value for e in UsExchange],
                          batch_size=batch_size,
                          force_update=force_update,
                          sleeping_time=sleeping_time,

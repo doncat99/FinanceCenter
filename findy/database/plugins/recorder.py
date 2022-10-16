@@ -67,10 +67,10 @@ class RecorderForEntities(Recorder):
     provider: Provider = None
     data_schema: Mixin = None
     entity_schema: EntityMixin = None
+    exchanges: List[str] = None
 
     def __init__(self,
                  entity_type: EntityType = EntityType.Stock,
-                 exchanges=None,
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
@@ -85,7 +85,6 @@ class RecorderForEntities(Recorder):
         # setup the entities you want to record
         self.entity_type = entity_type
         self.entity_ids = entity_ids
-        self.exchanges = exchanges
         self.codes = codes
         self.share_para = share_para
         
@@ -217,7 +216,6 @@ class RecorderForEntities(Recorder):
 class TimeSeriesDataRecorder(RecorderForEntities):
     def __init__(self,
                  entity_type: EntityType = EntityType.Stock,
-                 exchanges=None,
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
@@ -233,7 +231,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         self.start_timestamp = to_pd_timestamp(start_timestamp)
         self.end_timestamp = to_pd_timestamp(end_timestamp)
 
-        super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
+        super().__init__(entity_type, entity_ids, codes, batch_size,
                          force_update, sleeping_time, share_para=share_para)
 
     def get_evaluated_time_field(self):
@@ -366,7 +364,6 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 class KDataRecorder(TimeSeriesDataRecorder):
     def __init__(self,
                  entity_type: EntityType = EntityType.Stock,
-                 exchanges=None,
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
@@ -379,7 +376,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
                  # child add
                  level=IntervalLevel.LEVEL_1DAY,
                  share_para=None):
-        super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
+        super().__init__(entity_type, entity_ids, codes, batch_size,
                          force_update, sleeping_time, default_size,
                          fix_duplicate_way, start_timestamp, end_timestamp,
                          share_para=share_para)
@@ -485,7 +482,6 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
 
     def __init__(self,
                  entity_type: EntityType = EntityType.Stock,
-                 exchanges=None,
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
@@ -496,7 +492,7 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                  start_timestamp=None,
                  end_timestamp=None,
                  share_para=None) -> None:
-        super().__init__(entity_type, exchanges, entity_ids, codes, batch_size,
+        super().__init__(entity_type, entity_ids, codes, batch_size,
                          force_update, sleeping_time, default_size,
                          fix_duplicate_way, start_timestamp, end_timestamp,
                          share_para=share_para)

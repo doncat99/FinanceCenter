@@ -30,9 +30,9 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
     entity_schema = Stock
     # 只是为了把recorder注册到data_schema
     data_schema = StockKdataCommon
+    exchanges = [e.value for e in ChnExchange]
 
     def __init__(self,
-                 exchanges=[e.value for e in ChnExchange],
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
@@ -50,7 +50,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
         self.data_schema = self.get_kdata_schema(entity_type=EntityType.Stock, level=level, adjust_type=adjust_type)
         self.bao_trading_level = to_bao_trading_level(level)
 
-        super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
+        super().__init__(EntityType.Stock, entity_ids, codes, batch_size, force_update, sleeping_time,
                          default_size, fix_duplicate_way, start_timestamp, end_timestamp, level,
                          share_para=share_para)
         self.adjust_type = adjust_type

@@ -30,13 +30,13 @@ class StockSummaryRecorder(TimestampsDataRecorder):
     provider = Provider.Exchange
     entity_schema = Index
     data_schema = StockSummary
-
+    exchanges = ['cn']
     url = 'http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&searchDate={}&prodType=gp&_=1515717065511'
 
-    def __init__(self, exchanges=['cn'], entity_ids=None, codes=['000001'], batch_size=10,
+    def __init__(self, entity_ids=None, codes=['000001'], batch_size=10,
                  force_update=False, sleeping_time=5, default_size=findy_config['batch_size'],
                  fix_duplicate_way='add', share_para=None) -> None:
-        super().__init__(EntityType.Index, exchanges, entity_ids, codes, batch_size,
+        super().__init__(EntityType.Index, entity_ids, codes, batch_size,
                          force_update, sleeping_time, default_size, fix_duplicate_way,
                          share_para=share_para)
 

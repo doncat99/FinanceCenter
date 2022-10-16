@@ -101,7 +101,6 @@ class Mixin(object):
     async def record_data(cls,
                           region: Region,
                           provider: Provider,
-                          exchanges=None,
                           entity_ids=None,
                           codes=None,
                           batch_size=None,

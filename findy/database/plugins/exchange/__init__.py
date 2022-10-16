@@ -2,7 +2,6 @@ from findy.interface import Region, Provider
 from findy.database.schema.meta.stock_meta import StockMetaBase
 from findy.database.schema.misc.overall import OverallBase
 from findy.database.plugins.register import register_schema
-from findy.database.plugins.exchange.china_etf_list_spider import *
 from findy.database.plugins.exchange.china_index_list_spider import *
 from findy.database.plugins.exchange.china_stock_list_spider import *
 from findy.database.plugins.exchange.china_stock_summary import *

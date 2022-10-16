@@ -25,19 +25,19 @@ class task():
     async def get_stock_list_data(region: Region, provider: Provider, sleep, process, desc):
         # 股票列表
         from findy.database.schema.meta.stock_meta import Stock
-        await Stock.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_fund_list_data(region: Region, provider: Provider, sleep, process, desc):
         # 基金列表
         from findy.database.schema.meta.fund_meta import Fund
-        await Fund.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Fund.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_trade_day(region: Region, provider: Provider, sleep, process, desc):
         # 交易日
         from findy.database.schema.quotes.trade_day import StockTradeDay
-        await StockTradeDay.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await StockTradeDay.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_main_index(region: Region, provider: Provider, sleep, process, desc):
@@ -48,215 +48,215 @@ class task():
     async def get_stock_summary_data(region: Region, provider: Provider, sleep, process, desc):
         # 市场整体估值
         from findy.database.schema.misc.overall import StockSummary
-        await StockSummary.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await StockSummary.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_detail_data(region: Region, provider: Provider, sleep, process, desc):
         # 个股详情
         from findy.database.schema.meta.stock_meta import StockDetail
-        await StockDetail.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await StockDetail.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_finance_factor_data(region: Region, provider: Provider, sleep, process, desc):
         # 主要财务指标
         from findy.database.schema.fundamental.finance import FinanceFactor
-        await FinanceFactor.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await FinanceFactor.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_balance_sheet_data(region: Region, provider: Provider, sleep, process, desc):
         # 资产负债表
         from findy.database.schema.fundamental.finance import BalanceSheet
-        await BalanceSheet.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await BalanceSheet.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_income_statement_data(region: Region, provider: Provider, sleep, process, desc):
         # 收益表
         from findy.database.schema.fundamental.finance import IncomeStatement
-        await IncomeStatement.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await IncomeStatement.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_cashflow_statement_data(region: Region, provider: Provider, sleep, process, desc):
         # 现金流量表
         from findy.database.schema.fundamental.finance import CashFlowStatement
-        await CashFlowStatement.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await CashFlowStatement.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_moneyflow_data(region: Region, provider: Provider, sleep, process, desc):
         # 股票资金流向表
         from findy.database.schema.misc.money_flow import StockMoneyFlow
-        await StockMoneyFlow.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await StockMoneyFlow.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_dividend_financing_data(region: Region, provider: Provider, sleep, process, desc):
         # 除权概览表
         from findy.database.schema.fundamental.dividend_financing import DividendFinancing
-        await DividendFinancing.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await DividendFinancing.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_dividend_detail_data(region: Region, provider: Provider, sleep, process, desc):
         # 除权具细表
         from findy.database.schema.fundamental.dividend_financing import DividendDetail
-        await DividendDetail.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await DividendDetail.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_rights_issue_detail_data(region: Region, provider: Provider, sleep, process, desc):
         # 配股表
         from findy.database.schema.fundamental.dividend_financing import RightsIssueDetail
-        await RightsIssueDetail.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await RightsIssueDetail.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_spo_detail_data(region: Region, provider: Provider, sleep, process, desc):
         # 现金增资
         from findy.database.schema.fundamental.dividend_financing import SpoDetail
-        await SpoDetail.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await SpoDetail.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_margin_trading_summary_data(region: Region, provider: Provider, sleep, process, desc):
         # 融资融券概况
         from findy.database.schema.misc.overall import MarginTradingSummary
-        await MarginTradingSummary.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await MarginTradingSummary.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_cross_market_summary_data(region: Region, provider: Provider, sleep, process, desc):
         # 北向/南向成交概况
         from findy.database.schema.misc.overall import CrossMarketSummary
-        await CrossMarketSummary.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await CrossMarketSummary.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_holder_trading_data(region: Region, provider: Provider, sleep, process, desc):
         # 股东交易
         from findy.database.schema.fundamental.trading import HolderTrading
-        await HolderTrading.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await HolderTrading.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_top_ten_holder_data(region: Region, provider: Provider, sleep, process, desc):
         # 前十股东表
         from findy.database.schema.misc.holder import TopTenHolder
-        await TopTenHolder.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await TopTenHolder.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_top_ten_tradable_holder_data(region: Region, provider: Provider, sleep, process, desc):
         # 前十可交易股东表
         from findy.database.schema.misc.holder import TopTenTradableHolder
-        await TopTenTradableHolder.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await TopTenTradableHolder.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_valuation_data(region: Region, provider: Provider, sleep, process, desc):
         # 个股估值数据
         from findy.database.schema.fundamental.valuation import StockValuation
-        await StockValuation.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await StockValuation.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_etf_valuation_data(region: Region, provider: Provider, sleep, process, desc):
         # ETF估值数据
         from findy.database.schema.fundamental.valuation import EtfValuation
-        await EtfValuation.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await EtfValuation.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1d_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 日线
         from findy.database.schema.quotes.stock.stock_1d_kdata import Stock1dKdata
-        await Stock1dKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1dKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1d_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 日线复权
         from findy.database.schema.quotes.stock.stock_1d_kdata import Stock1dHfqKdata
-        await Stock1dHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1dHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1w_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 周线
         from findy.database.schema.quotes.stock.stock_1wk_kdata import Stock1wkKdata
-        await Stock1wkKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1wkKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1w_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 周线复权
         from findy.database.schema.quotes.stock.stock_1wk_kdata import Stock1wkHfqKdata
-        await Stock1wkHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1wkHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1mon_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 月线
         from findy.database.schema.quotes.stock.stock_1mon_kdata import Stock1monKdata
-        await Stock1monKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1monKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1mon_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 月线复权
         from findy.database.schema.quotes.stock.stock_1mon_kdata import Stock1monHfqKdata
-        await Stock1monHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1monHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1m_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 1分钟线
         from findy.database.schema.quotes.stock.stock_1m_kdata import Stock1mKdata
-        await Stock1mKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1mKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1m_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 1分钟线复权
         from findy.database.schema.quotes.stock.stock_1m_kdata import Stock1mHfqKdata
-        await Stock1mHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1mHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_5m_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 5分钟线
         from findy.database.schema.quotes.stock.stock_5m_kdata import Stock5mKdata
-        await Stock5mKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock5mKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_5m_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 5分钟线复权
         from findy.database.schema.quotes.stock.stock_5m_kdata import Stock5mHfqKdata
-        await Stock5mHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock5mHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_15m_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 15分钟线
         from findy.database.schema.quotes.stock.stock_15m_kdata import Stock15mKdata
-        await Stock15mKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock15mKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_15m_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 15分钟线复权
         from findy.database.schema.quotes.stock.stock_15m_kdata import Stock15mHfqKdata
-        await Stock15mHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock15mHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_30m_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 30分钟线
         from findy.database.schema.quotes.stock.stock_30m_kdata import Stock30mKdata
-        await Stock30mKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock30mKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_30m_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 30分钟线复权
         from findy.database.schema.quotes.stock.stock_30m_kdata import Stock30mHfqKdata
-        await Stock30mHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock30mHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1h_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 1小时线
         from findy.database.schema.quotes.stock.stock_1h_kdata import Stock1hKdata
-        await Stock1hKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1hKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_stock_1h_hfq_k_data(region: Region, provider: Provider, sleep, process, desc):
         # 1小时线复权
         from findy.database.schema.quotes.stock.stock_1h_kdata import Stock1hHfqKdata
-        await Stock1hHfqKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Stock1hHfqKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_etf_1d_k_data(region: Region, provider: Provider, sleep, process, desc):
         from findy.database.schema.quotes.etf.etf_1d_kdata import Etf1dKdata
-        await Etf1dKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Etf1dKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
     @staticmethod
     async def get_index_1d_k_data(region: Region, provider: Provider, sleep, process, desc):
         from findy.database.schema.quotes.index.index_1d_kdata import Index1dKdata
-        await Index1dKdata.record_data(region=region, provider=provider, share_para=(process, desc), sleeping_time=sleep)
+        await Index1dKdata.record_data(region, provider, sleeping_time=sleep, share_para=(process, desc))
 
 
 task_set_chn = [
