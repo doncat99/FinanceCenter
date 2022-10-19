@@ -308,20 +308,20 @@ task_set_chn = [
 
 
 task_set_us = [
-    ["task_us_01", task.get_stock_list_data,              Provider.Exchange,  0, 10, "Stock List",               24,      RunMode.Serial],
-    ["task_us_02", task.get_stock_trade_day,              Provider.Yahoo,     0, 10, "Trade Day",                24,      RunMode.Serial],
-    ["task_us_03", task.get_stock_main_index,             Provider.Exchange,  0, 10, "Main Index",               24,      RunMode.Serial],
-    ["task_us_04", task.get_stock_detail_data,            Provider.Yahoo,     0, 10, "Stock Detail",             24 * 6,  RunMode.Parallel],
+    ["task_us_01", task.get_stock_list_data,              Provider.Exchange,  0, 3, "Stock List",               24,      RunMode.Serial],
+    ["task_us_02", task.get_stock_trade_day,              Provider.Yahoo,     0, 3, "Trade Day",                24,      RunMode.Serial],
+    ["task_us_03", task.get_stock_main_index,             Provider.Exchange,  0, 3, "Main Index",               24,      RunMode.Serial],
+    ["task_us_04", task.get_stock_detail_data,            Provider.Yahoo,     0, 3, "Stock Detail",             24 * 6,  RunMode.Parallel],
 
-    ["task_us_05", task.get_index_1d_k_data,              Provider.Yahoo,     0, 20, "Index Daily   K-Data",     24,      RunMode.Parallel],
-    ["task_us_06", task.get_stock_1d_k_data,              Provider.Yahoo,     0, 20, "Stock Daily   K-Data",     24,      RunMode.Parallel],
-    ["task_us_07", task.get_stock_1w_k_data,              Provider.Yahoo,     0, 20, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
-    ["task_us_08", task.get_stock_1mon_k_data,            Provider.Yahoo,     0, 20, "Stock Monthly K-Data",     24,      RunMode.Parallel],
-    ["task_us_09", task.get_stock_1h_k_data,              Provider.Yahoo,     0, 20, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
-    ["task_us_10", task.get_stock_30m_k_data,             Provider.Yahoo,     0, 20, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
-    ["task_us_11", task.get_stock_15m_k_data,             Provider.Yahoo,     0, 20, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
-    ["task_us_12", task.get_stock_5m_k_data,              Provider.Yahoo,     0, 20, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
-    ["task_us_13", task.get_stock_1m_k_data,              Provider.Yahoo,     0, 20, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
+    ["task_us_05", task.get_index_1d_k_data,              Provider.Yahoo,     0, 3, "Index Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_us_06", task.get_stock_1d_k_data,              Provider.Yahoo,     0, 3, "Stock Daily   K-Data",     24,      RunMode.Parallel],
+    ["task_us_07", task.get_stock_1w_k_data,              Provider.Yahoo,     0, 3, "Stock Weekly  K-Data",     24,      RunMode.Parallel],
+    ["task_us_08", task.get_stock_1mon_k_data,            Provider.Yahoo,     0, 3, "Stock Monthly K-Data",     24,      RunMode.Parallel],
+    ["task_us_09", task.get_stock_1h_k_data,              Provider.Yahoo,     0, 3, "Stock 1 hours K-Data",     24,      RunMode.Parallel],
+    ["task_us_10", task.get_stock_30m_k_data,             Provider.Yahoo,     0, 3, "Stock 30 mins K-Data",     24,      RunMode.Parallel],
+    ["task_us_11", task.get_stock_15m_k_data,             Provider.Yahoo,     0, 3, "Stock 15 mins K-Data",     24,      RunMode.Parallel],
+    ["task_us_12", task.get_stock_5m_k_data,              Provider.Yahoo,     0, 3, "Stock 5 mins  K-Data",     24,      RunMode.Parallel],
+    ["task_us_13", task.get_stock_1m_k_data,              Provider.Yahoo,     0, 3, "Stock 1 mins  K-Data",     24,      RunMode.Parallel],
 ]
 
 

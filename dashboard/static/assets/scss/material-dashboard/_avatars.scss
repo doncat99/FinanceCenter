@@ -5,29 +5,29 @@
 // General styles
 
 .avatar {
-	color: $white;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-size: $avatar-font-size;
-	border-radius: $border-radius-pill;
-	height: $avatar-height;
-	width: $avatar-width;
+    color: $white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $avatar-font-size;
+    border-radius: $border-radius-pill;
+    height: $avatar-height;
+    width: $avatar-width;
   transition: all .2s ease-in-out;
 
     img {
-    	width: 100%;
+        width: 100%;
     }
 
-	&.rounded-circle {
-		img {
-			@extend .rounded-circle;
-		}
-	}
+    &.rounded-circle {
+        img {
+            @extend .rounded-circle;
+        }
+    }
 
     + .avatar-content {
-    	display: inline-block;
-    	margin-left: $avatar-content-margin;
+        display: inline-block;
+        margin-left: $avatar-content-margin;
     }
 
 
@@ -52,8 +52,8 @@
 // Avatar size variations
 
 .avatar-xxl {
-	width: $avatar-xxl-width !important;
-	height: $avatar-xxl-height !important;
+    width: $avatar-xxl-width !important;
+    height: $avatar-xxl-height !important;
 
   &.avatar-raised {
     margin-top: -($avatar-xxl-height / 2);
@@ -61,8 +61,8 @@
 }
 
 .avatar-xl {
-	width: $avatar-xl-width !important;
-	height: $avatar-xl-height !important;
+    width: $avatar-xl-width !important;
+    height: $avatar-xl-height !important;
 
   &.avatar-raised {
     margin-top: -($avatar-xl-height / 2);
@@ -70,9 +70,9 @@
 }
 
 .avatar-lg {
-	width: $avatar-lg-width !important;
-	height: $avatar-lg-height !important;
-	font-size: $font-size-sm;
+    width: $avatar-lg-width !important;
+    height: $avatar-lg-height !important;
+    font-size: $font-size-sm;
 
   &.avatar-raised {
     margin-top: -($avatar-lg-height / 2);
@@ -80,9 +80,9 @@
 }
 
 .avatar-sm {
-	width: $avatar-sm-width !important;
-	height: $avatar-sm-height !important;
-	font-size: $font-size-sm;
+    width: $avatar-sm-width !important;
+    height: $avatar-sm-height !important;
+    font-size: $font-size-sm;
 
   &.avatar-raised {
     margin-top: -($avatar-sm-height / 2);
@@ -90,9 +90,9 @@
 }
 
 .avatar-xs {
-	width: $avatar-xs-width !important;
-	height: $avatar-xs-height !important;
-	font-size: $font-size-xs;
+    width: $avatar-xs-width !important;
+    height: $avatar-xs-height !important;
+    font-size: $font-size-xs;
 
   &.avatar-raised {
     margin-top: -($avatar-xs-height / 2);
@@ -106,18 +106,18 @@
 // General styles
 
 .avatar-group {
-	.avatar {
-		position: relative;
-		z-index: $avatar-group-zindex;
-		border: $avatar-group-border solid $card-bg;
+    .avatar {
+        position: relative;
+        z-index: $avatar-group-zindex;
+        border: $avatar-group-border solid $card-bg;
 
-		&:hover {
-			z-index: $avatar-group-zindex-hover;
-		}
-	}
+        &:hover {
+            z-index: $avatar-group-zindex-hover;
+        }
+    }
 
-	.avatar + .avatar {
-		margin-left: $avatar-group-double;
+    .avatar + .avatar {
+        margin-left: $avatar-group-double;
 
-	}
+    }
 }

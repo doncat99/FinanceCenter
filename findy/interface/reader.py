@@ -132,7 +132,8 @@ class DataReader(object):
                     self.columns.append(eval(f'data_schema.{col}'))
 
             # always add category_column and time_field for normalizing
-            self.columns = list(set(self.columns) | {self.category_col, self.time_col})
+            # self.columns = list(set(self.columns) | {self.category_col, self.time_col})
+            self.columns = list(set(self.columns))
 
         self.data_listeners: List[DataListener] = []
 

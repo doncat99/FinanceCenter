@@ -1,6 +1,6 @@
 /*! PhotoSwipe main CSS by Dmitry Semenov | photoswipe.com | MIT license */
 /*
-	Styles for basic PhotoSwipe functionality (sliding area, open/close transitions)
+    Styles for basic PhotoSwipe functionality (sliding area, open/close transitions)
 */
 /* pswp = photoswipe */
 .pswp {
@@ -55,8 +55,8 @@
   cursor: grabbing; }
 
 /*
-	Background is added as a separate element.
-	As animating opacity is much faster than animating rgba() background-color.
+    Background is added as a separate element.
+    As animating opacity is much faster than animating rgba() background-color.
 */
 .pswp__bg {
   position: absolute;
@@ -143,15 +143,15 @@
   left: 0; }
 
 /*
-	stretched thumbnail or div placeholder element (see below)
-	style is added to avoid flickering in webkit/blink when layers overlap
+    stretched thumbnail or div placeholder element (see below)
+    style is added to avoid flickering in webkit/blink when layers overlap
 */
 .pswp__img--placeholder {
   -webkit-backface-visibility: hidden; }
 
 /*
-	div element that matches size of large image
-	large image loads on top of it
+    div element that matches size of large image
+    large image loads on top of it
 */
 .pswp__img--placeholder--blank {
   background: #222; }
@@ -163,8 +163,8 @@
   top: 0; }
 
 /*
-	Error message appears when image is not loaded
-	(JS option errorMsg controls markup)
+    Error message appears when image is not loaded
+    (JS option errorMsg controls markup)
 */
 .pswp__error-msg {
   position: absolute;

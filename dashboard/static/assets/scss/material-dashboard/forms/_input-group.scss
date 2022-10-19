@@ -36,14 +36,14 @@
       background-size: $input-background-size;
       transition: $input-transition;
 
-  		&:not(:first-child) {
-  	    border-left: 0;
-  	    padding-left: 0;
-  		}
-  		&:not(:last-child) {
-  			border-right: 0;
-  			padding-right: 0;
-  		}
+          &:not(:first-child) {
+          border-left: 0;
+          padding-left: 0;
+          }
+          &:not(:last-child) {
+              border-right: 0;
+              padding-right: 0;
+          }
 
       & + .input-group-text {
         border-left: 0;
@@ -64,7 +64,7 @@
         cursor: not-allowed;
         background-image: $input-background-image-disabled !important;
       }
-  	}
+      }
 
     .input-group-text {
       border-right: 0;
