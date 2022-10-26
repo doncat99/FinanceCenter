@@ -8,7 +8,7 @@ from aiohttp import ClientSession
 import pandas as pd
 import numpy as np
 
-from . import utils
+from yfinance import utils
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ class History(Enum):
     MAX = "max"
 
 
-class YH:
-    """API call to fetch the YH candles."""
+class Yahoo:
+    """API call to fetch the Yahoo candles."""
 
     base_url = "https://query1.finance.yahoo.com/v8/finance/chart/"
     base_params = {

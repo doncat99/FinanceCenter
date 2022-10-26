@@ -12,7 +12,7 @@ from findy.database.plugins.recorder import KDataRecorder
 from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
-from findy.vendor.yf import YH
+from findy.utils.fetch_apis.yahoo import Yahoo
 
 
 class YahooUsIndexKdataRecorder(KDataRecorder):
@@ -58,9 +58,9 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
             try:
                 code = entity.code
                 if self.level < IntervalLevel.LEVEL_1DAY:
-                    df, msg = await YH.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), period="3mon")
+                    df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), period="3mon")
                 else:
-                    df, msg = await YH.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
+                    df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
                 if isinstance(msg, str) and "symbol may be delisted" in msg:
                     entity.is_active = False
                 return df

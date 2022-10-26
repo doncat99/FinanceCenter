@@ -9,7 +9,7 @@ sqlalchemy_batch_inserts>=0.0.4
 
 # data utils
 pandas>=1.5.0
-numpy>=1.21.5
+numpy>=1.23.4
 demjson>=1.6
 
 # date utils
