@@ -8,7 +8,7 @@ from yfinance import Ticker
 
 from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema.fundamental.finance import BalanceSheet
-from findy.database.plugins.recorder import TimestampsDataRecorder
+from findy.database.recorder import TimestampsDataRecorder
 from findy.database.plugins.yahoo.common import to_report_period_type
 from findy.utils.pd import pd_valid
 

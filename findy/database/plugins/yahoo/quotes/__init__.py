@@ -10,7 +10,7 @@ from findy.database.schema.quotes.stock.stock_30m_kdata import tmKdataBase
 from findy.database.schema.quotes.stock.stock_15m_kdata import ofmKdataBase
 from findy.database.schema.quotes.stock.stock_5m_kdata import fmKdataBase
 from findy.database.schema.quotes.stock.stock_1m_kdata import mKdataBase
-from findy.database.plugins.register import register_schema
+from findy.database.schema.register import register_schema
 from findy.database.plugins.yahoo.quotes.yahoo_index_kdata_recorder import *
 from findy.database.plugins.yahoo.quotes.yahoo_stock_kdata_recorder import *
 

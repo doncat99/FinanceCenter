@@ -8,7 +8,7 @@
 # from findy.database.schema import IntervalLevel, AdjustType
 # from findy.database.schema.meta.stock_meta import Index
 # from findy.database.schema.datatype import IndexKdataCommon
-# from findy.database.plugins.recorder import KDataRecorder
+# from findy.database.recorder import KDataRecorder
 # from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 # from findy.utils.pd import pd_valid
 # from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str

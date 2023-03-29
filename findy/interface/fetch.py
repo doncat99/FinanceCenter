@@ -10,7 +10,6 @@ import asyncio
 import time
 from datetime import datetime
 
-from findy import findy_config
 from findy.interface import Region, Provider, RunMode
 from findy.utils.kafka import publish_message
 from findy.utils.progress import ProgressBarProcess, progress_topic, progress_key
@@ -365,8 +364,8 @@ async def fetch_process(region: Region, kafka_producer):
 
     schedule_log_file = f'update_schedule_log_{region.value}'
     schedule_cache = get_cache(schedule_log_file)
-    
-    if schedule_cache == None:
+
+    if schedule_cache is None:
         schedule_cache = {}
 
     tasks_list = [(region, item, index) for index, item in enumerate(task_set) if not valid(region, item[Para.FunName.value].__name__, item[Para.Cache.value], schedule_cache)]
@@ -429,8 +428,8 @@ async def fetch_process(region: Region, kafka_producer):
 
 def fetching(region: Region):
     pbar = ProgressBarProcess()
-    pbar.start()   
-    
+    pbar.start()
+
     kafka_producer = pbar.getProducer()
     print("waiting for kafka connection.....")
     time.sleep(5)

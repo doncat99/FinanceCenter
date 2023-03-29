@@ -28,7 +28,7 @@ class MultiProcess():
             with tqdm(total=len(args), leave=leave, ncols=ncols, position=pos) as pbar:
                 pbar.set_description(desc)
                 for res in pool.imap_unordered(func, args):
-                    res_list.append(res)
+                    res_list.extend(res)
                     pbar.update()
         return res_list
 

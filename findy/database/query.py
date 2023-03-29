@@ -9,7 +9,7 @@ from sqlalchemy.orm import Query
 # from findy import findy_config
 from findy.interface import Region, Provider
 from findy.database.schema import IntervalLevel
-from findy.database.plugins.register import providers
+from findy.database.schema.register import providers
 # from findy.database.context import  profiled
 # from findy.database.persist import from_postgresql
 from findy.utils.time import PRECISION_STR, to_pd_timestamp

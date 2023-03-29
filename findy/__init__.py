@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+sys.setrecursionlimit(1000000)
+
 import json
 import pkg_resources
 from pathlib import Path
 
 import pandas as pd
-
-from findy.utils.log import init_log
-
-sys.setrecursionlimit(1000000)
-
 pd.options.compute.use_bottleneck = True
 pd.options.compute.use_numba = False
 pd.options.compute.use_numexpr = True
@@ -19,10 +16,10 @@ pd.set_option('mode.chained_assignment', 'raise')
 # pd.set_option('display.max_rows', None)
 # pd.set_option('display.max_columns', None)
 
+from findy.utils.log import init_log
+
 findy_env = {}
-
 findy_config = {}
-
 FINDY_HOME = os.environ.get('FINDY_HOME', os.path.abspath(os.path.join(Path.home(), 'findy-home')))
 
 
@@ -95,7 +92,7 @@ def init_env(findy_home: str, **kwargs) -> dict:
 init_env(findy_home=FINDY_HOME)
 
 
-import findy.database.plugins as findy_plugins
+# import findy.database.plugins as findy_plugins
 
 
-__all__ = ['findy_plugins']
+# __all__ = ['findy_plugins']

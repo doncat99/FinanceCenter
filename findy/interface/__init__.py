@@ -1360,10 +1360,10 @@ SDAX_50_TICKER = [
     'ZO1.DE'
 ]
 
-############## Stock Ticker Setup ends ##############
+############ Stock Ticker Setup ends #################
 
-###Jan 20,2020, added by YuQing Huang###################
-################FX Ticker Setup Start###################
+###### Jan 20,2020, added by YuQing Huang ############
+############# FX Ticker Setup Start ##################
 FX_TICKER = [
     "AUDCAD",
     "AUDCHF",
@@ -1440,4 +1440,4 @@ FX_TICKER = [
     "EURDKK"
 ]
 
-################FX Ticker Setup End###################
+################ FX Ticker Setup End ###################

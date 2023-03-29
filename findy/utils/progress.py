@@ -21,8 +21,8 @@ class ProgressBarProcess():
 
     def __del__(self):
         if self.process.is_alive():
-            self.process.join()
-            
+            ...
+
     def getProducer(self):
         if self.kafka_producer:
             return self.kafka_producer

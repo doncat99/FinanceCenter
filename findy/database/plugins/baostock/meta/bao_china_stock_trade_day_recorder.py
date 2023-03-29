@@ -5,10 +5,10 @@ from datetime import datetime
 import pandas as pd
 
 from findy.interface import Region, Provider
-from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.quotes.trade_day import StockTradeDay
-from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.recorder import RecorderForEntities
+from findy.database.persist import df_to_db
 from findy.utils.time import PD_TIME_FORMAT_DAY, to_time_str
 from findy.utils.pd import pd_valid
 

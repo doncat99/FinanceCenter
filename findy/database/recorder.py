@@ -10,11 +10,10 @@ import pandas as pd
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
-from findy.interface.writer import df_to_db
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.datatype import Mixin, EntityMixin
 from findy.database.schema.quotes.trade_day import StockTradeDay
-from findy.database.plugins.register import get_schema_by_name
+from findy.database.schema.register import get_schema_by_name
 from findy.database.context import get_db_session
 from findy.database.quote import get_entities
 from findy.utils.request import get_async_http_session
@@ -325,6 +324,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         if pd_valid(df_record):
             assert 'id' in df_record.columns
+            from findy.database.persist import df_to_db
 
             saved_counts = await df_to_db(region=self.region,
                                           provider=self.provider,

@@ -17,7 +17,7 @@ from sqlalchemy_batch_inserts import enable_batch_inserting
 
 from findy import findy_config
 from findy.interface import Region, Provider
-from findy.database.plugins.register import get_db_name
+from findy.database.schema.register import get_db_name
 
 logger = logging.getLogger(__name__)
 logger_time = logging.getLogger("findy.sql.performance")
@@ -120,8 +120,8 @@ def create_db(db_name):
 
     # warning: windows platform user need to create postgresql database manually
     connection = psycopg2.connect(database='postgres',
-                                  user='postgres',
-                                  password='',
+                                  user=findy_config['db_user'],
+                                  password=findy_config['db_pass'],
                                   host=findy_config[f'db_host_{findy_config["location"]}'],
                                   port=findy_config[f'db_port_{findy_config["location"]}'])
     if connection is not None:
@@ -203,7 +203,7 @@ def create_index(region: Region, engine, schema_base):
             logger.debug(f'create async index -> engine: {engine}, table: {table_name}, index: {index_column_names}')
 
             # for col in ['timestamp', 'entity_id', 'code', 'report_period', 'created_timestamp', 'updated_timestamp']:
-            for col in ['timestamp', 'entity_id', 'code', 'report_period']: 
+            for col in ['timestamp', 'entity_id', 'code', 'report_period']:
                 if col in table.c:
                     index_name = f'{table_name}_{col}_index'
                     if index_name not in index_column_names:

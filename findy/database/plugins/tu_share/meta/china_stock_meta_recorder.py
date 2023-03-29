@@ -6,9 +6,9 @@ import tushare as ts
 
 from findy import findy_config
 from findy.interface import Region, Provider, ChnExchange, EntityType
-from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import StockDetail
-from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.recorder import RecorderForEntities
+from findy.database.persist import df_to_db
 from findy.utils.time import to_pd_timestamp
 from findy.utils.pd import pd_valid
 

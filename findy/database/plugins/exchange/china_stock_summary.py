@@ -1,14 +1,14 @@
 from datetime import datetime
 import time
 
-import demjson
+import demjson3
 import pandas as pd
 
 from findy import findy_config
 from findy.interface import Region, Provider, EntityType
 from findy.database.schema.meta.stock_meta import Index
 from findy.database.schema.misc.overall import StockSummary
-from findy.database.plugins.recorder import TimestampsDataRecorder
+from findy.database.recorder import TimestampsDataRecorder
 from findy.utils.request import chrome_copy_header_to_dict
 from findy.utils.time import to_time_str, now_pd_timestamp
 from findy.utils.convert import to_float
@@ -64,7 +64,7 @@ class StockSummaryRecorder(TimestampsDataRecorder):
                 if text is None:
                     continue
 
-                results = demjson.decode(text[text.index("(") + 1:text.index(")")])['result']
+                results = demjson3.decode(text[text.index("(") + 1:text.index(")")])['result']
                 result = [result for result in results if result['productType'] == '1']
                 if result and len(result) == 1:
                     result_json = result[0]

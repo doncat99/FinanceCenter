@@ -2,10 +2,10 @@
 # import pandas as pd
 
 # from findy.interface import Region, Provider, EntityType
-# from findy.interface.writer import df_to_db
 # from findy.database.schema.meta.stock_meta import Stock, StockDetail
-# from findy.database.plugins.recorder import RecorderForEntities
+# from findy.database.recorder import RecorderForEntities
 # from findy.database.plugins.baostock.common import to_entity_id, to_bao_entity_type
+# from findy.database.persist import df_to_db
 # from findy.database.context import get_db_session
 # from findy.utils.pd import pd_valid
 

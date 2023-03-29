@@ -2,8 +2,8 @@
 import pandas as pd
 
 from findy.interface import Region, Provider
-from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Index
+from findy.database.persist import df_to_db
 from findy.database.context import get_db_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import to_pd_timestamp

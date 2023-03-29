@@ -6,9 +6,9 @@ import msgpack
 import pandas as pd
 
 from findy.interface import Region, Provider, ChnExchange, EntityType
-from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
-from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.recorder import RecorderForEntities
+from findy.database.persist import df_to_db
 from findy.database.context import get_db_session
 from findy.utils.kafka import publish_message
 from findy.utils.progress import progress_topic, progress_key

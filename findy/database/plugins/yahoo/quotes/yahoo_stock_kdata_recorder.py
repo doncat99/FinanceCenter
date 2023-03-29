@@ -8,7 +8,7 @@ from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
-from findy.database.plugins.recorder import KDataRecorder
+from findy.database.recorder import KDataRecorder
 from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 from findy.database.quote import get_entities
 from findy.utils.pd import pd_valid

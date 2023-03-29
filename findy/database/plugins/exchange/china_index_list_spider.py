@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import io
 
-import demjson
+import demjson3
 import pandas as pd
 
 from findy.interface import Region, Provider, EntityType
-from findy.interface.writer import df_to_db
 from findy.database.schema.meta.stock_meta import IndexStock, Index
-from findy.database.plugins.recorder import RecorderForEntities
+from findy.database.recorder import RecorderForEntities
+from findy.database.persist import df_to_db
 from findy.database.context import get_db_session
 from findy.database.quote import china_stock_code_to_id
 from findy.utils.request import get_sync_http_session, sync_get
@@ -50,7 +50,7 @@ class ChinaIndexListSpider(RecorderForEntities):
             if text is None:
                 continue
 
-            response_dict = demjson.decode(text)
+            response_dict = demjson3.decode(text)
             response_index_list = response_dict.get('list', [])
 
             if len(response_index_list) == 0:
@@ -66,7 +66,7 @@ class ChinaIndexListSpider(RecorderForEntities):
         df = df[['base_date', 'base_point', 'index_code', 'indx_sname', 'online_date', 'class_eseries']].copy()
         df.columns = ['timestamp', 'base_point', 'code', 'name', 'list_date', 'class_eseries']
         df['category'] = df['class_eseries'].apply(lambda x: x.split(' ')[0].lower())
-        df = df.drop('class_eseries', axis=1)
+        df.drop(columns=['class_eseries'], inplace=True)
         df = df.loc[df['code'].str.contains(r'^\d{6}$')]
 
         await self.persist_index(df)
@@ -199,7 +199,7 @@ class ChinaIndexListSpider(RecorderForEntities):
 
             result_df = pd.concat([result_df, df])
 
-        result_df = result_df.drop('样本股数量', axis=1)
+        result_df.drop(columns=['样本股数量'], inplace=True)
         result_df.columns = ['name', 'code', 'timestamp', 'base_point', 'list_date']
         result_df['timestamp'] = result_df['timestamp'].apply(lambda x: x.replace('-', ''))
         result_df['list_date'] = result_df['list_date'].apply(lambda x: x.replace('-', ''))

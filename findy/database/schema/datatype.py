@@ -119,7 +119,7 @@ class Mixin(object):
         recorder_class = cls.provider_map_recorder[region][provider]
 
         # get args for specific recorder class
-        from findy.database.plugins.recorder import TimeSeriesDataRecorder
+        from findy.database.recorder import TimeSeriesDataRecorder
         if issubclass(recorder_class, TimeSeriesDataRecorder):
             args = [item for item in inspect.getfullargspec(cls.record_data).args if
                     item not in ('cls', 'region', 'provider')]
@@ -134,7 +134,7 @@ class Mixin(object):
                 kw[arg] = tmp
 
         # KDataRecorder
-        from findy.database.plugins.recorder import KDataRecorder
+        from findy.database.recorder import KDataRecorder
         if issubclass(recorder_class, KDataRecorder):
             # contract:
             # 1)use KDataRecorder to record the data with IntervalLevel
@@ -294,7 +294,7 @@ class Portfolio(EntityMixin):
         :param provider: the data provider
         :return:
         """
-        from findy.database.plugins.register import get_schema_by_name
+        from findy.database.schema.register import get_schema_by_name
         from findy.database.context import get_db_session
 
         schema_str = f'{cls.__name__}Stock'
