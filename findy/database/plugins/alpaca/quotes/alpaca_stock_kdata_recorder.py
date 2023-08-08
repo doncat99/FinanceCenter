@@ -1,6 +1,4 @@
 # # -*- coding: utf-8 -*-
-# import time
-
 # import pandas as pd
 # import alpaca_trade_api as tradeapi
 
@@ -13,6 +11,7 @@
 # from findy.database.plugins.yahoo.common import to_yahoo_trading_level
 # from findy.database.quote import get_entities
 # from findy.utils.pd import pd_valid
+# from findy.utils.functool import time_it
 # from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
 
 
@@ -30,8 +29,7 @@
 #                  codes=None,
 #                  batch_size=10,
 #                  force_update=True,
-#                  sleeping_time=0,
-#                  default_size=findy_config['batch_size'],
+#                  sleep_time=0,
 #                  real_time=False,
 #                  fix_duplicate_way='ignore',
 #                  start_timestamp=None,
@@ -48,8 +46,8 @@
 #         self.data_schema = self.get_kdata_schema(entity_type=EntityType.Stock, level=level, adjust_type=adjust_type)
 #         self.level = level
 
-#         super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleeping_time,
-#                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
+#         super().__init__(EntityType.Stock, exchanges, entity_ids, codes, batch_size, force_update, sleep_time,
+#                          real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
 #                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes, share_para=share_para)
 #         self.adjust_type = adjust_type
 
@@ -104,8 +102,8 @@
 #         self.logger.error(error_msg)
 #         return None
 
+#     @time_it
 #     async def record(self, entity, http_session, db_session, para):
-#         start_point = time.time()
 
 #         (start, end, size, timestamps) = para
 
@@ -113,9 +111,9 @@
 #         df = await self.yh_get_bars(http_session, entity, start=start, end=end_timestamp)
 
 #         if pd_valid(df):
-#             return False, time.time() - start_point, self.format(entity, df)
+#             return False, self.format(entity, df)
 
-#         return True, time.time() - start_point, None
+#         return True, None
 
 #     def format(self, entity, df):
 #         df.reset_index(inplace=True)
@@ -136,10 +134,9 @@
 #         df['id'] = self.generate_domain_id(entity, df)
 #         return df
 
+#     @time_it
 #     async def on_finish_entity(self, entity, http_session, db_session, result):
-#         now = time.time()
 #         if result == 2 and not entity.is_active:
-
 #             try:
 #                 db_session.commit()
 #             except Exception as e:
@@ -147,8 +144,6 @@
 #                 db_session.rollback()
 #             finally:
 #                 db_session.close()
-
-#         return time.time() - now
 
 #     async def on_finish(self):
 #         pass

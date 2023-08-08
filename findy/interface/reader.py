@@ -55,7 +55,7 @@ class DataReader(object):
     def __init__(self,
                  region: Region,
                  data_schema: Type[Mixin],
-                 entity_schema: Type[EntityMixin],
+                 entity_schema: Type[EntityMixin] = None,
                  provider: Provider = None,
                  entity_ids: List[str] = None,
                  exchanges: List[str] = None,

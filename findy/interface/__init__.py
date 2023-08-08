@@ -2,6 +2,12 @@
 import enum
 
 
+class Device(enum.Enum):
+    cpu = 'cpu'
+    cuda = 'cuda'
+    mps = 'mps'
+
+
 class Region(enum.Enum):
     CHN = 'chn'
     US = 'us'
@@ -14,6 +20,7 @@ class Provider(enum.Enum):
     BaoStock = 'baostock'
     TuShare = 'tushare'
     AkShare = 'akshare'
+    EastMoney = 'eastmoney'
     Yahoo = 'yahoo'
     Alpaca = 'alpaca'
     Findy = 'findy'
@@ -25,6 +32,7 @@ class EntityType(enum.Enum):
     Fund = 'fund'
     Stock = 'stock'
     Block = 'block'
+    News = 'news'
     StockDetail = 'stock_detail'
     FundDetail = 'fund_detail'
 
@@ -39,11 +47,6 @@ class UsExchange(enum.Enum):
     NSDQ = 'nasdaq'
     AMEX = 'amex'
     CME = 'cme'
-
-
-class RunMode(enum.Enum):
-    Serial = 2
-    Parallel = 3
 
 
 class Signal(enum.Enum):

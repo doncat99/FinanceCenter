@@ -65,15 +65,19 @@ def init_env(findy_home: str, **kwargs) -> dict:
 
     findy_env['findy_home'] = findy_home
 
-    # path for storing cache
+    # path for log file
     findy_env['log_path'] = os.path.join(findy_home, 'logs')
     os.makedirs(findy_env['log_path'], exist_ok=True)
+    
+    # path for error file
+    findy_env['err_path'] = os.path.join(findy_home, 'err_path')
+    os.makedirs(findy_env['err_path'], exist_ok=True)
 
     # path for storing cache
     findy_env['cache_path'] = os.path.join(findy_home, 'cache')
     os.makedirs(findy_env['cache_path'], exist_ok=True)
 
-    # path for storing cache
+    # path for out file
     findy_env['out_path'] = os.path.join(findy_home, 'out')
     os.makedirs(findy_env['out_path'], exist_ok=True)
 

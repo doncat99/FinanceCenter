@@ -7,7 +7,6 @@ from findy.interface import Region, Provider
 from findy.database.persist import df_to_db
 from findy.database.schema.datatype import Mixin
 
-
 logger = logging.getLogger(__name__)
 
 

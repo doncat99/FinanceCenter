@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from typing import List, Union
 import logging
+import os
 import time
 import msgpack
 import math
-from typing import List, Union
 import asyncio
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 import pandas as pd
 
@@ -20,10 +22,13 @@ from findy.utils.request import get_async_http_session
 from findy.utils.kafka import connect_kafka_producer, publish_message
 from findy.utils.progress import progress_topic, progress_key
 from findy.utils.pd import pd_valid
+from findy.utils.functool import time_it
 from findy.utils.time import (PD_TIME_FORMAT_DAY, PRECISION_STR,
                               to_pd_timestamp, to_time_str,
                               now_pd_timestamp, next_date,
                               is_same_date)
+
+kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
 
 class Meta(type):
@@ -45,17 +50,17 @@ class Recorder(metaclass=Meta):
     def __init__(self,
                  batch_size: int = 10,
                  force_update: bool = False,
-                 sleeping_time: int = 10) -> None:
+                 sleep_time: int = 10) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.batch_size = batch_size
         self.force_update = force_update
-        self.sleeping_time = sleeping_time
+        self.sleep_time = sleep_time
 
     async def run(self):
         raise NotImplementedError
 
-    async def sleep(self, sleeping_time=0.0):
-        sleep_time = max(sleeping_time, self.sleeping_time)
+    async def sleep(self, sleep_time=0.0):
+        sleep_time = max(sleep_time, self.sleep_time)
         self.logger.debug(f'sleeping {sleep_time} seconds')
         return await asyncio.sleep(sleep_time)
 
@@ -74,7 +79,7 @@ class RecorderForEntities(Recorder):
                  codes=None,
                  batch_size=10,
                  force_update=False,
-                 sleeping_time=10,
+                 sleep_time=10,
                  share_para=None) -> None:
         assert self.region is not None
         assert self.provider is not None
@@ -86,8 +91,8 @@ class RecorderForEntities(Recorder):
         self.entity_ids = entity_ids
         self.codes = codes
         self.share_para = share_para
-        
-        super().__init__(batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time)
+
+        super().__init__(batch_size=batch_size, force_update=force_update, sleep_time=sleep_time)
 
     async def init_entities(self, db_session):
         # init the entity list
@@ -117,7 +122,7 @@ class RecorderForEntities(Recorder):
     async def on_finish(self, entities):
         raise NotImplementedError
 
-    async def process_entity(self, entity, http_session, db_session, throttler):
+    async def __process_entity(self, entity, http_session, db_session, concurrent):
         eval_time = 0
         download_time = 0
         persist_time = 0
@@ -125,36 +130,42 @@ class RecorderForEntities(Recorder):
         start_point = time.time()
 
         # eval
-        is_finish, eval_time, para = await self.eval(entity, http_session, db_session)
+        eval_time, (is_finish, para) = await self.eval(entity, http_session, db_session)
+
+        # data is up to date
         if is_finish:
-            # await self.sleep(0.1)
             return 1, eval_time, download_time, persist_time, time.time() - start_point, None
 
-        async with throttler:
+        async with asyncio.Semaphore(concurrent):
             start_point = time.time()
 
             # fetch
-            is_finish, download_time, df_record = await self.record(entity, http_session, db_session, para)
+            download_time, (is_finish, df_record) = await self.record(entity, http_session, db_session, para)
             if is_finish:
                 # await self.sleep(0.1)
                 return 2, eval_time, download_time, persist_time, time.time() - start_point + eval_time, None
 
             # save
-            is_finish, persist_time, extra = await self.persist(entity, http_session, db_session, df_record)
+            persist_time, (is_finish, extra) = await self.persist(entity, http_session, db_session, df_record)
             if is_finish:
                 # await self.sleep(0.1)
                 return 3, eval_time, download_time, persist_time, time.time() - start_point + eval_time, extra
 
         return 0, eval_time, download_time, persist_time, time.time() - start_point + eval_time, None
 
-    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, item):
+        entity, pbar_update, concurrent = item
+
+        http_session = get_async_http_session()
+        db_session = get_db_session(self.region, self.provider, self.data_schema)
+
         eval_time = 0
         download_time = 0
         persist_time = 0
         total_time = 0
 
         while True:
-            result, eval_, download_, persist_, total_, extra = await self.process_entity(entity, http_session, db_session, throttler)
+            result, eval_, download_, persist_, total_, extra = await self.__process_entity(entity, http_session, db_session, concurrent)
             eval_time += eval_
             download_time += download_
             persist_time += persist_
@@ -162,9 +173,10 @@ class RecorderForEntities(Recorder):
 
             if result > 0:
                 # add finished entity to finished_items
-                total_time += await self.on_finish_entity(entity, http_session, db_session, result)
+                time, _ = await self.on_finish_entity(entity, http_session, db_session, result)
+                total_time += time
                 break
-        
+
         pbar_update["update"] = 1
         publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
 
@@ -190,31 +202,38 @@ class RecorderForEntities(Recorder):
             self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}{}".format(
                 prefix, self.data_schema.__name__, name, eval_time, download_time, persist_time, total_time, postfix))
 
+        await http_session.close()
+
+    @staticmethod
+    def async_to_sync(corofn, *args):
+        loop = asyncio.new_event_loop()
+        try:
+            coro = corofn(*args)
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
     async def run(self):
         db_session = get_db_session(self.region, self.provider, self.data_schema)
-        kafka_producer = connect_kafka_producer(findy_config['kafka'])
-
         entities = await self.init_entities(db_session)
 
         if entities and len(entities) > 0:
-            http_session = get_async_http_session()
-            throttler = asyncio.Semaphore(self.share_para[0])
+            processor, concurrent, desc, taskid = self.share_para
 
-            (taskid, desc) = self.share_para[1]
             pbar_update = {"task": taskid, "total": len(entities), "desc": desc, "leave": True, "update": 0}
-            publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))
+            publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
 
-            # tasks = [asyncio.ensure_future(self.process_loop(entity, pbar_update, http_session, db_session, throttler)) for entity in entities]
-            tasks = [self.process_loop(entity, pbar_update, http_session, db_session, kafka_producer, throttler) for entity in entities]
+            items = [(entity, pbar_update, concurrent) for entity in entities]
 
-            # for result in asyncio.as_completed(tasks):
-            #     await result
+            with ProcessPoolExecutor(max_workers=processor) as pool:
+                loop = asyncio.get_event_loop()
+                tasks = [loop.run_in_executor(pool, self.async_to_sync, self.process_loop, item) for item in items]
 
-            [await _ for _ in asyncio.as_completed(tasks)]
+            # tasks = [asyncio.ensure_future(self.process_loop(item)) for item in items]
+            [await result for result in asyncio.as_completed(tasks)]
 
             await self.on_finish(entities)
-
-            return await http_session.close()
 
 
 class TimeSeriesDataRecorder(RecorderForEntities):
@@ -224,19 +243,18 @@ class TimeSeriesDataRecorder(RecorderForEntities):
                  codes=None,
                  batch_size=10,
                  force_update=False,
-                 sleeping_time=5,
-                 default_size=findy_config['batch_size'],
+                 sleep_time=5,
                  fix_duplicate_way='add',
                  start_timestamp=None,
                  end_timestamp=None,
                  share_para=None) -> None:
-        self.default_size = default_size
+        self.default_size = findy_config['batch_size']
         self.fix_duplicate_way = fix_duplicate_way
         self.start_timestamp = to_pd_timestamp(start_timestamp)
         self.end_timestamp = to_pd_timestamp(end_timestamp)
 
         super().__init__(entity_type, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, share_para=share_para)
+                         force_update, sleep_time, share_para=share_para)
 
     def get_evaluated_time_field(self):
         return 'timestamp'
@@ -297,9 +315,8 @@ class TimeSeriesDataRecorder(RecorderForEntities):
 
         return latest_timestamp, self.end_timestamp, size, None
 
+    @time_it
     async def eval(self, entity, http_session, db_session):
-        start_point = time.time()
-
         # ref_record = await self.get_referenced_saved_record(entity, db_session)
 
         # cost = PRECISION_STR.format(time.time() - start_point)
@@ -308,17 +325,13 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         start, end, size, timestamps = \
             await self.eval_fetch_timestamps(entity, http_session, db_session)
 
-        cost = PRECISION_STR.format(time.time() - start_point)
-        self.logger.debug(f'evaluate entity: {entity.id}, time: {cost}')
-
         # no more to record
         is_finish = True if size == 0 else False
 
-        return is_finish, time.time() - start_point, (start, end, size, timestamps)
+        return is_finish, (start, end, size, timestamps)
 
+    @time_it
     async def persist(self, entity, http_session, db_session, df_record):
-        start_point = time.time()
-
         saved_counts = 0
         is_finished = False
 
@@ -346,7 +359,7 @@ class TimeSeriesDataRecorder(RecorderForEntities):
         start_timestamp = to_time_str(df_record['timestamp'].min(axis=0))
         end_timestamp = to_time_str(df_record['timestamp'].max(axis=0))
 
-        return is_finished, time.time() - start_point, [saved_counts, start_timestamp, end_timestamp]
+        return is_finished, [saved_counts, start_timestamp, end_timestamp]
 
     async def run(self):
         db_session = get_db_session(self.region, self.provider, self.data_schema)
@@ -372,8 +385,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
                  codes=None,
                  batch_size=10,
                  force_update=True,
-                 sleeping_time=10,
-                 default_size=findy_config['batch_size'],
+                 sleep_time=10,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
@@ -381,10 +393,11 @@ class KDataRecorder(TimeSeriesDataRecorder):
                  level=IntervalLevel.LEVEL_1DAY,
                  share_para=None):
         super().__init__(entity_type, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size,
+                         force_update, sleep_time,
                          fix_duplicate_way, start_timestamp, end_timestamp,
                          share_para=share_para)
         self.level = IntervalLevel(level)
+        self.default_size = findy_config['batch_size']
 
     @staticmethod
     def get_kdata_schema(entity_type: EntityType,
@@ -467,7 +480,7 @@ class KDataRecorder(TimeSeriesDataRecorder):
         try:
             start_timestamp = next_date(latest_timestamp)
         except Exception as e:
-            print(e)
+            print('next_date exception:', e)
 
         start = max(self.start_timestamp, start_timestamp) if self.start_timestamp else start_timestamp
 
@@ -490,14 +503,13 @@ class TimestampsDataRecorder(TimeSeriesDataRecorder):
                  codes=None,
                  batch_size=10,
                  force_update=False,
-                 sleeping_time=5,
-                 default_size=findy_config['batch_size'],
+                 sleep_time=5,
                  fix_duplicate_way='add',
                  start_timestamp=None,
                  end_timestamp=None,
                  share_para=None) -> None:
         super().__init__(entity_type, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size,
+                         force_update, sleep_time,
                          fix_duplicate_way, start_timestamp, end_timestamp,
                          share_para=share_para)
         self.security_timestamps_map = {}

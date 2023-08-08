@@ -6,12 +6,10 @@ from functools import wraps, lru_cache
 import json
 
 from findy import findy_env
-from findy.interface import Region
 
 
-def valid(region: Region, func_name, valid_time, data):
+def valid(key, valid_time, data):
     if data is not None:
-        key = f"{region.value}_{func_name}"
         lasttime = data.get(key, None)
         if lasttime is not None:
             if lasttime > (datetime.now() - timedelta(hours=valid_time)):
@@ -19,12 +17,12 @@ def valid(region: Region, func_name, valid_time, data):
     return False
 
 
-def get_cache(filename):
+def get_cache(filename, default=None):
     file = os.path.join(findy_env['cache_path'], f"{filename}.pkl")
     if os.path.exists(file) and os.path.getsize(file) > 0:
         with open(file, 'rb') as handle:
             return pickle.load(handle)
-    return None
+    return default
 
 
 def dump_cache(filename, data):

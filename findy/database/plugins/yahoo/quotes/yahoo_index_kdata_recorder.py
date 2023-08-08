@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import time
-
 import pandas as pd
+from yfinance import Ticker
 
 from findy import findy_config
 from findy.interface import Region, Provider, UsExchange, EntityType
@@ -10,9 +9,9 @@ from findy.database.schema.meta.stock_meta import Index
 from findy.database.schema.datatype import IndexKdataCommon
 from findy.database.recorder import KDataRecorder
 from findy.database.plugins.yahoo.common import to_yahoo_trading_level
+from findy.utils.functool import time_it
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
-from findy.utils.fetch_apis.yahoo import Yahoo
 
 
 class YahooUsIndexKdataRecorder(KDataRecorder):
@@ -22,15 +21,14 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
     entity_schema = Index
     # 只是为了把recorder注册到data_schema
     data_schema = IndexKdataCommon
-    exchanges=[e.value for e in UsExchange]
+    exchanges = [e.value for e in UsExchange]
 
     def __init__(self,
                  entity_ids=None,
                  codes=None,
                  batch_size=10,
                  force_update=True,
-                 sleeping_time=0,
-                 default_size=findy_config['batch_size'],
+                 sleep_time=0,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
@@ -42,8 +40,8 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
         self.data_schema = self.get_kdata_schema(entity_type=EntityType.Index, level=level, adjust_type=adjust_type)
         self.level = level
 
-        super().__init__(EntityType.Stock, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, fix_duplicate_way, start_timestamp, end_timestamp, level, share_para=share_para)
+        super().__init__(EntityType.Stock, entity_ids, codes, batch_size, force_update, sleep_time,
+                         fix_duplicate_way, start_timestamp, end_timestamp, level, share_para=share_para)
         self.adjust_type = adjust_type
 
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
@@ -53,19 +51,32 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
     async def yh_get_bars(self, http_session, entity, start=None, end=None, enable_proxy=False):
         retry = 3
         error_msg = None
+        
+        tunnel = findy_config['kuaidaili_proxy_tunnel']
+        username = findy_config['kuaidaili_proxy_username']
+        password = findy_config['kuaidaili_proxy_password']
+        proxies = {
+            "http": "http://%(user)s:%(pwd)s@%(proxy)s/" % {"user": username, "pwd": password, "proxy": tunnel},
+            "https": "http://%(user)s:%(pwd)s@%(proxy)s/" % {"user": username, "pwd": password, "proxy": tunnel}
+        }
+
+        USE_PROXY = False
+        proxies = proxies if USE_PROXY else {}
 
         for _ in range(retry):
             try:
                 code = entity.code
                 if self.level < IntervalLevel.LEVEL_1DAY:
-                    df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), period="3mon")
+                    df = Ticker(code).history(period="3mon", interval=to_yahoo_trading_level(self.level), proxy=proxies, debug=False)
+                    # df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), period="3mon", proxy=proxies)
                 else:
-                    df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), start=start, end=end)
-                if isinstance(msg, str) and "symbol may be delisted" in msg:
-                    entity.is_active = False
+                    df = Ticker(code).history(start=start, end=end, interval=to_yahoo_trading_level(self.level), proxy=proxies, debug=False)
+                    # df, msg = await Yahoo.fetch(http_session, 'US/Eastern', code, interval=to_yahoo_trading_level(self.level), start=start, end=end, proxy=proxies)
                 return df
             except Exception as e:
                 msg = str(e)
+                if isinstance(msg, str) and "symbol may be delisted" in msg:
+                    entity.is_active = False
                 error_msg = f'yh_get_bars, code: {code}, interval: {self.level.value}, error: {msg}'
                 if isinstance(msg, str) and ("Server disconnected" in msg or
                                              "Cannot connect to host" in msg or
@@ -77,18 +88,17 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
         self.logger.error(error_msg)
         return None
 
+    @time_it
     async def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         (start, end, size, timestamps) = para
 
         end_timestamp = to_time_str(self.end_timestamp) if self.end_timestamp else None
         df = await self.yh_get_bars(http_session, entity, start=start, end=end_timestamp)
 
         if pd_valid(df):
-            return False, time.time() - start_point, self.format(entity, df)
+            return False, self.format(entity, df)
 
-        return True, time.time() - start_point, None
+        return True, None
 
     def format(self, entity, df):
         df.reset_index(inplace=True)
@@ -109,8 +119,9 @@ class YahooUsIndexKdataRecorder(KDataRecorder):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        return 0
+        pass
 
     async def on_finish(self, entities):
         pass

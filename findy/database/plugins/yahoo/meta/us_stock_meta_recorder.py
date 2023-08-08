@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import time
-
 from yfinance import Ticker
 
 from findy.interface import Region, Provider, EntityType
 from findy.database.schema.meta.stock_meta import StockDetail
 from findy.database.recorder import RecorderForEntities
 from findy.database.quote import get_entities
+from findy.utils.functool import time_it
 
 
 class YahooUsStockDetailRecorder(RecorderForEntities):
@@ -14,8 +13,8 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
     provider = Provider.Yahoo
     data_schema = StockDetail
 
-    def __init__(self, batch_size=10, force_update=False, sleeping_time=5, codes=None, share_para=None) -> None:
-        super().__init__(entity_type=EntityType.StockDetail, batch_size=batch_size, force_update=force_update, sleeping_time=sleeping_time, codes=codes, share_para=share_para)
+    def __init__(self, batch_size=10, force_update=False, sleep_time=5, codes=None, share_para=None) -> None:
+        super().__init__(entity_type=EntityType.StockDetail, batch_size=batch_size, force_update=force_update, sleep_time=sleep_time, codes=codes, share_para=share_para)
 
     async def init_entities(self, db_session):
         entities, column_names = get_entities(
@@ -24,9 +23,11 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
             db_session=db_session,
             entity_type=EntityType.StockDetail,
             codes=self.codes,
-            filters=[StockDetail.market_cap == 0, 
-                        StockDetail.sector.is_(None),
-                        StockDetail.country.is_(None)])
+            filters=[
+                StockDetail.market_cap == 0,
+                StockDetail.sector.is_(None),
+                StockDetail.country.is_(None)
+            ])
         return entities
 
     def yh_get_info(self, code):
@@ -44,25 +45,17 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
         self.logger.error(error_msg)
         return None
 
+    @time_it
     async def eval(self, entity, http_session, db_session):
-        # entity_saved, column_names = StockDetail.query_data(
-        #     region=self.region,
-        #     provider=self.provider,
-        #     db_session=db_session,
-        #     entity_id=entity.entity_id,
-        #     limit=1)
+        return not isinstance(entity, StockDetail), None
 
-        # return entity.market_cap > 0, 0, None
-        return not isinstance(entity, StockDetail), 0, None
-
+    @time_it
     async def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         # get stock info
         info = self.yh_get_info(entity.code)
 
         if info is None or len(info) == 0:
-            return True, time.time() - start_point, None
+            return True, None
 
         if not entity.sector:
             entity.sector = info.get('sector', None)
@@ -80,11 +73,10 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
 
         entity.last_sale = info.get('previousClose', None)
 
-        return False, time.time() - start_point, None
+        return False, None
 
+    @time_it
     async def persist(self, entity, http_session, db_session, df_record):
-        start_point = time.time()
-
         try:
             db_session.commit()
         except Exception as e:
@@ -92,10 +84,11 @@ class YahooUsStockDetailRecorder(RecorderForEntities):
             db_session.rollback()
         finally:
             db_session.close()
-        return True, time.time() - start_point, 1
+        return True, 1
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        return 0
+        pass
 
     async def on_finish(self, entities):
         pass

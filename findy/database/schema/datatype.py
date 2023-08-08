@@ -105,8 +105,7 @@ class Mixin(object):
                           codes=None,
                           batch_size=None,
                           force_update=None,
-                          sleeping_time=None,
-                          default_size=None,
+                          sleep_time=None,
                           fix_duplicate_way=None,
                           start_timestamp=None,
                           end_timestamp=None,
@@ -124,7 +123,7 @@ class Mixin(object):
             args = [item for item in inspect.getfullargspec(cls.record_data).args if
                     item not in ('cls', 'region', 'provider')]
         else:
-            args = ['batch_size', 'force_update', 'sleeping_time']
+            args = ['batch_size', 'force_update', 'sleep_time']
 
         # just fill the None arg to kw,so we could use the recorder_class default args
         kw = {}

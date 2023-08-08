@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-import time
-
 import pandas as pd
-# import asyncio
 
-from findy import findy_config
 from findy.interface import Region, Provider, ChnExchange, EntityType
 from findy.database.schema import IntervalLevel, AdjustType
 from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.datatype import StockKdataCommon
 from findy.database.recorder import KDataRecorder
-from findy.database.plugins.baostock.common import to_bao_trading_level, to_bao_entity_id, \
-                                                          to_bao_trading_field, to_bao_adjust_flag
+from findy.database.plugins.baostock.common import (to_bao_trading_level, to_bao_entity_id,
+                                                    to_bao_trading_field, to_bao_adjust_flag)
 from findy.database.quote import get_entities
+from findy.utils.functool import time_it
 from findy.utils.pd import pd_valid
 from findy.utils.time import PD_TIME_FORMAT_DAY, PD_TIME_FORMAT_ISO8601, to_time_str
 
@@ -24,7 +21,6 @@ except:
 
 
 class BaoChinaStockKdataRecorder(KDataRecorder):
-    # 数据来自jq
     region = Region.CHN
     provider = Provider.BaoStock
     entity_schema = Stock
@@ -37,8 +33,7 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                  codes=None,
                  batch_size=10,
                  force_update=True,
-                 sleeping_time=0,
-                 default_size=findy_config['batch_size'],
+                 sleep_time=0,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
@@ -50,8 +45,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
         self.data_schema = self.get_kdata_schema(entity_type=EntityType.Stock, level=level, adjust_type=adjust_type)
         self.bao_trading_level = to_bao_trading_level(level)
 
-        super().__init__(EntityType.Stock, entity_ids, codes, batch_size, force_update, sleeping_time,
-                         default_size, fix_duplicate_way, start_timestamp, end_timestamp, level,
+        super().__init__(EntityType.Stock, entity_ids, codes, batch_size, force_update, sleep_time,
+                         fix_duplicate_way, start_timestamp, end_timestamp, level,
                          share_para=share_para)
         self.adjust_type = adjust_type
 
@@ -88,9 +83,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
             self.logger.error(f'bao_get_bars, frequency: {frequency}, code: {code}, error: {e}')
         return None
 
+    @time_it
     async def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         (start, end, size, timestamps) = para
 
         start = to_time_str(start)
@@ -106,11 +100,11 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                                fields=to_bao_trading_field(self.bao_trading_level),
                                adjustflag=to_bao_adjust_flag(self.adjust_type))
         # await asyncio.sleep(0.005)
-        
-        if pd_valid(df):
-            return False, time.time() - start_point, self.format(entity, df)
 
-        return True, time.time() - start_point, None
+        if pd_valid(df):
+            return False, self.format(entity, df)
+
+        return True, None
 
     def format(self, entity, df):
         if self.bao_trading_level == 'd':
@@ -142,8 +136,8 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        now = time.time()
         if result == 2 and not entity.is_active:
             try:
                 db_session.commit()
@@ -152,8 +146,6 @@ class BaoChinaStockKdataRecorder(KDataRecorder):
                 db_session.rollback()
             finally:
                 db_session.close()
-
-        return time.time() - now
 
     async def on_finish(self, entities):
         pass

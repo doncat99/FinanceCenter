@@ -7,7 +7,6 @@ import requests
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
 # from aiohttp_client_cache import CachedSession, SQLiteBackend
 
-# from findy.interface import RunMode
 # from findy.utils.cache import hashable_lru
 
 logger = logging.getLogger(__name__)
@@ -41,12 +40,6 @@ def get_sync_http_session():
 
 
 def get_async_http_session():
-    # if fetch_mode == RunMode.Sync:
-    #     http_session = TimeoutRequestsSession()
-    #     http_session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=0))
-    #     http_session.mount('https://', requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=0))
-    #     return http_session
-
     timeout = ClientTimeout(total=None,
                             connect=None,
                             sock_connect=None,

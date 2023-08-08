@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-import time
 
 import pandas as pd
 import exchange_calendars as calendars
@@ -10,6 +9,7 @@ from findy.database.schema.meta.stock_meta import Stock
 from findy.database.schema.quotes.trade_day import StockTradeDay
 from findy.database.recorder import RecorderForEntities
 from findy.database.persist import df_to_db
+from findy.utils.functool import time_it
 from findy.utils.time import PD_TIME_FORMAT_DAY, to_time_str, now_pd_timestamp
 
 
@@ -25,12 +25,12 @@ class UsStockTradeDayRecorder(RecorderForEntities):
     def generate_domain_id(self, entity, df, time_fmt=PD_TIME_FORMAT_DAY):
         return df['timestamp'].dt.strftime(time_fmt)
 
+    @time_it
     async def eval(self, entity, http_session, db_session):
-        return not isinstance(entity, str), 0, None
+        return not isinstance(entity, str), None
 
+    @time_it
     async def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         trade_day, column_names = StockTradeDay.query_data(
             region=self.region,
             provider=self.provider,
@@ -47,9 +47,9 @@ class UsStockTradeDayRecorder(RecorderForEntities):
 
         if len(dates) > 0:
             df = pd.DataFrame(dates, columns=['timestamp'])
-            return False, time.time() - start_point, self.format(entity, df)
+            return False, self.format(entity, df)
 
-        return True, time.time() - start_point, None
+        return True, None
 
     def format(self, entity, df):
         if 'timestamp' not in df.columns:
@@ -63,17 +63,18 @@ class UsStockTradeDayRecorder(RecorderForEntities):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    @time_it
     async def persist(self, entity, http_session, db_session, df_record):
-        start_point = time.time()
         saved = await df_to_db(region=self.region,
                                provider=self.provider,
                                data_schema=self.data_schema,
                                db_session=db_session,
                                df=df_record)
-        return True, time.time() - start_point, saved
+        return True, saved
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        return 0
+        pass
 
     async def on_finish(self, entities):
         pass

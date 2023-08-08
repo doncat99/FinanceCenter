@@ -24,7 +24,7 @@ def init_log(log_dir, file_name='findy.log', simple_formatter=True, debug_mode=F
     # create formatter and add it to the handlers
     if simple_formatter:
         formatter = logging.Formatter(
-            "%(asctime)s  %(levelname)-7s  %(process)-5s  %(processName)-15s  %(message)s")
+            "%(asctime)s  %(levelname)-7s  %(process)-5s  %(processName)-18s  %(message)s")
     else:
         formatter = logging.Formatter(
             "%(asctime)s  %(levelname)s  %(threadName)s  %(name)s:%(filename)s:%(lineno)s  %(funcName)s  %(message)s")

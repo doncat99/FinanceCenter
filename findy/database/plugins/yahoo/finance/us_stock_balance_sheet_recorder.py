@@ -10,6 +10,7 @@ from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema.fundamental.finance import BalanceSheet
 from findy.database.recorder import TimestampsDataRecorder
 from findy.database.plugins.yahoo.common import to_report_period_type
+from findy.utils.functool import time_it
 from findy.utils.pd import pd_valid
 
 
@@ -446,13 +447,13 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
     def __init__(self,
                  batch_size=10,
                  force_update=False,
-                 sleeping_time=5,
+                 sleep_time=5,
                  codes=None,
                  share_para=None) -> None:
         super().__init__(entity_type=EntityType.Stock,
                          batch_size=batch_size,
                          force_update=force_update,
-                         sleeping_time=sleeping_time,
+                         sleep_time=sleep_time,
                          codes=codes,
                          share_para=share_para)
 
@@ -471,22 +472,21 @@ class UsStockBalanceSheetRecorder(TimestampsDataRecorder):
         self.logger.error(error_msg)
         return None
 
+    @time_it
     def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         # get stock info
         balance_sheet = self.yh_get_balance_sheet(entity.code)
 
         if balance_sheet is None or len(balance_sheet) == 0:
-            return True, time.time() - start_point, None
+            return True, None
         balance_sheet = balance_sheet.T
 
         balance_sheet['timestamp'] = balance_sheet.index
 
         if pd_valid(balance_sheet):
-            return False, time.time() - start_point, self.format(entity, balance_sheet)
+            return False, self.format(entity, balance_sheet)
 
-        return True, time.time() - start_point, None
+        return True, None
 
     def format(self, entity, df):
         df.rename(colunms={}, inplace=True)

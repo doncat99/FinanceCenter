@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-import time
 import msgpack
 
 import pandas as pd
 
+from findy import findy_config
 from findy.interface import Region, Provider, UsExchange, EntityType
 from findy.database.schema.meta.stock_meta import Stock, StockDetail
 from findy.database.recorder import RecorderForEntities
 from findy.database.persist import df_to_db
 from findy.database.context import get_db_session
-from findy.utils.kafka import publish_message
+from findy.utils.functool import time_it
+from findy.utils.request import get_async_http_session
+from findy.utils.kafka import connect_kafka_producer, publish_message
 from findy.utils.progress import progress_topic, progress_key
 from findy.utils.time import to_pd_timestamp
+
+kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
 YAHOO_STOCK_LIST_HEADER = {
     'authority': 'old.nasdaq.com',
@@ -41,7 +45,11 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
     def get_original_time_field(self):
         return 'list_date'
 
-    async def process_loop(self, entity, pbar_update, http_session, db_session, kafka_producer, throttler):
+    async def process_loop(self, item):
+        entity, pbar_update, concurrent = item
+        
+        http_session = get_async_http_session()
+
         url = 'https://api.nasdaq.com/api/screener/stocks'
         params = {'download': 'true', 'exchange': entity}
 
@@ -51,12 +59,15 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
                 _json = _json['data']['rows']
                 if _json is not None and len(_json) > 0:
                     df = self.format(content=_json, exchange=entity)
+                    db_session = get_db_session(self.region, self.provider, self.data_schema)
                     await self.persist(df, db_session)
         except Exception as e:
             self.logger.info(f"persist {entity} stock list failed with error: {e}")
 
         pbar_update["update"] = 1
         publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
+        
+        await http_session.close()
 
     def format(self, content, exchange):
         df = pd.DataFrame(content)
@@ -79,9 +90,8 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
 
         return df
 
+    @time_it
     async def persist(self, df, db_session):
-        start_point = time.time()
-
         # persist to Stock
         saved = await df_to_db(region=self.region,
                                provider=self.provider,
@@ -98,10 +108,11 @@ class ExchangeUsStockListRecorder(RecorderForEntities):
                        df=df,
                        force_update=True)
 
-        return True, time.time() - start_point, saved
+        return True, saved
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        return 0
+        pass
 
     async def on_finish(self, entities):
         pass

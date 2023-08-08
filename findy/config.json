@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.1.0",
 
   "debug": 0,
   "processes": 4,
@@ -28,13 +28,22 @@
   "alpaca_api_key": "",
   "alpaca_secret_key": "",
 
+  "financial_modeling_prep": "",
+
+  "openai_key": "",
+
   "trade_host": "127.0.0.1",
   "trade_port": "11111",
   "trade_socket_port": "33333",
   "trade_socket_key": "",
 
+  
   "http_proxy": "127.0.0.1:1087",
   "https_proxy": "127.0.0.1:1087",
+  "kuaidaili_proxy_tunnel": "",
+  "kuaidaili_proxy_username": "",
+  "kuaidaili_proxy_password": "",
+
 
   "smtp_host": "smtpdm.aliyun.com",
   "smtp_port": "80",

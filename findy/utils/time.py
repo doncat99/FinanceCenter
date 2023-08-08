@@ -7,8 +7,17 @@ import pytz
 
 from findy.interface import Region
 
-tz_list = {Region.CHN: 'Asia/Shanghai',
-           Region.US: 'America/New_York'}
+# Possible time zones
+TIME_ZONE_SHANGHAI = "Asia/Shanghai"  # Hang Seng HSI, SSE, CSI
+TIME_ZONE_USEASTERN = "US/Eastern"  # Dow, Nasdaq, SP
+TIME_ZONE_PARIS = "Europe/Paris"  # CAC,
+TIME_ZONE_BERLIN = "Europe/Berlin"  # DAX, TECDAX, MDAX, SDAX
+TIME_ZONE_JAKARTA = "Asia/Jakarta"  # LQ45
+TIME_ZONE_SELFDEFINED = "xxx"  # If neither of the above is your time zone, you should define it, and set USE_TIME_ZONE_SELFDEFINED 1.
+USE_TIME_ZONE_SELFDEFINED = 0  # 0 (default) or 1 (use the self defined)
+
+timezone_list = {Region.CHN: TIME_ZONE_SHANGHAI,
+                 Region.US: TIME_ZONE_USEASTERN}
 
 TIME_FORMAT_ISO8601 = "YYYY-MM-DDTHH:mm:ss.SSS"
 TIME_FORMAT_DAY = 'YYYY-MM-DD'
@@ -55,7 +64,7 @@ def to_pd_datetime(the_date, the_time):
 
 
 def now_pd_timestamp(region: Region) -> pd.Timestamp:
-    central = pytz.timezone(tz_list[region])
+    central = pytz.timezone(timezone_list[region])
     # return central.localize(d)
     return pd.Timestamp.now(central).replace(tzinfo=None)
 

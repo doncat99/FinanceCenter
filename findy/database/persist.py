@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from io import StringIO
 
@@ -6,6 +7,7 @@ import pandas as pd
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
+from findy import findy_env
 from findy.interface import Region, Provider
 from findy.database.schema.register import get_schema_columns
 from findy.database.context import get_db_engine
@@ -125,11 +127,21 @@ def to_postgresql(region: Region, df, tablename):
     db_engine = get_db_engine(region)
     connection = db_engine.raw_connection()
     cursor = connection.cursor()
-    cursor.copy_from(output, tablename, null='', size=1024 * 16, columns=list(df.columns))
-    try:        
-        connection.commit()
+    
+    try:
+        cursor.copy_from(output, tablename, null='', size=1024 * 16, columns=list(df.columns))
     except Exception as e:
         logger.error(f'copy_from failed on table: [ {tablename} ], {e}')
+        err_msg = str(e).replace("\"", "")
+        df.to_csv(os.path.join(findy_env['err_path'], f'{err_msg[:min(len(err_msg), 50)]}.csv'))
+        cursor.close()
+        connection.close()
+        return 0
+    
+    try:
+        connection.commit()
+    except Exception as e:
+        logger.error(f'copy_from commit failed on table: [ {tablename} ], {e}')
         connection.rollback()
     finally:
         cursor.close()

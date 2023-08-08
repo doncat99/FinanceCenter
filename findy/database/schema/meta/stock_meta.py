@@ -2,7 +2,7 @@
 from sqlalchemy import Column, String, DateTime, BigInteger, Float
 from sqlalchemy.ext.declarative import declarative_base
 
-from findy.interface import Region, Provider, EntityType
+from findy.interface import EntityType
 from findy.database.schema.datatype import EntityMixin, Portfolio, PortfolioStock, PortfolioStockHistory
 from findy.database.schema.register import register_entity
 
@@ -26,7 +26,7 @@ class Block(StockMetaBase, Portfolio):
 
 # 指数
 @register_entity(entity_type=EntityType.Index)
-class Index(StockMetaBase, Portfolio):
+class Index(StockMetaBase, EntityMixin):
     __tablename__ = EntityType.Index.value
 
     # 发布商

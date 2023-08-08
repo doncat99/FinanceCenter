@@ -1,14 +1,13 @@
 from datetime import datetime
-import time
 
 import demjson3
 import pandas as pd
 
-from findy import findy_config
 from findy.interface import Region, Provider, EntityType
 from findy.database.schema.meta.stock_meta import Index
 from findy.database.schema.misc.overall import StockSummary
 from findy.database.recorder import TimestampsDataRecorder
+from findy.utils.functool import time_it
 from findy.utils.request import chrome_copy_header_to_dict
 from findy.utils.time import to_time_str, now_pd_timestamp
 from findy.utils.convert import to_float
@@ -34,10 +33,10 @@ class StockSummaryRecorder(TimestampsDataRecorder):
     url = 'http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&searchDate={}&prodType=gp&_=1515717065511'
 
     def __init__(self, entity_ids=None, codes=['000001'], batch_size=10,
-                 force_update=False, sleeping_time=5, default_size=findy_config['batch_size'],
+                 force_update=False, sleep_time=5,
                  fix_duplicate_way='add', share_para=None) -> None:
         super().__init__(EntityType.Index, entity_ids, codes, batch_size,
-                         force_update, sleeping_time, default_size, fix_duplicate_way,
+                         force_update, sleep_time, fix_duplicate_way,
                          share_para=share_para)
 
     def init_timestamps(self, entity, http_session):
@@ -45,9 +44,8 @@ class StockSummaryRecorder(TimestampsDataRecorder):
                              end=now_pd_timestamp(Region.CHN),
                              freq='B').tolist()
 
+    @time_it
     async def record(self, entity, http_session, db_session, para):
-        start_point = time.time()
-
         (start, end, size, timestamps) = para
 
         json_results = []
@@ -58,7 +56,7 @@ class StockSummaryRecorder(TimestampsDataRecorder):
 
             async with http_session.get(url, headers=DEFAULT_SH_SUMMARY_HEADER) as response:
                 if response.status != 200:
-                    return
+                    return True, None
 
                 text = await response.text()
                 if text is None:
@@ -86,14 +84,14 @@ class StockSummaryRecorder(TimestampsDataRecorder):
                         df['timestamp'] = pd.to_datetime(df['timestamp'])
                         df['name'] = '上证指数'
                         df = self.format(df)
-                        return False, time.time() - start_point, df
+                        return False, df
 
         if len(json_results) > 0:
             df = pd.DataFrame.from_records(json_results)
             df = self.format(df)
-            return False, time.time() - start_point, df
+            return False, df
 
-        return True, time.time() - start_point, None
+        return True, None
 
     def format(self, entity, df):
         if 'timestamp' not in df.columns:
@@ -108,8 +106,9 @@ class StockSummaryRecorder(TimestampsDataRecorder):
         df['id'] = self.generate_domain_id(entity, df)
         return df
 
+    @time_it
     async def on_finish_entity(self, entity, http_session, db_session, result):
-        return 0
+        pass
 
     async def on_finish(self, entities):
         pass

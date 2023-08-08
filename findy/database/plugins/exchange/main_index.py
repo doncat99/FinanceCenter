@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
+import msgpack
+
 import pandas as pd
 
+from findy import findy_config
 from findy.interface import Region, Provider
 from findy.database.schema.meta.stock_meta import Index
+from findy.database.recorder import RecorderForEntities
 from findy.database.persist import df_to_db
 from findy.database.context import get_db_session
 from findy.utils.pd import pd_valid
 from findy.utils.time import to_pd_timestamp
+from findy.utils.progress import progress_topic, progress_key
+from findy.utils.kafka import connect_kafka_producer, publish_message
+
+kafka_producer = connect_kafka_producer(findy_config['kafka'])
 
 CHINA_STOCK_MAIN_INDEX = [{'id': 'index_sh_000001',
                            'entity_id': 'index_sh_000001',
@@ -139,22 +147,45 @@ US_STOCK_MAIN_INDEX = [{'id': 'index_cme_SPY',
                        ]
 
 
-async def init_main_index(region: Region, provider=Provider.Exchange):
-    if region == Region.CHN:
+class ChinaIndexListSpider(RecorderForEntities):
+    region = Region.CHN
+    provider = Provider.Exchange
+    data_schema = Index
+        
+    async def run(self):
         for item in CHINA_STOCK_MAIN_INDEX:
             item['timestamp'] = to_pd_timestamp(item['timestamp'])
-        df = pd.DataFrame(CHINA_STOCK_MAIN_INDEX)
-    elif region == Region.US:
+            df = pd.DataFrame(CHINA_STOCK_MAIN_INDEX)
+
+        if pd_valid(df):
+            await df_to_db(region=self.region,
+                           provider=self.provider,
+                           data_schema=Index,
+                           db_session=get_db_session(self.region, self.provider, Index),
+                           df=df)
+        
+        processor, concurrent, desc, taskid = self.share_para
+        pbar_update = {"task": taskid, "total": 1, "desc": desc, "leave": True, "update": 1}
+        publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))
+
+
+class UsIndexListSpider(RecorderForEntities):
+    region = Region.US
+    provider = Provider.Exchange
+    data_schema = Index
+        
+    async def run(self):
         for item in US_STOCK_MAIN_INDEX:
             item['timestamp'] = to_pd_timestamp(item['timestamp'])
-        df = pd.DataFrame(US_STOCK_MAIN_INDEX)
-    else:
-        print("index not initialized, in file: init_main_index")
-        df = pd.DataFrame()
+            df = pd.DataFrame(US_STOCK_MAIN_INDEX)
 
-    if pd_valid(df):
-        await df_to_db(region=region,
-                       provider=provider,
-                       data_schema=Index,
-                       db_session=get_db_session(region, provider, Index),
-                       df=df)
+        if pd_valid(df):
+            await df_to_db(region=self.region,
+                           provider=self.provider,
+                           data_schema=Index,
+                           db_session=get_db_session(self.region, self.provider, Index),
+                           df=df)
+
+        processor, concurrent, desc, taskid = self.share_para
+        pbar_update = {"task": taskid, "total": 1, "desc": desc, "leave": True, "update": 1}
+        publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))

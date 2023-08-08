@@ -51,9 +51,10 @@ def common_filter(query: Query,
     if end_timestamp:
         query = query.filter(time_col <= to_pd_timestamp(end_timestamp))
 
-    if filters:
+    if filters is not None and len(filters) > 0:
         for filter in filters:
             query = query.filter(filter)
+
     if order is not None:
         query = query.order_by(order)
     if limit:
