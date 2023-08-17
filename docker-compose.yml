@@ -3,7 +3,7 @@ services:
   zookeeper:
     image: wurstmeister/zookeeper
     volumes:
-      - ./data:/data
+      - ./.tmp/zookeeper-data:/data
     ports:
       - 2182:2181
 
@@ -18,7 +18,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
     volumes:
-      - ./kafka-logs:/kafka
+      - ./.tmp/kafka-logs:/kafka
     depends_on:
       - zookeeper
 
