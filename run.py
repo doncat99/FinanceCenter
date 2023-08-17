@@ -3,15 +3,16 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask_migrate import Migrate
+import os
 from sys import exit
-from decouple import config
+
+from flask_migrate import Migrate
 
 from dashboard.config import config_dict
 from dashboard import create_app, db
 
 # WARNING: Don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 
 # The configuration
 get_config_mode = 'Debug' if DEBUG else 'Production'
@@ -27,11 +28,15 @@ except KeyError:
 app = create_app(app_config)
 Migrate(app, db)
 
-
+if not DEBUG:
+    from flask_minify import Minify
+    Minify(app=app, html=True, js=False, cssless=False)
+    
 if DEBUG:
-    app.logger.info('DEBUG       = ' + str(DEBUG))
-    app.logger.info('Environment = ' + get_config_mode)
-    app.logger.info('DBMS        = ' + app_config.SQLALCHEMY_FLASK_URI)
+    app.logger.info('DEBUG            = ' + str(DEBUG)             )
+    app.logger.info('Page Compression = ' + 'FALSE' if DEBUG else 'TRUE' )
+    app.logger.info('DBMS             = ' + app_config.SQLALCHEMY_DATABASE_URI)
+    app.logger.info('ASSETS_ROOT      = ' + app_config.ASSETS_ROOT )
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0', port=5000, debug=True)

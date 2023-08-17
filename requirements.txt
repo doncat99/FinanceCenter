@@ -1,11 +1,20 @@
+# flask requirement
+-r requirements-dashboard.txt
+
 # multiprocessing utils
 # numba>=0.57.0
 uvloop>=0.17.0
+kafka_python
 
 # database utils
 psycopg2>=2.9.6
-SQLAlchemy>=1.4.48
+sqlalchemy>=1.4.41
 sqlalchemy_batch_inserts>=0.0.4
+alembic>=1.11.1
+asyncpg>=0.28.0
+fastapi>=0.100.0
+sqlmodel>=0.0.8
+uvicorn>=0.22.0
 
 # data utils
 pandas>=1.5.3

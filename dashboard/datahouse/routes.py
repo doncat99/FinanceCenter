@@ -11,7 +11,8 @@ from flask import render_template, current_app, Response, flash
 
 from findy import findy_env, findy_config
 from findy.interface import Region
-from findy.interface.fetch import Para, task_set_chn, task_set_us
+from findy.interface.fetch import task_stock_chn, task_stock_us
+from findy.task import TaskArgs
 from findy.utils.kafka import connect_kafka_consumer
 from findy.utils.progress import progress_topic
 
@@ -50,19 +51,19 @@ def create_tasks():
     onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 
     try:
-        for item in task_set_chn:
-            task = Tasks(taskid=item[Para.TaskID.value],
+        for item in task_stock_chn:
+            task = Tasks(taskid=item[TaskArgs.TaskID.value],
                          taskicon=random.choice(onlyfiles),
-                         taskname=item[Para.Desc.value],
+                         taskname=item[TaskArgs.Desc.value],
                          marketid=Region.CHN.value,
                          completion="0")
             db.session.add(task)
             tasks.append(task)
 
-        for item in task_set_us:
-            task = Tasks(taskid=item[Para.TaskID.value],
+        for item in task_stock_us:
+            task = Tasks(taskid=item[TaskArgs.TaskID.value],
                          taskicon=random.choice(onlyfiles),
-                         taskname=item[Para.Desc.value],
+                         taskname=item[TaskArgs.Desc.value],
                          marketid=Region.US.value,
                          completion="0")
             db.session.add(task)

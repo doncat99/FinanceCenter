@@ -1,0 +1,73 @@
+version: '3.8'
+services:
+
+  dashboard:
+    container_name: dashboard
+    restart: always
+    env_file: .env
+    build: .
+    networks:
+      - db_network
+      - web_network
+
+  nginx:
+    container_name: nginx5085
+    restart: always
+    image: "nginx:latest"
+    ports:
+      - "5085:5085"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - web_network
+    depends_on: 
+      - dashboard
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    volumes:
+      - ./data:/data
+    ports:
+      - 2182:2181
+       
+  kafka9094:
+    image: wurstmeister/kafka
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.60:9092
+      KAFKA_CREATE_TOPICS: "kafeidou:2:0"   #kafka启动后初始化一个有2个partition(分区)0个副本名叫kafeidou的topic 
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    volumes:
+      - ./kafka-logs:/kafka
+    depends_on:
+      - zookeeper
+
+  db:
+    build: ./docker/pgsql
+    restart: unless-stopped
+    volumes:
+      # - ./pgsql/postgresqltuner_init.sh:/docker-entrypoint-initdb.d/00_postgresqltuner_init.sh
+      - ./docker/pgsql/init_db.sh:/docker-entrypoint-initdb.d/10_init_db.sh
+    environment:
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=findy
+
+  financenter:
+    build: ./
+    restart: unless-stopped
+    volumes:
+      - $PWD/:/work
+    depends_on:
+      - kafka9094
+      - db
+    # entrypoint: ['python', 'run.py']
+
+networks:
+  db_network:
+    driver: bridge
+  web_network:
+    driver: bridge
