@@ -1,28 +1,5 @@
 version: '3.8'
 services:
-
-  dashboard:
-    container_name: dashboard
-    restart: always
-    env_file: .env
-    build: .
-    networks:
-      - db_network
-      - web_network
-
-  nginx:
-    container_name: nginx5085
-    restart: always
-    image: "nginx:latest"
-    ports:
-      - "5085:5085"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-    networks:
-      - web_network
-    depends_on: 
-      - dashboard
-
   zookeeper:
     image: wurstmeister/zookeeper
     volumes:
@@ -46,11 +23,11 @@ services:
       - zookeeper
 
   db:
-    build: ./docker/pgsql
+    build: ./pgsql
     restart: unless-stopped
     volumes:
       # - ./pgsql/postgresqltuner_init.sh:/docker-entrypoint-initdb.d/00_postgresqltuner_init.sh
-      - ./docker/pgsql/init_db.sh:/docker-entrypoint-initdb.d/10_init_db.sh
+      - ./pgsql/init_db.sh:/docker-entrypoint-initdb.d/10_init_db.sh
     environment:
       - POSTGRES_PASSWORD=123
       - POSTGRES_USER=postgres
@@ -64,10 +41,30 @@ services:
     depends_on:
       - kafka9094
       - db
-    # entrypoint: ['python', 'run.py']
 
+  app:
+    container_name: app
+    restart: always
+    env_file: .env
+    build: .
+    networks:
+      - db_network
+      - web_network
+  nginx:
+    container_name: nginx5085
+    restart: always
+    image: "nginx:latest"
+    ports:
+      - "5085:5085"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - web_network
+    depends_on: 
+      - app
 networks:
   db_network:
     driver: bridge
   web_network:
     driver: bridge
+ 

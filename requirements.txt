@@ -1,5 +1,5 @@
 # flask requirement
--r requirements-dashboard.txt
+-r requirements-apps.txt
 
 # multiprocessing utils
 # numba>=0.57.0

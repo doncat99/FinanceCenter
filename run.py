@@ -4,12 +4,12 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
-from sys import exit
+from   flask_migrate import Migrate
+from   flask_minify  import Minify
+from   sys import exit
 
-from flask_migrate import Migrate
-
-from dashboard.config import config_dict
-from dashboard import create_app, db
+from apps.config import config_dict
+from apps import create_app, db
 
 # WARNING: Don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
@@ -29,7 +29,6 @@ app = create_app(app_config)
 Migrate(app, db)
 
 if not DEBUG:
-    from flask_minify import Minify
     Minify(app=app, html=True, js=False, cssless=False)
     
 if DEBUG:
@@ -39,4 +38,4 @@ if DEBUG:
     app.logger.info('ASSETS_ROOT      = ' + app_config.ASSETS_ROOT )
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run()
