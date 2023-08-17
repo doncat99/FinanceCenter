@@ -6,7 +6,7 @@ services:
       - ./data:/data
     ports:
       - 2182:2181
-       
+
   kafka9094:
     image: wurstmeister/kafka
     ports:
@@ -50,6 +50,9 @@ services:
     networks:
       - db_network
       - web_network
+    depends_on: 
+      - financenter
+
   nginx:
     container_name: nginx5085
     restart: always
@@ -62,6 +65,7 @@ services:
       - web_network
     depends_on: 
       - app
+
 networks:
   db_network:
     driver: bridge
