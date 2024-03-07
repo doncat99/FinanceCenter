@@ -5,7 +5,7 @@ warnings.filterwarnings("ignore")
 # from apscheduler.schedulers.background import BackgroundScheduler
 
 from findy import findy_config
-from findy.interface import Region
+from findy.interface import ContentType, Region
 from findy.interface.fetch import fetching
 
 # sched = BackgroundScheduler()
@@ -22,8 +22,12 @@ def arg_parsing():
                         help="Debug message output")
 
     parser.add_argument("-fetch",
+                        choices=[e.value for e in ContentType],
+                        help=f"fetch data type. support: {[e.value for e in ContentType]}")
+
+    parser.add_argument("-region",
                         choices=[e.value for e in Region],
-                        help=f"fetch stock market data. support: {[e.value for e in Region]}")
+                        help=f"fetch data region. support: {[e.value for e in Region]}")
 
     parser.add_argument("-v", action="version",
                         version="Financial-Dynamics v%s" % findy_config['version'],
@@ -34,8 +38,8 @@ def arg_parsing():
 
 # @sched.scheduled_job('interval', days=1)
 def fetch(args):
-    if args.fetch is not None:
-        fetching(Region(args.fetch))
+    if args.fetch is not None and args.region is not None:
+        fetching([{"content_type": args.fetch, "region": [args.region]}])
 
 
 if __name__ == '__main__':

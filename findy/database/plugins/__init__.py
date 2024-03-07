@@ -6,3 +6,4 @@ from findy.database.plugins.baostock import *
 from findy.database.plugins.eastmoney import *
 from findy.database.plugins.yahoo import *
 from findy.database.plugins.alpaca import *
+from findy.database.plugins.newsdata import *

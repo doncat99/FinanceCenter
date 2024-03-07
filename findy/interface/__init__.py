@@ -13,6 +13,10 @@ class Region(enum.Enum):
     US = 'us'
     HK = 'hk'
 
+class ContentType(enum.Enum):
+    Stock = 'stock'
+    News = 'news'
+    
 
 class Provider(enum.Enum):
     Exchange = 'exchange'
@@ -23,6 +27,7 @@ class Provider(enum.Enum):
     EastMoney = 'eastmoney'
     Yahoo = 'yahoo'
     Alpaca = 'alpaca'
+    NewsData = 'newsdata'
     Findy = 'findy'
 
 

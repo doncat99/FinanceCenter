@@ -11,6 +11,34 @@ NewsMetaBase = declarative_base()
 
 # 新闻
 @register_entity(entity_type=EntityType.News)
+class News(NewsMetaBase, Mixin):
+    __tablename__ = 'news'
+
+    article_id = Column(String)
+    title = Column(String)
+    link = Column(String)
+    source_id = Column(String)
+    source_url = Column(String)
+    source_icon = Column(String)
+    source_priority = Column(String)
+    keywords = Column(String)
+    creator = Column(String)
+    image_url = Column(String)
+    video_url = Column(String)
+    description = Column(String)
+    pubDate = Column(String)
+    content = Column(String)
+    country = Column(String)
+    category = Column(String)
+    language = Column(String)
+    ai_tag = Column(String)
+    sentiment = Column(String)
+    sentiments_stats = Column(String)
+    ai_region = Column(String)
+    nextPage = Column(String)
+    
+
+@register_entity(entity_type=EntityType.News)
 class NewsTitle(NewsMetaBase, Mixin):
     __tablename__ = 'news_title'
 

@@ -158,7 +158,7 @@ def build_engine(region: Region) -> Engine:
         findy_config[f'db_port_{findy_config["location"]}'],
         db_name)
     engine = create_engine(link,
-                           encoding='utf-8',
+                        #   encoding='utf-8',
                            echo=False,
                            poolclass=QueuePool,
                            pool_size=5,
