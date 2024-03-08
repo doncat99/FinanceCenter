@@ -339,3 +339,4 @@ task_stock_us = [
 task_news_us = [
     ["us_news",       "task_001", RunMode.Serial,    24,      task.get_news,                         [Region.US, Provider.NewsData,   0, os.cpu_count(), 99, "News"]],
 ]
+
