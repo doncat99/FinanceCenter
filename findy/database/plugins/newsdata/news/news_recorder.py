@@ -8,92 +8,135 @@ from newsdataapi import NewsDataApiClient
 from findy import findy_config
 from findy.interface import Region, Provider
 from findy.database.schema.meta.news_meta import News
-from findy.database.recorder import Recorder
-from findy.database.context import get_db_session
+from findy.database.recorder import RecorderForEntities
 from findy.database.persist import df_to_db
+from findy.utils.functool import time_it
 
 logger = logging.getLogger(__name__)
 
 
-class NewsDataUsNewsRecorder(Recorder):
+class NewsDataUsNewsRecorder(RecorderForEntities):
     region = Region.US
     provider = Provider.NewsData
     data_schema = News
     max_retry = 3
 
-    def inner_request_news(self, api, keyword, language, page):
+    async def init_entities(self, db_session):
+        keywords = ['Biodiversity conservation',
+                    'Biodiversity conservation efforts',
+                    'Board diversity',
+                    'Board governance',
+                    'Carbon footprint reduction',
+                    'Carbon offsetting',
+                    'Carbon pricing',
+                    'Circular economy initiatives',
+                    'Clean energy investments',
+                    'Clean technology',
+                    'Climate action plans',
+                    'Climate adaptation',
+                    'Climate change initiatives',
+                    'Climate finance',
+                    'Climate initiatives',
+                    'Climate mitigation strategies',
+                    'Climate resilience',
+                    'Climate risk management',
+                    'Community development',
+                    'Community engagement',
+                    'Corporate accountability',
+                    'Corporate citizenship',
+                    'Corporate social responsibility',
+                    'Diversity and inclusion initiatives',
+                    'Environmental advocacy',
+                    'Environmental certifications',
+                    'Environmental conservation',
+                    'Environmental disclosure',
+                    'Environmental impact analysis',
+                    'Environmental impact assessments',
+                    'Environmental justice',
+                    'Environmental management systems',
+                    'Environmental policy',
+                    'Environmental regulations',
+                    'Environmental regulations and compliance',
+                    'Environmental risk assessment',
+                    'Environmental stewardship',
+                    'Environmental sustainability',
+                    'ESG benchmarks',
+                    'ESG criteria',
+                    'ESG indices',
+                    'ESG integration',
+                    'ESG integration in investment strategies',
+                    'ESG investing',
+                    'ESG metrics',
+                    'ESG performance',
+                    'ESG reporting',
+                    'Ethical governance',
+                    'Ethical investing',
+                    'Ethical investing criteria',
+                    'Ethical investments',
+                    'Ethical labor practices',
+                    'Ethical sourcing',
+                    'Ethical sourcing practices',
+                    'Ethical supply chain',
+                    'Fair labor practices',
+                    'Fair trade practices',
+                    'Gender equality initiatives',
+                    'Green bonds',
+                    'Green buildings',
+                    'Green finance',
+                    'Greenwashing',
+                    'Human capital management',
+                    'Human rights initiatives',
+                    'Impact investing',
+                    'Impact measurement',
+                    'Net-zero emissions',
+                    'Renewable energy investments',
+                    'Renewable energy policies',
+                    'Renewable energy transition',
+                    'Responsible business conduct',
+                    'Responsible consumption',
+                    'Responsible investing',
+                    'Sustainable packaging',
+                    'Responsible production',
+                    'Responsible sourcing',
+                    'Social enterprise',
+                    'Social equity',
+                    'Social governance',
+                    'Social impact investing',
+                    'Social impact measurement',
+                    'Social justice advocacy',
+                    'Socially responsible investing',
+                    'Stakeholder engagement',
+                    'Sustainable agriculture',
+                    'Sustainable agriculture practices',
+                    'Sustainable business practices',
+                    'Sustainable development',
+                    'Sustainable fashion',
+                    'Sustainable fisheries',
+                    'Sustainable forestry',
+                    'Sustainable forestry management',
+                    'Sustainable infrastructure',
+                    'Sustainable investing', 
+                    'Sustainable supply chain',
+                    'Sustainable tourism',
+                    'Sustainable tourism practices',
+                    'Sustainable transportation',
+                    'Sustainable urban development',
+                    'Waste management strategies',
+                    'Waste reduction',
+                    'Water management',
+                    'Water conservation efforts',
+        ]
 
-        for _ in range(self.max_retry):
-            try:
-                response = api.news_api(q=keyword, language=language, page=page)
-                if response is not None and response['status'] == 'success':
-                    break
-            except Exception as e:
-                logger.warning(f'get newsdata failed: {e}')
-                response = None
+        # init the entity list
+        entities = self.generate_search_keys(keywords, max_keyword_len=512)
+        return entities
 
-        return response
-    
-    def generate_search_keys(self, keywords, max_keyword_len=128):
-        search_list = []
-        
-        pattern = ' OR '
-        q = pattern.join([f'"{keyword}"' for keyword in keywords])
+    @time_it
+    async def eval(self, entity, http_session, db_session):
+        return False, None
 
-        matchs = [m.start() for m in re.finditer(pattern, q)]
-        index_offset = 0
-        match_cnt = len(matchs)
-
-        for index, match in enumerate(matchs):
-            if index == match_cnt - 1:
-                search_list.append(q[index_offset:matchs[index]])
-
-            elif match-index_offset > max_keyword_len:
-                anchor = matchs[index - 1]
-                search_list.append(q[index_offset : anchor])
-                index_offset = anchor + len(pattern)
-
-        return search_list
-
-    def request_news(self, api, keywords, language, page=None):
-        articles_list = []
-        totalResults = 0
-        
-        while True:
-            response = self.inner_request_news(api, keywords, language, page)
-            
-            if response is not None:
-                totalResults = response['totalResults']
-    
-            if totalResults == 0:
-                break
-            
-            articles_list.extend(response['results'])
-            
-            if response['nextPage'] is None:
-                break
-            
-            page = response['nextPage']
-
-        return articles_list
-    
-    async def save_news(self, articles_list):
-        saved = 0
-        db_session = get_db_session(self.region, self.provider, News)
-        result_df = pd.DataFrame(articles_list)
-        result_df.drop_duplicates(subset='article_id', keep='last', inplace=True)
-        result_df['id'] = result_df['article_id']
-
-        saved += await df_to_db(region=self.region,
-                                provider=self.provider,
-                                data_schema=self.data_schema,
-                                db_session=db_session,
-                                df=result_df)
-        return saved
-
-    async def run(self):
-        api = NewsDataApiClient(apikey=findy_config['newsdata.io'])
-        
+    @time_it
+    async def record(self, entity, http_session, db_session, para):
         # Language      Language Code
         # Afrikaans          af
         # Albanian           sq
@@ -178,35 +221,82 @@ class NewsDataUsNewsRecorder(Recorder):
         # Vietnamese         vi
         # Welsh              cy
         language = 'en'
+        api = NewsDataApiClient(apikey=findy_config['newsdata.io'])
+        articles_result = self.request_news(api, entity, language)
+        df = pd.DataFrame(articles_result)
+        df.drop_duplicates(subset='article_id', keep='last', inplace=True)
+        df['id'] = df['article_id']
+        return False, df
+
+    @time_it
+    async def persist(self, entity, http_session, db_session, df_record):
+        saved = await df_to_db(region=self.region,
+                               provider=self.provider,
+                               data_schema=self.data_schema,
+                               db_session=db_session,
+                               df=df_record)
+
+        return True, saved
+
+    @time_it
+    async def on_finish_entity(self, entity, http_session, db_session, result):
+        pass
+
+    async def on_finish(self, entities):
+        pass
+
+    def generate_search_keys(self, keywords, max_keyword_len=128):
+        search_list = []
         
-        keywords = ['Sustainable investing', 
-                    'Corporate social responsibility',
-                    'Green finance',
-                    'Ethical investing',
-                    'Impact investing',
-                    'Socially responsible investing',
-                    'Climate change initiatives',
-                    'Sustainable development goals',
-                    'Carbon footprint reduction',
-                    'ESG metrics and reporting',
-                    'Responsible sourcing',
-                    'Diversity and inclusion initiatives',
-                    'Renewable energy investments',
-                    'Ethical supply chain management',
-                    'Environmental stewardship',
-                    'Sustainable business practices',
-                    'ESG integration in investment strategies',
-                    'Environmental regulations and compliance',
-                    'Social justice advocacy',
-                    'Board diversity and governance'
-        ]
+        pattern = ' OR '
+        q = pattern.join([f'"{keyword}"' for keyword in keywords])
 
-        search_list = self.generate_search_keys(keywords, max_keyword_len=512)
+        matchs = [m.start() for m in re.finditer(pattern, q)]
+        index_offset = 0
+        match_cnt = len(matchs)
 
+        for index, match in enumerate(matchs):
+            if index == match_cnt - 1:
+                search_list.append(q[index_offset:matchs[index]])
+
+            elif match-index_offset > max_keyword_len:
+                anchor = matchs[index - 1]
+                search_list.append(q[index_offset : anchor])
+                index_offset = anchor + len(pattern)
+
+        return search_list
+
+    def inner_request_news(self, api, keyword, language, page):
+
+        for _ in range(self.max_retry):
+            try:
+                response = api.news_api(q=keyword, language=language, page=page)
+                if response is not None and response['status'] == 'success':
+                    break
+            except Exception as e:
+                logger.warning(f'get newsdata failed: {e}')
+                response = None
+
+        return response
+
+    def request_news(self, api, keywords, language, page=None):
         articles_list = []
-        for search in search_list:
-            articles_result = self.request_news(api, search, language)
-            articles_list.extend(articles_result)
+        totalResults = 0
         
-        if len(articles_list) > 0:
-            await self.save_news(articles_list)
+        while True:
+            response = self.inner_request_news(api, keywords, language, page)
+            
+            if response is not None:
+                totalResults = response['totalResults']
+    
+            if totalResults == 0:
+                break
+            
+            articles_list.extend(response['results'])
+            
+            if response['nextPage'] is None:
+                break
+            
+            page = response['nextPage']
+
+        return articles_list

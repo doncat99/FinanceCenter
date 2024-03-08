@@ -261,7 +261,7 @@ class task():
     @staticmethod
     async def get_news(args):
         from findy.database.schema.meta.news_meta import News
-        await News.record_data(args[0], args[1], sleep_time=args[2])
+        await News.record_data(args[0], args[1], sleep_time=args[2], share_para=args[3:])
     
 
 task_stock_chn = [
@@ -337,5 +337,5 @@ task_stock_us = [
 
 
 task_news_us = [
-    ["us_news",      "task_001", RunMode.Serial,     24,      task.get_news,                         [Region.US, Provider.NewsData,   0, os.cpu_count(), 99, "News"]],
+    ["us_news",       "task_001", RunMode.Serial,    24,      task.get_news,                         [Region.US, Provider.NewsData,   0, os.cpu_count(), 99, "News"]],
 ]
