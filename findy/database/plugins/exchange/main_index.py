@@ -164,7 +164,7 @@ class ChinaIndexListSpider(RecorderForEntities):
                            db_session=get_db_session(self.region, self.provider, Index),
                            df=df)
         
-        processor, concurrent, desc, taskid = self.share_para
+        taskid, processor, concurrent, desc = self.share_para[0:4]
         pbar_update = {"task": taskid, "total": 1, "desc": desc, "leave": True, "update": 1}
         publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))
 
@@ -186,6 +186,6 @@ class UsIndexListSpider(RecorderForEntities):
                            db_session=get_db_session(self.region, self.provider, Index),
                            df=df)
 
-        processor, concurrent, desc, taskid = self.share_para
+        taskid, processor, concurrent, desc = self.share_para[0:4]
         pbar_update = {"task": taskid, "total": 1, "desc": desc, "leave": True, "update": 1}
         publish_message(kafka_producer, progress_topic, progress_key,  msgpack.dumps(pbar_update))

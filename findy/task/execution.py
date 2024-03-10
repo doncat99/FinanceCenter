@@ -55,7 +55,7 @@ async def fetch_process(task_set):
     parallel_tasks_args_list = []
     for task_args in tasks_args_list:
         # add task index in desc parameter
-        task_args[0][TaskArgs.Argument.value].append(task_args[1])
+        task_args[0][TaskArgs.Argument.value].insert(3, task_args[1])
 
         if task_args[0][TaskArgs.Mode.value] == RunMode.Serial:
             await loop_task_set(task_args)

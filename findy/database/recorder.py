@@ -219,7 +219,7 @@ class RecorderForEntities(Recorder):
         entities = await self.init_entities(db_session)
 
         if entities and len(entities) > 0:
-            processor, concurrent, desc, taskid = self.share_para
+            taskid, processor, concurrent, desc = self.share_para[0:4]
 
             pbar_update = {"task": taskid, "total": len(entities), "desc": desc, "leave": True, "update": 0}
             publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
