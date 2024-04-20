@@ -30,12 +30,13 @@ class ProgressBarProcess():
         while True:
             for msg in consumer:
                 data = msgpack.loads(msg.value)
-
+                # print("data", data)
                 command = data.get('command', None)
                 if command == '@end':
                     return
                 if command == '@task-finish':
                     task = data['task']
+                    # print("task", task)
                     pbar = pbars.get(task, None)
                     if pbar is not None:
                         pbar.n = pdata[task]['total']

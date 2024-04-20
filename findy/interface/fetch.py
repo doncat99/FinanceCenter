@@ -4,7 +4,7 @@ warnings.filterwarnings("ignore")
 import logging
 
 from findy.interface import ContentType, Region
-from findy.interface.fetch_content import task_news_chn, task_news_us, task_stock_chn, task_stock_us
+from findy.interface.fetch_task import task_news_chn, task_news_us, task_stock_chn, task_stock_us
 from findy.task.execution import task_execution
 
 logger = logging.getLogger(__name__)

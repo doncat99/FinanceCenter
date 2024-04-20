@@ -29,7 +29,7 @@ async def loop_task_set(task):
     logger.info(f"End Func: {item[TaskArgs.FunName.value].__name__}, cost: {time.time() - now}\n")
 
     publish_message(kafka_producer, progress_topic, progress_key,
-                    msgpack.dumps({"command": "@task-finish", "task": item[TaskArgs.Argument.value][-1]}))
+                    msgpack.dumps({"command": "@task-finish", "task": item[TaskArgs.Argument.value][2]})) # TaskArgs.Argument.value list index 0: region 1: provider 2: task-id [3:]: function parameter
 
     pbar_update['update'] = 1
     publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))

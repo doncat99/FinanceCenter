@@ -120,9 +120,13 @@ class NewsDataUsNewsRecorder(RecorderForEntities):
         api = NewsDataApiClient(apikey=findy_config['newsdata.io'])
         articles_result = self.request_news(api, entity, language)
         df = pd.DataFrame(articles_result)
-        df.drop_duplicates(subset='article_id', keep='last', inplace=True)
-        df['id'] = df['article_id']
-        return False, df
+        try:
+            df.drop_duplicates(subset='article_id', keep='last', inplace=True)
+            df['id'] = df['article_id']
+            return False, df
+        except:
+            return True, None
+            
 
     @time_it
     async def persist(self, entity, http_session, db_session, df_record):
@@ -181,13 +185,13 @@ class NewsDataUsNewsRecorder(RecorderForEntities):
         
         while True:
             response = self.inner_request_news(api, keywords, language, page)
-            
+
             if response is not None:
                 totalResults = response['totalResults']
-    
+
             if totalResults == 0:
                 break
-            
+
             articles_list.extend(response['results'])
             
             if response['nextPage'] is None:

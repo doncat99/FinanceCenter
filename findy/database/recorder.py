@@ -188,7 +188,7 @@ class RecorderForEntities(Recorder):
         prefix = "finish~ " if findy_config['debug'] else ""
         postfix = "\n" if findy_config['debug'] else ""
 
-        name = entity if isinstance(entity, str) else entity.id
+        name = "{:.18}".format(entity if isinstance(entity, str) else entity.id)
         if extra is not None:
             if isinstance(extra, int):
                 self.logger.info("{}{:>17}, {:>18}, eval: {}, download: {}, persist: {}, total: {}, size: {:>7}, {}".format(
