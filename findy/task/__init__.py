@@ -13,4 +13,15 @@ class TaskArgs(enum.Enum):
     Mode = 2
     Update = 3
     FunName = 4
-    Argument = 5
+    Extend = 5
+
+
+class TaskArgsExtend(enum.Enum):
+    Region = 0
+    Provider = 1
+    Sleep = 2
+    TaskID = 3
+    Cpus = 4
+    Concurrent = 5
+    Desc = 6
+    keyword = 7

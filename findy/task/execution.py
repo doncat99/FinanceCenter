@@ -10,7 +10,7 @@ from datetime import datetime
 import msgpack
 
 from findy import findy_config
-from findy.task import TaskArgs, RunMode
+from findy.task import TaskArgs, TaskArgsExtend, RunMode
 from findy.utils.kafka import connect_kafka_producer, publish_message
 from findy.utils.progress import ProgressBarProcess, progress_topic, progress_key
 from findy.utils.cache import valid, get_cache, dump_cache
@@ -25,11 +25,11 @@ async def loop_task_set(task):
     item, index, pbar_update, schedule_cache, schedule_file = task
 
     logger.info(f"Start Func: {item[TaskArgs.FunName.value].__name__}")
-    await item[TaskArgs.FunName.value](item[TaskArgs.Argument.value])
+    await item[TaskArgs.FunName.value](item[TaskArgs.Extend.value])
     logger.info(f"End Func: {item[TaskArgs.FunName.value].__name__}, cost: {time.time() - now}\n")
 
     publish_message(kafka_producer, progress_topic, progress_key,
-                    msgpack.dumps({"command": "@task-finish", "task": item[TaskArgs.Argument.value][2]})) # TaskArgs.Argument.value list index 0: region 1: provider 2: task-id [3:]: function parameter
+                    msgpack.dumps({"command": "@task-finish", "task": item[TaskArgs.Extend.value][TaskArgsExtend.TaskID.value]}))
 
     pbar_update['update'] = 1
     publish_message(kafka_producer, progress_topic, progress_key, msgpack.dumps(pbar_update))
@@ -55,7 +55,7 @@ async def fetch_process(task_set):
     parallel_tasks_args_list = []
     for task_args in tasks_args_list:
         # add task index in desc parameter
-        task_args[0][TaskArgs.Argument.value].insert(3, task_args[1])
+        task_args[0][TaskArgs.Extend.value].insert(TaskArgsExtend.TaskID.value, task_args[1])
 
         if task_args[0][TaskArgs.Mode.value] == RunMode.Serial:
             await loop_task_set(task_args)
@@ -65,7 +65,7 @@ async def fetch_process(task_set):
     task_args_len = len(parallel_tasks_args_list)
     cpus = os.cpu_count()
     multiplier = 2  # 1 if task_args_len > cpus else 2
-    [task_args[0][TaskArgs.Argument.value][3] * multiplier for task_args in parallel_tasks_args_list]
+    [task_args[0][TaskArgs.Extend.value][TaskArgsExtend.Cpus.value] * multiplier for task_args in parallel_tasks_args_list]
 
     # if tasks > cpus/2:
     if True:
