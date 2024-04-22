@@ -1,3 +1,5 @@
+import platform
+import multiprocessing
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -43,6 +45,17 @@ def fetch(args):
 
 
 if __name__ == '__main__':
+    current_os = platform.system().lower()
+    if current_os == 'darwin':
+        pass
+    elif current_os == "windows":
+        multiprocessing.set_start_method("spawn")
+    elif current_os == "linux":
+        multiprocessing.set_start_method("spawn")
+    else:
+        print("system not support.")
+        exit()
+
     args = arg_parsing()
     print(args)
 
